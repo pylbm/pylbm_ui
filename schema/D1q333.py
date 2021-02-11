@@ -139,7 +139,7 @@ class D1Q333(BaseModel, Scheme):
     @property
     def description(self):
         return """
-The $D_1Q_{333} scheme involves the following set of parameters:
+The $D_1Q_{333}$ scheme involves the following set of parameters:
 
 Relaxation rates (values must be in $]0,2[$):
 

@@ -7,10 +7,11 @@ from ..utils import schema_to_widgets
 class test_case_widget:
 
     def __init__(self, cases, default_case):
+        default_layout = Layout(width='100%')
         self.case = Dropdown(options=cases,
                              value=default_case,
                              disabled=False,
-                             layout=Layout(width='auto')
+                             layout=default_layout
         )
 
         self.case_parameters = schema_to_widgets(self.case.value)
@@ -22,7 +23,7 @@ class test_case_widget:
                            Accordion(children=[param_widget],
                                      _titles={0: 'Show parameters'},
                                      selected_index=None,
-                                     layout=Layout(width='100%'))],
+                                     layout=default_layout)],
                            layout=Layout(align_items='center', margin='10px')
         )
 

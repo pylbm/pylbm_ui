@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from .symbol import Symbol
 import sympy as sp
 
-
 class EquationType(BaseModel):
     pass
 

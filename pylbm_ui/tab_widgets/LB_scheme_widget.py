@@ -8,11 +8,12 @@ from ..utils import schema_to_widgets
 class LB_scheme_widget:
 
     def __init__(self, cases, default_case):
+        default_layout = Layout(width='100%')
         self.case = Dropdown(
             options=cases,
             value=default_case,
             disabled=False,
-            layout=Layout(width='auto')
+            layout=default_layout
         )
 
         self.case_parameters = schema_to_widgets(self.case.value)
@@ -24,7 +25,7 @@ class LB_scheme_widget:
                            Accordion(children=[param_widget],
                                      _titles={0: 'Show parameters'},
                                      selected_index=None,
-                                     layout=Layout(width='100%'))],
+                                     layout=default_layout)],
                            layout=Layout(align_items='center', margin= '10px')
         )
 
@@ -46,18 +47,19 @@ class LB_scheme_widget:
                     right_panel.children[i].clear_output()
                     display(d)
 
-        def observer(change):
-            update_right_panel()
+        def observer_param(change):
+            for k, v in self.case_parameters.items():
+                setattr(self.case.value, k, v.value)
 
         for c in self.case_parameters.values():
-            c.observe(observer, 'value')
+            c.observe(observer_param, 'value')
 
         def change_case(change):
             self.case_parameters = schema_to_widgets(self.case.value)
             param_widget.children = [*self.case_parameters.values()]
             for c in self.case_parameters.values():
-                c.observe(observer, 'value')
-            observer(None)
+                c.observe(observer_param, 'value')
+            update_right_panel()
 
         self.case.observe(change_case, 'value')
 

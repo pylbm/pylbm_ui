@@ -26,8 +26,6 @@ class D1Q222(BaseModel, Scheme):
 
         u = q/rho
 
-        self.dx = 0.01
-        self.la = 10
         s_rho_ = sp.symbols('s_rho', constants=True)
         s_u_ = sp.symbols('s_u', constants=True)
         s_p_ = sp.symbols('s_p', constants=True)

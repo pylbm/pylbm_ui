@@ -8,6 +8,8 @@ from ..utils import schema_to_widgets
 class stability_widget:
 
     def __init__(self, test_case_widget, LB_scheme_widget):
+        default_layout = Layout(width='100%')
+
         case = LB_scheme_widget.case
         case_parameters = LB_scheme_widget.case_parameters
 
@@ -19,7 +21,7 @@ class stability_widget:
                            Accordion(children=[param_widget],
                                      _titles={0: 'Scheme'},
                                      selected_index=None,
-                                     layout=Layout(width='100%'))],
+                                     layout=default_layout)],
                            layout=Layout(align_items='center', margin='10px')
         )
 

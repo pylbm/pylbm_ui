@@ -1,8 +1,9 @@
 import os
 import sys
-from ipywidgets import Tab, Layout
+import asyncio
 
-from .tab_widgets import test_case_widget, LB_scheme_widget, stability_widget
+from ipywidgets import Tab, Layout
+from .tab_widgets import *
 
 ferr = open(os.devnull, 'w')
 sys.stderr = ferr
@@ -32,7 +33,8 @@ def main():
 
     tab_contents = {'Test case': tc.widget,
                     'Scheme': lb.widget,
-                    'Linear stability': stability_widget(tc, lb).widget
+                    'Linear stability': stability_widget(tc, lb).widget,
+                    'LBM Simulation': simulation_widget(tc, lb).widget
     }
 
     tab = Tab(list(tab_contents.values()),
@@ -41,3 +43,5 @@ def main():
     )
 
     return tab
+
+# app = asyncio.run(main())

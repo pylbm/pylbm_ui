@@ -72,6 +72,9 @@ class ToroCase(BaseModel):
             0: self.equation.NonReflexiveOutlet,
         }
 
+    def size(self):
+        return self.xmax-self.xmin
+
     def state(self):
         return [{self.equation.rho: self.rho_left,
                  self.equation.q: self.rho_left*self.u_left,

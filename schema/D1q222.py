@@ -10,7 +10,6 @@ class D1Q222(BaseModel, Scheme):
     s_rho: RelaxationParameter
     s_u: RelaxationParameter
     s_p: RelaxationParameter
-    dx: float
     la: float
 
     equation = Euler1D()
@@ -38,7 +37,6 @@ class D1Q222(BaseModel, Scheme):
 
         return {
             'dim': 1,
-            'space_step': self.dx,
             'scheme_velocity': LA,
             'schemes': [
                 {

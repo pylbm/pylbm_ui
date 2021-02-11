@@ -11,7 +11,6 @@ class D1Q333(BaseModel, Scheme):
     s_rhox: RelaxationParameter
     s_ux: RelaxationParameter
     s_px: RelaxationParameter
-    dx: float
     la: float
 
     equation = Euler1D()
@@ -55,7 +54,6 @@ class D1Q333(BaseModel, Scheme):
 
         return {
             'dim': 1,
-            'space_step': self.dx,
             'scheme_velocity': LA,
             'schemes': [
                 {

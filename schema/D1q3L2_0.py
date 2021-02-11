@@ -6,12 +6,11 @@ from .utils import Scheme, RelaxationParameter
 
 
 class D1Q3L2(BaseModel, Scheme):
-    s_rho: RelaxationParameter 
-    s_u: RelaxationParameter 
+    s_rho: RelaxationParameter
+    s_u: RelaxationParameter
     s_p: RelaxationParameter
-    alpha: float 
-    dx: float 
-    la: float 
+    alpha: float
+    la: float
     equation = Euler1D()
     dim = 1
     name = 'D1Q3L2'
@@ -77,7 +76,6 @@ class D1Q3L2(BaseModel, Scheme):
 
         return {
             'dim': 1,
-            'space_step': self.dx,
             'scheme_velocity': LA,
             'schemes': [
                 {
@@ -131,9 +129,9 @@ class D1Q3L2(BaseModel, Scheme):
         print("""The scheme involves the following set of parameters:
 
     Relaxation rates (values must be in ]0,2[):
-        s_rho: the relaxation rate for the density equation  
-        s_u: the relaxation rate for the velocity equation 
-        s_p: the relaxation rate for the pressure equation 
+        s_rho: the relaxation rate for the density equation
+        s_u: the relaxation rate for the velocity equation
+        s_p: the relaxation rate for the pressure equation
     Other:
         alpha: ???
        """)
@@ -162,7 +160,7 @@ class D1Q3L2(BaseModel, Scheme):
         if printFlg:
             #print("Test case: {}".format(test_case_name))
             print("""Proposition of parameters for selected test case: {}
-(!valid for default test case parameters only!)  
+(!valid for default test case parameters only!)
     dx =              {}
     la = {}
     alpha =           {}
@@ -170,24 +168,24 @@ class D1Q3L2(BaseModel, Scheme):
     s_u =             {}
     s_p =             {}
        """.format(test_case_name, dx, la, alpha, srho, su, sp))
-            
+
         defParam = {
-            'dx': dx, 
+            'dx': dx,
             'la': la,
             's_rho': srho,
             's_u': su,
             's_p': sp,
             'alpha': alpha
             }
-        
+
         return defParam
-    
+
     def get_S(self):
         return {'s_rho': self.s_rho,
                 's_u': self.s_u,
                 's_p': self.s_p}
     def get_Disc(self):
-        return {'dx': self.dx, 
+        return {'dx': self.dx,
                 'la': self.la}
     def get_EquParams(self):
-        return {'alpha': self.alpha} 
+        return {'alpha': self.alpha}

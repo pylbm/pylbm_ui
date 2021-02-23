@@ -15,16 +15,29 @@ class Scheme:
         eqpde = pylbm.EquivalentEquation(scheme)
         return eqpde
 
-    def get_stability(self, state):
+    def get_stability(self, state, markers1, markers2):
         scheme = pylbm.Scheme(self.get_dictionary())
         stab = pylbm.Stability(scheme)
 
-        stab.is_notebook = True
-        stab.visualize(
-            {
-                'linearization': state,
-            }
-        )
+        consm0 = [0.] * len(stab.consm)
+        for k, moment in enumerate(stab.consm):
+            consm0[k] = state.get(moment, 0.)
+
+        n_wv = 512
+        v_xi, eigs = stab.eigenvalues(consm0, n_wv)
+        nx = v_xi.shape[1]
+
+        pos0 = np.empty((nx*stab.nvtot, 2))
+        for k in range(stab.nvtot):
+            pos0[nx*k:nx*(k+1), 0] = np.real(eigs[:, k])
+            pos0[nx*k:nx*(k+1), 1] = np.imag(eigs[:, k])
+        markers1.set_offsets(pos0)
+
+        pos1 = np.empty((nx*stab.nvtot, 2))
+        for k in range(stab.nvtot):
+            pos1[nx*k:nx*(k+1), 0] = np.max(v_xi, axis=0)
+            pos1[nx*k:nx*(k+1), 1] = np.abs(eigs[:, k])
+        markers2.set_offsets(pos1)
 
         return stab
 

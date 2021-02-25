@@ -17,7 +17,10 @@ class Scheme:
 
     def get_stability(self, state, markers1, markers2):
         scheme = pylbm.Scheme(self.get_dictionary())
-        stab = pylbm.Stability(scheme, True)
+        # FIXME: remove the output in the notebook by passing a boolean
+        #        True if we are in a notebook
+        #stab = pylbm.Stability(scheme, True)
+        stab = pylbm.Stability(scheme)
 
         consm0 = [0.] * len(stab.consm)
         for k, moment in enumerate(stab.consm):

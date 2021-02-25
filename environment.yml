@@ -1,0 +1,12 @@
+name: pylbm_ui
+channels:
+  - conda-forge
+dependencies:
+  - pylbm
+  - ipyvuetify
+  - ipympl
+  - markdown
+  - python-markdown-math
+  - pydantic
+  - scipy
+  - jupyterlab

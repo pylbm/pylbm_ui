@@ -1,12 +1,11 @@
-from ipywidgets import HBox, VBox, GridspecLayout, Dropdown, Layout, Button, FloatProgress, Text, HTML, Accordion, SelectMultiple, Tab, Output, ToggleButton, IntText, FloatText
 import ipywidgets as widgets
 import pylbm
 import asyncio
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-from ipympl.backend_nbagg import Canvas
 
+import ipyvuetify as v
 
 class simulation:
     def __init__(self):
@@ -20,18 +19,18 @@ class simulation:
             self.func[k] = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
 
     def init_sol(self, test_case, lb_scheme, codegen, discret):
-        simu_cfg = test_case.value.get_dictionary()
+        simu_cfg = test_case.get_dictionary()
         param = simu_cfg['parameters']
-        simu_cfg.update(lb_scheme.value.get_dictionary())
+        simu_cfg.update(lb_scheme.get_dictionary())
         param.update(simu_cfg['parameters'])
         simu_cfg['parameters'] = param
-        simu_cfg['space_step'] = discret['dx'].value
-        if codegen.value != 'auto':
-            simu_cfg['generator'] = codegen.value
+        simu_cfg['space_step'] = float(discret['dx'].v_model)
+        if codegen.v_model != 'auto':
+            simu_cfg['generator'] = codegen.v_model
 
         bound_cfg = {}
-        bound_tc = test_case.value.get_boundary()
-        bound_sc = lb_scheme.value.get_boundary()
+        bound_tc = test_case.get_boundary()
+        bound_sc = lb_scheme.get_boundary()
         for key, val in bound_tc.items():
             bound_cfg[key] = bound_sc[val]
 
@@ -66,203 +65,193 @@ def prepare_simu_fig():
     fig, ax = plt.subplots(figsize=(10,5))
     fig.canvas.header_visible = False
 
-    return fig.canvas
+    return fig.canvas, ax
 
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
 
-        default_layout = Layout(width='90%')
-
-        test_case = test_case_widget.case
-        lb_scheme = lb_scheme_widget.case
-        case_parameters = lb_scheme_widget.case_parameters
-
-        pause = ToggleButton(value=False,
-                            description='Pause',
-                            disabled=True,
-        )
-        start = ToggleButton(value=False,
-                       description='Start',
-                       button_style='success',
-        )
-        progress = FloatProgress(value=0.0, min=0.0, max=1.0,
-                                 layout=Layout(width='80%')
-        )
-
-        codegen = Dropdown(options=['auto', 'numpy', 'cython'],
-                           layout=default_layout,
-        )
+        test_case = test_case_widget.get_case()
+        lb_param = lb_scheme_widget.parameters
 
         simu = simulation()
-        simu.init_fields(lb_scheme.value.equation.get_fields())
-        fields_select = SelectMultiple(options=simu.fields.keys(),
-                                # description='<b>field(s)</b>',
-                                # style={'description_width': '50px'},
-                                layout=default_layout,
-        )
+        simu.init_fields(lb_scheme_widget.get_case().equation.get_fields())
 
-        results = Dropdown(options=simu.fields.keys(),
-                           layout=Layout(width="35%")
-        )
-        period = IntText(value=16,
-                         description='period (step):',
-                         continuous_update=True,
-                         layout=Layout(width="35%")
-        )
-        snapshot = Button(description='snapshot',
-                          button_style='primary',
-                          layout=Layout(width="20%")
-        )
 
-        self.scatter_plot = None
-        plot_output = prepare_simu_fig()
-
-        discret = {'nx': IntText(value=101,
-                                 continuous_update=True,
-                                 description='$N_{points}$',
-                                 style={'description_width': '50px'},
-                                 layout=default_layout),
-                   'dx': FloatText(value=test_case.value.size()/100,
-                                   continuous_update=True,
-                                   description='$\Delta x$',
-                                   style={'description_width': '50px'},
-                                   layout=default_layout),
-                   'nt': IntText(value=case_parameters['la'].value*101,
-                                 continuous_update=True,
-                                 description='$N_{step}$',
-                                 style={'description_width': '50px'},
-                                 layout=default_layout),
-                   'dt': FloatText(value=case_parameters['la'].value/100,
-                                   continuous_update=True,
-                                   description='$\Delta t$',
-                                   style={'description_width': '50px'},
-                                   layout=default_layout),
+        discret = {
+            'nx': v.TextField(label='Number of points', v_model=101, value=101, type='number'),
+            'dx': v.TextField(label='Space step', v_model=test_case.size()/100, value=101, type='number'),
+            'nt': v.TextField(label='Number of steps', v_model=float(lb_param['la'].v_model)*101, value=101, type='number'),
+            'dt': v.TextField(label='Time step', v_model=float(lb_param['la'].v_model)*0.01, value=101, type='number'),
         }
 
+        codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
+        left_panel = v.ExpansionPanels(children=[
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Discretization']),
+                v.ExpansionPanelContent(children=[
+                    v.Card(children=[
+                        v.CardTitle(children=['In space']),
+                        v.CardText(children=[
+                            discret['nx'],
+                            discret['dx'],
+                        ]),
+                    ], class_="ma-2"),
+                    v.Card(children=[
+                        v.CardTitle(children=['In time']),
+                        v.CardText(children=[
+                            discret['nt'],
+                            discret['dt'],
+                        ]),
+                    ], class_="ma-2"),
+                    v.Card(children=[
+                        v.CardTitle(children=['Scheme velocity']),
+                        v.CardText(children=[
+                            lb_param['la']
+                        ]),
+                    ], class_="ma-2"),
+                ]),
+            ]),
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Code generator']),
+                v.ExpansionPanelContent(children=[codegen]),
+            ]),
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Field output request']),
+                v.ExpansionPanelContent(children=[
+                    v.Select(items=list(simu.fields.keys()), multiple=True),
+                ]),
+            ]),
+        ], multiple=True)
 
-        artificial = Dropdown(options=['OFF', 'Mass', 'Momentum', 'Energy', 'Pressure'],
-                             tooltip="select the detector for artificial viscosity. Select OFF to avoid the use of artificial viscosity", layout=default_layout)
-        thetaFunc = Dropdown(options=["power","tanh"], layout=default_layout)
-        chi = FloatText(value = 2, description='Chi', tooltip="theta_chi", continuous_update=False, layout=default_layout)
-        threshold = FloatText(value = 1, description='Threshold', tooltip="theta_threshold", continuous_update=False, layout=default_layout)
-        sharpness = FloatText(value = 1, description='Sharpness', tooltip="theta_sharpness", continuous_update=False, layout=default_layout)
 
-        left_panel = VBox([HTML(value='<u><b>Simulation name</u></b>'),
-                           Text(value='simu',
-                                layout=default_layout
-                            ),
-                           HTML(value='<u><b>Settings</u></b>'),
-                           Accordion(children=[VBox([HTML('<b>In space</b>'), discret['nx'], discret['dx'],
-                                                     HTML('<b>In time</b>'), discret['nt'], discret['dt'],
-                                                     case_parameters['la'],
-                                     ])],
-                                     _titles={0: 'Discretization'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                           Accordion(children=[codegen],
-                                     _titles={0: 'Code generator'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                           Accordion(children=[fields_select],
-                                     _titles={0: 'Field output request'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                           Accordion(children=[VBox([artificial,
-                                                    Accordion(children=[VBox([thetaFunc,
-                                                                              chi,
-                                                                              threshold,
-                                                                              sharpness])],
-                                                              _titles={0: 'Parameters'},
-                                                              selected_index=None,
-                                                              layout=default_layout)])],
-                                     _titles={0: 'Artificial viscosity'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                            ],
-                           layout=Layout(align_items='center', margin= '10px')
-        )
+        #
+        # Right panel
+        #
 
-        right_panel = Tab([VBox([HBox([results, period, snapshot],
-                                 layout=Layout(display='flex', justify_content='space-between')),
-                                 plot_output])],
-                          _titles= {0: 'Live results',
-                          },
-        )
+        start = v.Btn(v_model=True, children=['Start'], class_="ma-2", style_="width: 100px", color='success')
+        pause = v.Btn(children=['Pause'], class_="ma-2", style_="width: 100px", disabled=True, v_model=False)
+        progress_bar = v.ProgressLinear(height=20, value=0, color="light-blue", striped=True)
+        result = v.Select(items=list(simu.fields.keys()), v_model=list(simu.fields.keys())[0])
+        period = v.TextField(label='Period', v_model=16, type='number')
+        self.scatter_plot = None
+        plot_output, ax = prepare_simu_fig()
+
+        right_panel = [
+            v.Row(children=[start, pause]),
+            progress_bar,
+            v.Row(children=[
+                v.Col(children=[result], sm=5),
+                v.Col(children=[period], sm=5),
+                v.Col(children=[v.Btn(children=['Snapshot'])], sm=2),
+            ], align='center', justify='center'),
+            v.Row(children=[plot_output])
+        ]
+
+
+        def stop_simulation(change):
+            start.v_model = True
+            start.children = ['Start']
+            start.color = 'success'
+            pause.disabled = True
+            pause.v_model = False
 
         async def run_simu(simu):
             nite = 1
 
-            t, x, data = simu.get_data(results.value)
+            test_case = test_case_widget.get_case()
+            t, x, data = simu.get_data(result.v_model)
             self.scatter_plot = plot(ax, self.scatter_plot, t, x, data)
             plot_output.draw_idle()
 
             await asyncio.sleep(0.01)
-            while simu.sol.t <= test_case.value.duration:
-                progress.value = simu.sol.t/test_case.value.duration
+            while simu.sol.t <= test_case.duration:
+                progress_bar.value = simu.sol.t/test_case.duration*100
 
-                if not pause.value:
+                if not pause.v_model:
                     simu.sol.one_time_step()
 
-                    if nite >= period.value:
+                    if nite >= int(period.v_model):
                         nite = 1
-                        t, x, data = simu.get_data(results.value)
+                        t, x, data = simu.get_data(result.v_model)
                         self.scatter_plot = plot(ax, self.scatter_plot, t, x, data)
                         plot_output.draw_idle()
 
                     nite += 1
 
-                await asyncio.sleep(0.1)
-                if not start.value:
+                await asyncio.sleep(0.01)
+                if start.v_model:
                     break
-            start.value = False
+            stop_simulation(None)
 
-        def start_simulation(change):
-            if start.value:
-                start.description = 'Stop'
-                start.button_style = 'danger'
+        def start_simulation(widget, event, data):
+            if start.v_model:
+                start.v_model = False
+                start.children = ['Stop']
+                start.color = 'error'
                 pause.disabled = False
+
+                test_case = test_case_widget.get_case()
+                lb_scheme = lb_scheme_widget.get_case()
+
                 simu.init_sol(test_case, lb_scheme, codegen, discret)
 
                 asyncio.ensure_future(run_simu(simu))
             else:
-                start.description = 'Start'
-                start.button_style = 'success'
-                pause.disabled = False
-                pause.value = False
+                stop_simulation(None)
 
-        start.observe(start_simulation, 'value')
+        def on_pause_click(widget, event, data):
+            pause.v_model = not pause.v_model
 
-        # FIX: We should only keep dx
+        def replot(change):
+            t, x, data = simu.get_data(result.v_model)
+            self.scatter_plot = plot(ax, self.scatter_plot, t, x, data)
+            plot_output.draw_idle()
+
+        start.on_event('click', start_simulation)
+        pause.on_event('click', on_pause_click)
+        result.observe(replot, 'v_model')
+
+        test_case_widget.case.observe(stop_simulation, 'v_model')
+        lb_scheme_widget.case.observe(stop_simulation, 'v_model')
+
         def observer(change):
             key = None
-            for k, v in discret.items():
-                if v == change.owner:
+            for k, value in discret.items():
+                if value == change.owner:
                     key = k
                     break
 
+
+            problem_size = test_case_widget.get_case().size()
+            la = float(lb_param['la'].v_model)
+
             if key == 'nx' or key is None:
-                discret['dx'].value = test_case.value.size()/discret['nx'].value
-                discret['nt'].value = case_parameters['la'].value*discret['nx'].value
-                discret['dt'].value = discret['dx'].value/case_parameters['la'].value
+                nx = float(discret['nx'].v_model)
+                dx = problem_size/nx
+                discret['dx'].v_model = dx
+                discret['nt'].v_model = la*nx
+                discret['dt'].v_model = dx/la
             elif key == 'dx':
-                discret['nx'].value = test_case.value.size()/discret['dx'].value
-                discret['nt'].value = case_parameters['la'].value*discret['nx'].value
-                discret['dt'].value = discret['dx'].value/case_parameters['la'].value
+                dx = float(discret['dx'].v_model)
+                discret['nx'].v_model = problem_size/dx
+                discret['nt'].v_model = la*discret['nx'].v_model
+                discret['dt'].v_model = dx/la
             elif key == 'nt':
-                discret['nx'].value = discret['nt'].value/case_parameters['la'].value
-                discret['dx'].value = test_case.value.size()/discret['nx'].value
-                discret['dt'].value = discret['dx'].value/case_parameters['la'].value
+                nt = float(discret['nt'].v_model)
+                discret['nx'].v_model = nt/la
+                discret['dx'].v_model = problem_size/discret['nx'].v_model
+                discret['dt'].v_model = discret['dx'].v_model/la
             elif key == 'dt':
-                discret['dx'].value = discret['dt'].value*case_parameters['la'].value
-                discret['nx'].value = test_case.value.size()/discret['dx'].value
-                discret['nt'].value = case_parameters['la'].value*discret['nx'].value
+                dt = float(discret['dt'].v_model)
+                discret['dx'].v_model = dt*la
+                discret['nx'].v_model = problem_size/discret['dx'].v_model
+                discret['nt'].v_model = la*discret['nx'].v_model
 
-        for v in discret.values():
-            v.observe(observer, 'value')
-        case_parameters['la'].observe(observer, 'value')
+        for value in discret.values():
+            value.observe(observer, 'v_model')
+        lb_param['la'].observe(observer, 'v_model')
 
-        self.widget = VBox([HBox([start, pause, progress]),
-                            GridspecLayout(1, 4)])
-        self.widget.children[1][0, 0] = left_panel
-        self.widget.children[1][0, 1:] = right_panel
-
+        self.widget = v.Row(children=[
+            v.Col(children=[left_panel], sm=3),
+            v.Col(children=right_panel)
+        ])

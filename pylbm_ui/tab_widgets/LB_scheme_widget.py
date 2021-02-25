@@ -1,70 +1,57 @@
-from ipywidgets import Dropdown, Output, VBox, Layout, Tab, Accordion, GridspecLayout, HTML, interaction
-import markdown
-import mdx_mathjax
-from IPython.display import display, Markdown
-import IPython.display as ipydisplay
+import ipyvuetify as v
+
 from ..utils import schema_to_widgets
+from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
 
 class LB_scheme_widget:
-
     def __init__(self, cases, default_case):
-        default_layout = Layout(width='100%')
-        self.case = Dropdown(
-            options=cases,
-            value=default_case,
-            disabled=False,
-            layout=default_layout
-        )
+        self.cases = cases
+        case = v.Select(items=list(cases.keys()), v_model=default_case, label='LBM schemes')
+        panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
 
-        self.case_parameters = schema_to_widgets(self.case.value)
+        self.parameters = None
+        description = Markdown()
+        properties = v.Layout()
 
-        param_widget = VBox([*self.case_parameters.values()])
+        tabs = Tabs(v_model=None, children=[v.Tab(children=['Description']),
+                                            v.Tab(children=['Properties']),
+                                            v.Tab(children=['Equivalent equations']),
+                                            v.TabItem(children=[description]),
+                                            v.TabItem(children=[properties]),
+                                            v.TabItem(children=[]),
+                                            ], right=True)
 
-        left_panel = VBox([HTML(value='<u><b>Select the LBM scheme</u></b>'),
-                           self.case,
-                           Accordion(children=[param_widget],
-                                     _titles={0: 'Show parameters'},
-                                     selected_index=None,
-                                     layout=default_layout)],
-                           layout=Layout(align_items='center', margin= '10px')
-        )
+        self.widget = v.Row(children=[v.Col(children=[case, panels], sm=3),
+                                      v.Col(children=[tabs])
+        ])
 
-        right_panel = Tab([Output(), Output(), Output()],
-                          _titles= {0: 'Description',
-                                    1: 'Properties',
-                                    2: 'Equivalent equations'
-                          },
-        )
-
-        def update_right_panel():
-            md_desc = markdown.markdown(self.case.value.description)
-            self.data = [ipydisplay.HTML(md_desc),
-                         self.case.value.get_information(),
-                         self.case.value.get_eqpde(),
-            ]
-            for i, d in enumerate(self.data):
-                with right_panel.children[i]:
-                    right_panel.children[i].clear_output()
-                    display(d)
-
-        def observer_param(change):
-            for k, v in self.case_parameters.items():
-                setattr(self.case.value, k, v.value)
-
-        for c in self.case_parameters.values():
-            c.observe(observer_param, 'value')
+        def change_param(change):
+            pass
 
         def change_case(change):
-            self.case_parameters = schema_to_widgets(self.case.value)
-            param_widget.children = [*self.case_parameters.values()]
-            for c in self.case_parameters.values():
-                c.observe(observer_param, 'value')
-            update_right_panel()
+            with out:
+                v_model = tabs.v_model
+                description.update_content(cases[case.v_model].description)
+                tabs.children[4].children = [Markdown(cases[case.v_model].description)]
+                self.parameters = schema_to_widgets(cases[case.v_model])
+                panels.children[0].update(self.parameters.values())
+                panels.children[0].bind(change_param)
+                tabs.v_model = v_model
 
-        self.case.observe(change_case, 'value')
+                if not tabs.viz:
+                    tabs.show()
+                    panels.children[0].show()
 
-        update_right_panel()
+                change_param(None)
 
-        self.widget = GridspecLayout(1, 4)
-        self.widget[0, 0] = left_panel
-        self.widget[0, 1:] = right_panel
+        case.observe(change_case, 'v_model')
+        panels.children[0].bind(change_param)
+        change_case(None)
+        self.case = case
+        self.panels = panels
+
+    def get_case(self):
+        select_case = self.cases[self.case.v_model]
+        for k, v in self.parameters.items():
+                setattr(select_case, k, float(v.v_model))
+        return select_case

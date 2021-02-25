@@ -1,71 +1,65 @@
-from ipywidgets import Dropdown, Output, VBox, Layout, Tab, Accordion, GridspecLayout, HTML, interaction
-import markdown
-import IPython.display as ipydisplay
+import ipyvuetify as v
+import matplotlib.pyplot as plt
 
 from ..utils import schema_to_widgets
+from .pylbmwidget import Markdown, ParametersPanel, Tabs
 
 class test_case_widget:
 
     def __init__(self, cases, default_case):
-        default_layout = Layout(width='100%')
-        self.case = Dropdown(options=cases,
-                             value=default_case,
-                             disabled=False,
-                             layout=default_layout
-        )
 
-        self.case_parameters = schema_to_widgets(self.case.value)
+        self.cases = cases
+        self.parameters = None
 
-        param_widget = VBox([*self.case_parameters.values()])
+        case = v.Select(items=list(cases.keys()), v_model=default_case, label='Test cases')
 
-        left_panel = VBox([HTML(value='<u><b>Select the test case</u></b>'),
-                           self.case,
-                           Accordion(children=[param_widget],
-                                     _titles={0: 'Show parameters'},
-                                     selected_index=None,
-                                     layout=default_layout)],
-                           layout=Layout(align_items='center', margin='10px')
-        )
+        panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
 
-        right_panel = Tab([Output(), Output()],
-                          _titles= {0: 'Description',
-                                    1: 'Reference results'
-                          },
-        )
+        description = Markdown()
+        plt.ioff()
+        fig = plt.figure(figsize=(12,6))
+        fig.canvas.header_visible = False
 
-        def update_right_panel():
-            with right_panel.children[0]:
-                right_panel.children[0].clear_output()
-                display(ipydisplay.HTML(markdown.markdown(self.case.value.description)))
+        tabs_content = [v.TabItem(children=[description]), v.TabItem(children=[fig.canvas])]
+        tabs = Tabs(v_model=None, children=[v.Tab(children=['Description']),
+                              v.Tab(children=['Reference results'])] + tabs_content, right=True)
 
-            interaction.show_inline_matplotlib_plots()
-            with right_panel.children[1]:
-                right_panel.children[1].clear_output()
-                self.plot_exact_solution()
-                interaction.show_inline_matplotlib_plots()
+        self.widget = v.Row(children=[v.Col(children=[case, panels], sm=3),
+                                      v.Col(children=[tabs])
+        ])
 
-        def observer(change):
-            update_right_panel()
+        def change_param(change):
+            v_model = panels.v_model
+            for axe in fig.axes:
+                fig.delaxes(axe)
+            panels.v_model = v_model
 
-        for c in self.case_parameters.values():
-            c.observe(observer, 'value')
+            select_case = cases[case.v_model]
+            for k, v in self.parameters.items():
+                setattr(select_case, k, float(v.v_model))
+            select_case.plot_ref_solution(fig)
+            fig.canvas.draw_idle()
+
 
         def change_case(change):
-            self.case_parameters = schema_to_widgets(self.case.value)
-            param_widget.children = [*self.case_parameters.values()]
-            for c in self.case_parameters.values():
-                c.observe(observer, 'value')
-            observer(None)
+            v_model = tabs.v_model
+            description.update_content(cases[case.v_model].description)
+            self.parameters = schema_to_widgets(cases[case.v_model])
+            panels.children[0].update(self.parameters.values())
+            panels.children[0].bind(change_param)
+            tabs.v_model = v_model
 
-        self.case.observe(change_case, 'value')
+            if not tabs.viz:
+                tabs.show()
+                panels.children[0].show()
 
-        update_right_panel()
+            change_param(None)
 
-        self.widget = GridspecLayout(1, 4)
-        self.widget[0, 0] = left_panel
-        self.widget[0, 1:] = right_panel
+        case.observe(change_case, 'v_model')
+        panels.children[0].bind(change_param)
+        change_case(None)
 
-    def plot_exact_solution(self):
-        for k, v in self.case_parameters.items():
-            setattr(self.case.value, k, v.value)
-        self.case.value.plot_ref_solution()
+        self.case = case
+
+    def get_case(self):
+        return self.cases[self.case.v_model]

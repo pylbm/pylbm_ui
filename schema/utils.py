@@ -17,13 +17,13 @@ class Scheme:
 
     def get_stability(self, state, markers1, markers2):
         scheme = pylbm.Scheme(self.get_dictionary())
-        stab = pylbm.Stability(scheme)
+        stab = pylbm.Stability(scheme, True)
 
         consm0 = [0.] * len(stab.consm)
         for k, moment in enumerate(stab.consm):
             consm0[k] = state.get(moment, 0.)
 
-        n_wv = 512
+        n_wv = 1024
         v_xi, eigs = stab.eigenvalues(consm0, n_wv)
         nx = v_xi.shape[1]
 

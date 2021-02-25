@@ -86,7 +86,7 @@ def solve(f1, f2, xa, xb, eps, nitermax=1000):
     """
     # ya, dya = f1(xa)
     # yb, dyb = f2(xb)
-    
+
     # x = (ya - xa * dya - yb + xb * dyb) / (dyb - dya)
     # if x <= 0:
     #     ya, dya = f2(xa)
@@ -94,7 +94,7 @@ def solve(f1, f2, xa, xb, eps, nitermax=1000):
     #     x = (ya - xa * dya - yb + xb * dyb) / (dyb - dya)
     # if x <= 0:
     #     print("Problem to compute interstate !!!")
-    
+
     def phi(x):
         return f1(x)[0] - f2(x)[0]
 
@@ -111,7 +111,7 @@ def solve(f1, f2, xa, xb, eps, nitermax=1000):
             xtol=1.e-10
         )
         # This should not happen:
-        if ier != 1: 
+        if ier != 1:
             print('Warning: fsolve did not converge.')
             print(msg)
 

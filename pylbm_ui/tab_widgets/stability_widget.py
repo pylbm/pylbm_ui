@@ -1,11 +1,9 @@
-from ipywidgets import Dropdown, Output, VBox, Layout, Tab, Accordion, GridspecLayout, HTML, Button
-import markdown
-import mdx_mathjax
-from IPython.display import display, Markdown
-import IPython.display as ipydisplay
+import ipyvuetify as v
 import matplotlib.pyplot as plt
 import numpy as np
+
 from ..utils import schema_to_widgets
+from .pylbmwidget import Markdown, ParametersPanel, Tabs, out, Container
 
 def prepare_stab_plot():
     plt.ioff()
@@ -40,86 +38,71 @@ def prepare_stab_plot():
 
     markers1 = ax1.scatter(0, 0, c='orange', s=0.5, alpha=0.5)
     markers2 = ax2.scatter(0, 0, c='orange', s=0.5, alpha=0.5)
-    return fig.canvas, markers1, markers2
+    return fig, markers1, markers2
 
 class stability_widget:
 
     def __init__(self, test_case_widget, LB_scheme_widget):
-        default_layout = Layout(width='100%')
+        case = LB_scheme_widget.get_case()
+        panels = LB_scheme_widget.panels
 
-        case = LB_scheme_widget.case
-        case_parameters = LB_scheme_widget.case_parameters
+        test_case = test_case_widget.get_case()
+        state = v.Select(label='States', items=[{'text':str(s), 'value': i} for i, s in enumerate(test_case.state())], v_model=0)
 
-        test_case = test_case_widget.case
-
-        param_widget = VBox([*case_parameters.values()])
-
-        left_panel = VBox([HTML(value='<u><b>Parameters</u></b>'),
-                           Accordion(children=[param_widget],
-                                     _titles={0: 'Scheme'},
-                                     selected_index=None,
-                                     layout=default_layout)],
-                           layout=Layout(align_items='center', margin='10px')
-        )
-
-        state = Dropdown(options=test_case.value.state(),
-                         layout=Layout(width='auto'),
-        )
-
-        stab_button = Button(description='>>> Click here to eval stability <<<',
-                             button_style='warning',
-                             layout=Layout(width='auto'),
-        )
-
-        stab_state = Button(disabled=True, layout=Layout(width='100%'))
-        stab_state.layout.visibility = 'hidden'
-
+        eval_stab = v.Btn(children=['Check stability'], color='primary')
+        alert = v.Alert(children=['Check the stability for this state...'], dense=True, type='info')
         stab_output, markers1, markers2 = prepare_stab_plot()
 
-        test_case_tab = VBox([HTML('<b>''Compute the linear stability for all the predefined physical states of the selected test case:'),
-                         state,
-                         HTML('Return UNSTABLE if at least ONE of the states is unstable'),
-                         stab_button,
-                         VBox([stab_state, stab_output]),
-                         ],
-                         layout=Layout(width='100%', align_items='center')
-        )
+        container = Container(children=[v.Row(children=[v.Col(children=[alert])]),
+                                          v.Row(children=[stab_output.canvas])],
+                                align_content_center=True,)
+        container.hide()
 
-        right_panel = Tab([test_case_tab, Output()],
-                          _titles= {0: 'Test case states',
-                                    1: 'User defined state',
-                          },
-        )
+        tabs_content = [v.TabItem(children=[v.Card(children=[v.CardTitle(children=['Compute the linear stability for all the predefined physical states of the selected test case:']),
+                                             v.CardText(children=[state, 'Return UNSTABLE if at least ONE of the states is unstable']),
+                                             v.CardActions(children=[v.Spacer(), eval_stab])
+                                             ],
+                                             class_="ma-6",
+                                             elevation=10),
+                                             container
+        ])]
+        tabs = Tabs(v_model=None, children=[v.Tab(children=['Test case states']),
+                                            v.Tab(children=['User defined state'])] + tabs_content, right=True)
 
-        def on_button_clicked(b):
-            stab_state.layout.visibility = 'visible'
-            stab_state.description = 'Compute eigenvalues ...'
-            stab_state.button_style = 'warning'
-            for k, v in case_parameters.items():
-                setattr(case.value, k, v.value)
+        def on_click(widget, event, data):
+            if not container.viz:
+                container.show()
 
-            stability = case.value.get_stability(state.value, markers1, markers2)
-            stab_output.draw_idle()
-            if stability.is_stable_l2:
-                stab_state.description = 'STABLE for this physical state'
-                stab_state.button_style = 'success'
-            else:
-                stab_state.description = 'UNSTABLE for the user defined physical state'
-                stab_state.button_style = 'danger'
+            if state.v_model is not None:
+                markers1.set_offsets([])
+                stab_output.canvas.draw_idle()
+
+                alert.type = 'info'
+                alert.children = ['Check the stability for this state...']
+                case = LB_scheme_widget.get_case()
+                stability = case.get_stability(test_case.state()[state.v_model], markers1, markers2)
+                stab_output.canvas.draw_idle()
+                if stability.is_stable_l2:
+                    alert.type = 'success'
+                    alert.children = ['STABLE for this physical state']
+                else:
+                    alert.type = 'error'
+                    alert.children = ['UNSTABLE for this physical state']
+
+        eval_stab.on_event('click', on_click)
 
         def change_test_case(change):
-            state.options = test_case.value.state()
-            stab_state.layout.visibility = 'hidden'
-            stab_output.clear_output()
+            test_case = test_case_widget.get_case()
+            state.items = [{'text':str(s), 'value': i} for i, s in enumerate(test_case.state())]
+            state.v_model = 0
 
-        def change_case(change):
-            case_parameters = schema_to_widgets(case.value)
-            param_widget.children = [*case_parameters.values()]
+        def hide_plot(change):
+            container.hide()
 
-        case.observe(change_case, 'value')
-        test_case.observe(change_test_case, 'value')
-        stab_button.on_click(on_button_clicked)
+        test_case_widget.case.observe(change_test_case, 'v_model')
+        test_case_widget.case.observe(hide_plot, 'v_model')
+        LB_scheme_widget.case.observe(hide_plot, 'v_model')
 
-        self.widget = GridspecLayout(1, 4)
-        self.widget[0, 0] = left_panel
-        self.widget[0, 1:] = right_panel
+        self.widget = v.Row(children=[v.Col(children=[panels], sm=3),
+                                      v.Col(children=[tabs])
+        ])

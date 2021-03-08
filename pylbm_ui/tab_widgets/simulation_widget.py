@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 import ipyvuetify as v
 
+from .save_widget import Save_widget
 class simulation:
     def __init__(self):
         self.sol = None
@@ -118,7 +119,7 @@ class simulation_widget:
             v.ExpansionPanel(children=[
                 v.ExpansionPanelHeader(children=['Field output request']),
                 v.ExpansionPanelContent(children=[
-                    v.Select(items=list(simu.fields.keys()), multiple=True),
+                    Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys())).widget
                 ]),
             ]),
         ], multiple=True)

@@ -3,7 +3,7 @@ import ipyvuetify as v
 from .pylbmwidget import out
 
 import enum
-from traitlets import List, UseEnum
+from traitlets import List, UseEnum, Unicode
 
 class SaveType(enum.Enum):
     frequency = 'Frequency'
@@ -16,11 +16,13 @@ class SaveForm(v.Form):
     def __init__(self, fields):
         self.select_field = v.Select(label='Fields', v_model=None, items=fields, required=True, multiple=True)
         self.select_when = v.Select(label='When', v_model=None, items=[t.value for t in SaveType], required=True)
-
+        self.when_properties = v.TextField(label='when save the fields?', v_model=None, required=True)
         self.select_field.observe(self.select_fields_rules, 'v_model')
         self.select_when.observe(self.select_when_rules, 'v_model')
+        self.select_when.observe(self.when_properties_rules, 'v_model')
+        self.when_properties.observe(self.when_properties_rules, 'v_model')
 
-        super().__init__(v_model='valid', children=[self.select_field, self.select_when,])
+        super().__init__(v_model='valid', children=[self.select_field, self.select_when,self.when_properties,])
 
     def select_fields_rules(self, change):
         if self.select_field.v_model is None:
@@ -42,9 +44,53 @@ class SaveForm(v.Form):
             self.select_when.error = False
             self.v_model = True
 
+    def when_properties_rules(self, change):
+        with out:
+            if self.select_when.v_model in ['Frequency', 'Step period']:
+                try:
+                    int(self.when_properties.v_model)
+                    self.when_properties.rules = []
+                    self.when_properties.error = False
+                    self.v_model = True
+                except:
+                    self.when_properties.rules = ['You must enter an integer']
+                    self.when_properties.error = True
+                    self.v_model = False
+            if self.select_when.v_model == 'List of steps':
+                try:
+                    list(map(int, self.when_properties.v_model.split(',')))
+                    self.when_properties.rules = []
+                    self.when_properties.error = False
+                    self.v_model = True
+                except:
+                    self.when_properties.rules = ['You must enter a list of integers. For example: 1, 5, 6']
+                    self.when_properties.error = True
+                    self.v_model = False
+            if self.select_when.v_model == 'List of times':
+                try:
+                    list(map(float, self.when_properties.v_model.split(',')))
+                    self.when_properties.rules = []
+                    self.when_properties.error = False
+                    self.v_model = True
+                except:
+                    self.when_properties.rules = ['You must enter a list of floats. For example: 0.1, 0.25, 0.6']
+                    self.when_properties.error = True
+                    self.v_model = False
+            if self.select_when.v_model == 'Time period':
+                try:
+                    float(self.when_properties.v_model)
+                    self.when_properties.rules = []
+                    self.when_properties.error = False
+                    self.v_model = True
+                except:
+                    self.when_properties.rules = ['You must enter a float.']
+                    self.when_properties.error = True
+                    self.v_model = False
+
     def check_rules(self):
         self.select_fields_rules(None)
         self.select_when_rules(None)
+        self.when_properties_rules(None)
 
     def reset_form(self):
         self.select_field.v_model = None
@@ -55,11 +101,18 @@ class SaveForm(v.Form):
         self.select_when.rules = []
         self.select_when.error = False
 
+        self.when_properties.v_model = None
+        self.when_properties.rules = []
+        self.when_properties.error = False
+
         self.v_model = False
 
+    def __str__(self):
+        return ', '.join(self.select_field.v_model) + f' ({self.select_when.v_model}: {self.when_properties.v_model})'
 class SaveChip(v.Chip):
     fields = List()
     when = UseEnum(SaveType)
+    when_properties = Unicode()
 
     def __init__(self, all_fields, **kwargs):
         self.form = SaveForm(all_fields)
@@ -98,13 +151,15 @@ class SaveChip(v.Chip):
             if self.form.v_model:
                     self.fields = self.form.select_field.v_model
                     self.when = SaveType(self.form.select_when.v_model)
-                    self.children = [', '.join(self.form.select_field.v_model) + f' ({self.form.select_when.v_model})', self.update_dialog]
+                    self.when_properties = self.form.when_properties.v_model
+                    self.children = [f'{self.form}', self.update_dialog]
                     self.update_dialog.v_model = False
 
     def update_chip(self, widget, event, data):
         self.form.reset_form()
         self.form.select_field.v_model = self.fields
         self.form.select_when.v_model =  self.when.value
+        self.form.when_properties.v_model =  self.when_properties
         self.update_dialog.v_model = True
 
 class Save_widget:
@@ -138,7 +193,12 @@ class Save_widget:
                 form.check_rules()
 
                 if form.v_model:
-                    new_chip = SaveChip(all_fields, fields=form.select_field.v_model, when=SaveType(form.select_when.v_model), children=[', '.join(form.select_field.v_model) + f' ({form.select_when.v_model})'], close=True)
+                    new_chip = SaveChip(all_fields,
+                                        fields=form.select_field.v_model,
+                                        when=SaveType(form.select_when.v_model),
+                                        when_properties=form.when_properties.v_model,
+                                        children=[f'{form}']
+                                        , close=True)
                     new_chip_index = len(chip_group.children)
                     chip_group.children.append(new_chip)
                     create_dialog.v_model = False

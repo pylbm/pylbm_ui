@@ -2,73 +2,50 @@ import ipyvuetify as v
 import markdown
 import ipywidgets as widgets
 
+from .design_space import Design_widget
+from ..utils import required_fields
+
 class parametric_widget:
-    def __init__(self):
-        default_layout = widgets.Layout(width='90%')
+    def __init__(self, test_case_widget, lb_scheme_widget):
 
-        pause = widgets.ToggleButton(value=False,
-                            description='Pause',
-                            disabled=True,
-        )
-        start = widgets.ToggleButton(value=False,
-                       description='Start',
-                       button_style='success',
-        )
-        progress = widgets.FloatProgress(value=0.0, min=0.0, max=1.0,
-                                 layout=widgets.Layout(width='80%')
-        )
+        fields = required_fields(test_case_widget.get_case())
+        fields.update(required_fields(lb_scheme_widget.get_case()))
 
-        design_space = widgets.VBox([widgets.Dropdown(options=["duration",markdown.markdown("$\delta x$")], layout=default_layout),
-                                     widgets.FloatText(description='min',
-                                                       style={'description_width': '50px'},
-                                                       layout=default_layout),
-                                     widgets.FloatText(description='max',
-                                                       style={'description_width': '50px'},
-                                                       layout=default_layout),
-                                     widgets.HBox([widgets.Button(description='clear', button_style='danger'),
-                                                  widgets.Button(description='remove', button_style='warning'),
-                                                  widgets.Button(description='add', button_style='success'),
-                                    ])
+        parameters = {'relaxation parameters': None}
+        parameters.update({f: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
+        relax_parameters = {f: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
+
+        left_panel = v.ExpansionPanels(children=[
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Design space']),
+                v.ExpansionPanelContent(children=[
+                    Design_widget(parameters, relax_parameters).widget
+                ]),
+            ]),
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Responses']),
+            ]),
+            v.ExpansionPanel(children=[
+                v.ExpansionPanelHeader(children=['Methods']),
+            ]),
+        ], multiple=True)
+
+        #
+        # Right panel
+        #
+
+        start = v.Btn(v_model=True, children=['Start'], class_="ma-2", style_="width: 100px", color='success')
+        pause = v.Btn(children=['Pause'], class_="ma-2", style_="width: 100px", disabled=True, v_model=False)
+        progress_bar = v.ProgressLinear(height=20, value=0, color="light-blue", striped=True)
+        plotly_plot = v.Layout()
+
+        right_panel = [
+            v.Row(children=[start, pause]),
+            progress_bar,
+            v.Row(children=[plotly_plot])
+        ]
+
+        self.widget = v.Row(children=[
+            v.Col(children=[left_panel], sm=3),
+            v.Col(children=right_panel)
         ])
-
-        responses = widgets.VBox([widgets.Dropdown(options=["duration","$\delta x$"], layout=default_layout),
-                                  widgets.HBox([widgets.Button(description='clear', button_style='danger'),
-                                                widgets.Button(description='remove', button_style='warning'),
-                                                widgets.Button(description='add', button_style='success'),
-                                  ])
-        ])
-
-        methods = widgets.FloatText(description='nb points',
-                                    style={'description_width': '50px'},
-                                    layout=default_layout)
-
-        left_panel = widgets.VBox([widgets.HTML(value='<u><b>Study name</u></b>'),
-                           widgets.Text(value='PS0',
-                                layout=default_layout
-                            ),
-                           widgets.HTML(value='<u><b>Select simulation</u></b>'),
-                           widgets.Button(description='update simulation list'),
-                           widgets.HTML(value='<u><b>Settings</u></b>'),
-                           widgets.Accordion(children=[design_space],
-                                     _titles={0: 'Define design space'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                           widgets.Accordion(children=[responses],
-                                     _titles={0: 'Select responses'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                           widgets.Accordion(children=[methods],
-                                     _titles={0: 'Methods'},
-                                     selected_index=None,
-                                     layout=default_layout),
-                            ],
-                           layout=widgets.Layout(align_items='center', margin= '10px')
-        )
-
-        right_panel = widgets.Tab(_titles= {0: 'Post-treatment'},
-        )
-
-        self.widget = widgets.VBox([widgets.HBox([start, pause, progress]),
-                            widgets.GridspecLayout(1, 4)])
-        self.widget.children[1][0, 0] = left_panel
-        self.widget.children[1][0, 1:] = right_panel

@@ -82,6 +82,10 @@ class ParametersPanel(PylbmWidget, v.ExpansionPanel):
         for param in self.children[1].children:
             param.observe(method, 'v_model')
 
+    def unbind(self, method):
+        for param in self.children[1].children:
+            param.unobserve(method, 'v_model')
+
 class Tabs(PylbmWidget, v.Tabs):
     def __init__(self, **kwargs):
         super().__init__(

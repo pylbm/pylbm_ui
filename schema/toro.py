@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 import pylbm
+import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 
@@ -7,8 +7,9 @@ import numpy as np
 from .equation_type import EquationType, Euler1D
 from .exact_solvers import EulerSolver as exact_solver
 from .exact_solvers import riemann_pb
+from .utils import HashBaseModel
 
-class ToroCase(BaseModel):
+class ToroCase(HashBaseModel):
     rho_left: float
     rho_right: float
     u_left: float
@@ -74,7 +75,7 @@ class ToroCase(BaseModel):
         }
 
     def size(self):
-        return self.xmax-self.xmin
+        return self.xmax - self.xmin
 
     def state(self):
         return [{self.equation.rho: self.rho_left,
@@ -84,17 +85,6 @@ class ToroCase(BaseModel):
                  self.equation.q: self.rho_right*self.u_right,
                  self.equation.E: .5*self.rho_right*self.u_right**2 + self.p_right/(self.gamma-1.)},
         ]
-
-    def print_description(self):
-        #c_left = np.sqrt(self.gamma*self.p_left/self.rho_left)
-        #c_right = np.sqrt(self.gamma*self.p_right/self.rho_right)
-        #mach_left = self.u_left / c_left
-        #mach_right = self.u_right / c_right
-        #print("*"*80)
-        #print("Left Mach number:  {:10.7f}".format(mach_left))
-        #print("Right Mach number: {:10.7f}".format(mach_right))
-        #print("*"*80)
-        print(self.description)
 
     def get_ref_solution(self, t, x, field=None):
         exact_solution = exact_solver({
@@ -131,7 +121,7 @@ class ToroCase(BaseModel):
         mach_e = np.sqrt(q_e**2/(self.gamma*rho_e*p_e))
 
         gs = fig.add_gridspec(2, 4)
-        gs.update(wspace=0.3, hspace=0.3)
+        # gs.update(wspace=0.3, hspace=0.3)
         ax = fig.add_subplot(gs[0, 0])
         ax.set_title('Mass')
         ax.plot(x_e, rho_e, color='black')

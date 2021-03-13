@@ -4,6 +4,20 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import io
+from pydantic import BaseModel
+
+def freeze(d):
+    if isinstance(d, dict):
+        return frozenset((key, freeze(value)) for key, value in d.items())
+    elif isinstance(d, list):
+        return tuple(freeze(value) for value in d)
+    return d
+
+class HashBaseModel(BaseModel):
+    def __hash__(self):
+        set = frozenset((type(self),))
+        set.union(freeze(self.__dict__))
+        return hash(set)
 
 class Scheme:
     def get_information(self):
@@ -17,9 +31,6 @@ class Scheme:
 
     def get_stability(self, state, markers1, markers2):
         scheme = pylbm.Scheme(self.get_dictionary())
-        # FIXME: remove the output in the notebook by passing a boolean
-        #        True if we are in a notebook
-        #stab = pylbm.Stability(scheme, True)
         stab = pylbm.Stability(scheme)
 
         consm0 = [0.] * len(stab.consm)

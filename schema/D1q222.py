@@ -3,10 +3,10 @@ import sympy as sp
 import pylbm
 import traitlets
 from .equation_type import EquationType, Euler1D
-from .utils import Scheme, RelaxationParameter
+from .utils import HashBaseModel, Scheme, RelaxationParameter
 
 
-class D1Q222(BaseModel, Scheme):
+class D1Q222(HashBaseModel, Scheme):
     s_rho: RelaxationParameter
     s_u: RelaxationParameter
     s_p: RelaxationParameter

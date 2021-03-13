@@ -2,10 +2,10 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import EquationType, Euler1D
-from .utils import Scheme, RelaxationParameter
+from .utils import HashBaseModel, Scheme, RelaxationParameter
 
 
-class D1Q3L2(BaseModel, Scheme):
+class D1Q3L2(HashBaseModel, Scheme):
     s_rho: RelaxationParameter
     s_u: RelaxationParameter
     s_p: RelaxationParameter
@@ -125,16 +125,21 @@ class D1Q3L2(BaseModel, Scheme):
             },
         }
 
-    def print_description(self):
-        print("""The scheme involves the following set of parameters:
+    @property
+    def description(self):
+        return """
+The scheme involves the following set of parameters:
 
-    Relaxation rates (values must be in ]0,2[):
-        s_rho: the relaxation rate for the density equation
-        s_u: the relaxation rate for the velocity equation
-        s_p: the relaxation rate for the pressure equation
-    Other:
-        alpha: ???
-       """)
+Relaxation rates (values must be in $]0,2[$):
+
+- $s_\rho$: the relaxation rate for the density equation
+- $s_u$: the relaxation rate for the velocity equation
+- $s_p$: the relaxation rate for the pressure equation
+
+Other:
+
+- alpha: ???
+    """
 
     def get_default_parameters(self, test_case_name='none', printFlg=False):
         alpha = 0.125

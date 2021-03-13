@@ -1,15 +1,15 @@
-import ipyvuetify as v
 import matplotlib.pyplot as plt
+import ipyvuetify as v
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, Tabs
+from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
 
-class test_case_widget:
+class Test_case_widget:
 
     def __init__(self, cases, default_case):
 
         self.cases = cases
-        self.parameters = None
+        self.parameters = {}
 
         case = v.Select(items=list(cases.keys()), v_model=default_case, label='Test cases')
 
@@ -21,9 +21,9 @@ class test_case_widget:
         fig.canvas.header_visible = False
 
         tabs_content = [v.TabItem(children=[description]), v.TabItem(children=[fig.canvas])]
-        tabs = Tabs(v_model=None, children=[v.Tab(children=['Description']),
-                              v.Tab(children=['Reference results'])] + tabs_content, right=True)
-
+        tabs = Tabs(v_model=None,
+                     children=[v.Tab(children=['Description']),
+                               v.Tab(children=['Reference results'])] + tabs_content, right=True)
         self.widget = v.Row(children=[v.Col(children=[case, panels], sm=3),
                                       v.Col(children=[tabs])
         ])
@@ -37,23 +37,26 @@ class test_case_widget:
             select_case = cases[case.v_model]
             for k, v in self.parameters.items():
                 setattr(select_case, k, float(v.v_model))
-            select_case.plot_ref_solution(fig)
-            fig.canvas.draw_idle()
-
+            if hasattr(select_case, 'plot_ref_solution'):
+                select_case.plot_ref_solution(fig)
+                fig.canvas.draw_idle()
 
         def change_case(change):
-            v_model = tabs.v_model
-            description.update_content(cases[case.v_model].description)
-            self.parameters = schema_to_widgets(cases[case.v_model])
-            panels.children[0].update(self.parameters.values())
-            panels.children[0].bind(change_param)
-            tabs.v_model = v_model
+            with out:
+                panels.children[0].unbind(change_param)
+                v_model = tabs.v_model
+                description.update_content(cases[case.v_model].description)
+                self.parameters = schema_to_widgets(self.parameters, cases[case.v_model])
+                panels.children[0].update(self.parameters.values())
+                panels.children[0].bind(change_param)
+                tabs.v_model = v_model
 
-            if not tabs.viz:
-                tabs.show()
-                panels.children[0].show()
+                if not tabs.viz:
+                    tabs.show()
+                    panels.children[0].show()
 
-            change_param(None)
+                change_param(None)
+                panels.children[0].bind(change_param)
 
         case.observe(change_case, 'v_model')
         panels.children[0].bind(change_param)
@@ -61,5 +64,5 @@ class test_case_widget:
 
         self.case = case
 
-    def get_case(self):
+    def get_case(self, update_param=False):
         return self.cases[self.case.v_model]

@@ -10,7 +10,6 @@ def prepare_stab_plot():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     fig.canvas.header_visible = False
-    fig.canvas.toolbar_visible = False
 
     ax1.axis([-1.1, 1.1, -1.1, 1.1])
     ax1.grid(visible=False)
@@ -54,7 +53,7 @@ class stability_widget:
         stab_output, markers1, markers2 = prepare_stab_plot()
 
         container = Container(children=[v.Row(children=[v.Col(children=[alert])]),
-                                          v.Row(children=[stab_output.canvas])],
+                                        v.Row(children=[stab_output.canvas], align='center', justify='center')],
                                 align_content_center=True,)
         container.hide()
 
@@ -70,24 +69,26 @@ class stability_widget:
                                             v.Tab(children=['User defined state'])] + tabs_content, right=True)
 
         def on_click(widget, event, data):
-            if not container.viz:
-                container.show()
+            with out:
+                if not container.viz:
+                    container.show()
 
-            if state.v_model is not None:
-                markers1.set_offsets([])
-                stab_output.canvas.draw_idle()
+                if state.v_model is not None:
+                    markers1.set_offsets([])
+                    markers2.set_offsets([])
+                    stab_output.canvas.draw_idle()
 
-                alert.type = 'info'
-                alert.children = ['Check the stability for this state...']
-                case = LB_scheme_widget.get_case()
-                stability = case.get_stability(test_case.state()[state.v_model], markers1, markers2)
-                stab_output.canvas.draw_idle()
-                if stability.is_stable_l2:
-                    alert.type = 'success'
-                    alert.children = ['STABLE for this physical state']
-                else:
-                    alert.type = 'error'
-                    alert.children = ['UNSTABLE for this physical state']
+                    alert.type = 'info'
+                    alert.children = ['Check the stability for this state...']
+                    case = LB_scheme_widget.get_case()
+                    stability = case.get_stability(test_case.state()[state.v_model], markers1, markers2)
+                    stab_output.canvas.draw_idle()
+                    if stability.is_stable_l2:
+                        alert.type = 'success'
+                        alert.children = ['STABLE for this physical state']
+                    else:
+                        alert.type = 'error'
+                        alert.children = ['UNSTABLE for this physical state']
 
         eval_stab.on_event('click', on_click)
 
@@ -101,7 +102,7 @@ class stability_widget:
 
         test_case_widget.case.observe(change_test_case, 'v_model')
         test_case_widget.case.observe(hide_plot, 'v_model')
-        LB_scheme_widget.case.observe(hide_plot, 'v_model')
+        LB_scheme_widget.select_case.observe(hide_plot, 'v_model')
 
         self.widget = v.Row(children=[v.Col(children=[panels], sm=3),
                                       v.Col(children=[tabs])

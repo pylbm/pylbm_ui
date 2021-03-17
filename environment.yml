@@ -10,3 +10,5 @@ dependencies:
   - pydantic
   - scipy
   - jupyterlab
+  - pathos
+  - scikit-optimize

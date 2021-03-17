@@ -100,8 +100,8 @@ class stability_widget:
         def hide_plot(change):
             container.hide()
 
-        test_case_widget.case.observe(change_test_case, 'v_model')
-        test_case_widget.case.observe(hide_plot, 'v_model')
+        test_case_widget.select_case.observe(change_test_case, 'v_model')
+        test_case_widget.select_case.observe(hide_plot, 'v_model')
         LB_scheme_widget.select_case.observe(hide_plot, 'v_model')
 
         self.widget = v.Row(children=[v.Col(children=[panels], sm=3),

@@ -62,7 +62,7 @@ class LB_scheme_widget:
 
         select_case.observe(change_case, 'v_model')
 
-        tc.case.observe(change_test_case, 'v_model')
+        tc.select_case.observe(change_test_case, 'v_model')
 
         panels.children[0].bind(change_param)
         change_case(None)
@@ -72,5 +72,10 @@ class LB_scheme_widget:
     def get_case(self):
         case = self.cases[self.select_case.v_model]
         for k, v in self.parameters.items():
-                setattr(case, k, float(v.v_model))
+            attr = getattr(case, k)
+            value = float(v.v_model)
+            if hasattr(attr, 'value'):
+                attr.value = float(v.v_model)
+            else:
+                attr = float(v.v_model)
         return case

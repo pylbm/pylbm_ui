@@ -11,7 +11,7 @@ class Test_case_widget:
         self.cases = cases
         self.parameters = {}
 
-        case = v.Select(items=list(cases.keys()), v_model=default_case, label='Test cases')
+        select_case = v.Select(items=list(cases.keys()), v_model=default_case, label='Test cases')
 
         panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
 
@@ -24,7 +24,7 @@ class Test_case_widget:
         tabs = Tabs(v_model=None,
                      children=[v.Tab(children=['Description']),
                                v.Tab(children=['Reference results'])] + tabs_content, right=True)
-        self.widget = v.Row(children=[v.Col(children=[case, panels], sm=3),
+        self.widget = v.Row(children=[v.Col(children=[select_case, panels], sm=3),
                                       v.Col(children=[tabs])
         ])
 
@@ -34,19 +34,19 @@ class Test_case_widget:
                 fig.delaxes(axe)
             panels.v_model = v_model
 
-            select_case = cases[case.v_model]
+            case = cases[select_case.v_model]
             for k, v in self.parameters.items():
-                setattr(select_case, k, float(v.v_model))
-            if hasattr(select_case, 'plot_ref_solution'):
-                select_case.plot_ref_solution(fig)
+                setattr(case, k, float(v.v_model))
+            if hasattr(case, 'plot_ref_solution'):
+                case.plot_ref_solution(fig)
                 fig.canvas.draw_idle()
 
         def change_case(change):
             with out:
                 panels.children[0].unbind(change_param)
                 v_model = tabs.v_model
-                description.update_content(cases[case.v_model].description)
-                self.parameters = schema_to_widgets(self.parameters, cases[case.v_model])
+                description.update_content(cases[select_case.v_model].description)
+                self.parameters = schema_to_widgets(self.parameters, cases[select_case.v_model])
                 panels.children[0].update(self.parameters.values())
                 panels.children[0].bind(change_param)
                 tabs.v_model = v_model
@@ -58,11 +58,11 @@ class Test_case_widget:
                 change_param(None)
                 panels.children[0].bind(change_param)
 
-        case.observe(change_case, 'v_model')
+        select_case.observe(change_case, 'v_model')
         panels.children[0].bind(change_param)
         change_case(None)
 
-        self.case = case
+        self.select_case = select_case
 
     def get_case(self, update_param=False):
-        return self.cases[self.case.v_model]
+        return self.cases[self.select_case.v_model]

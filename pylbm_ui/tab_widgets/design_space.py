@@ -4,21 +4,54 @@ from .pylbmwidget import out
 
 import enum
 from traitlets import Unicode, Float, List
+from ..utils import required_fields
 
+def get_parameters(test_case, lb_case):
+    fields = required_fields(test_case_widget.get_case())
+    fields.update(required_fields(lb_scheme_widget.get_case()))
+
+    parameters = {'relaxation parameters': None}
+    parameters.update({v['name']: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
+    relax_parameters = {v['name']: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
+
+    params = {k: params[k] for k in sorted(params)}
+    relax_params = {k: relax_params[k] for k in sorted(relax_params)}
+
+    return params, relax_params
 class DesignForm(v.Form):
-    def __init__(self, params, relax_params):
-        self.params = params
-        self.select_param = v.Select(label='Parameters', v_model=None, items=sorted(params), multiple=False, required=True)
-        self.select_relax = v.Select(label='Relaxation parameters', v_model=[], items=sorted(relax_params), multiple=True, required=True, class_='d-none')
+    def __init__(self, test_case_widget, lb_scheme_widget):
+        self.test_case_widget, self.lb_scheme_widget = test_case_widget, lb_scheme_widget
+        self.params, self.relax_params = None, None
+
+        self.select_param = v.Select(label='Parameters', v_model=None, items=[], multiple=False, required=True)
+        self.select_relax = v.Select(label='Relaxation parameters', v_model=[], items=[], multiple=True, required=True, class_='d-none')
         self.min = v.TextField(label='Enter the minimum', v_model=None, required=True, class_='d-none')
         self.max = v.TextField(label='Enter the maximum', v_model=None, required=True, class_='d-none')
 
+        self.update_select_fields(None)
+
+        test_case_widget.select_case.observe(self.update_select_fields, 'v_model')
+        lb_scheme_widget.select_case.observe(self.update_select_fields, 'v_model')
         self.select_param.observe(self.select_param_changed, 'v_model')
         self.select_relax.observe(self.select_relax_rules, 'v_model')
         self.min.observe(self.minmax_rules, 'v_model')
         self.max.observe(self.minmax_rules, 'v_model')
 
         super().__init__(v_model='valid', children=[self.select_param, self.select_relax, self.min, self.max])
+
+    def update_select_fields(self, change):
+        fields = required_fields(self.test_case_widget.get_case())
+        fields.update(required_fields(self.lb_scheme_widget.get_case()))
+
+        params = {'relaxation parameters': None}
+        params.update({v['name']: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
+        relax_params = {v['name']: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
+
+        self.params = {k: params[k] for k in sorted(params)}
+        self.relax_params = {k: relax_params[k] for k in sorted(relax_params)}
+
+        self.select_param.items = list(self.params.keys())
+        self.select_relax.items = list(self.relax_params.keys())
 
     def select_param_changed(self, change):
         with out:
@@ -28,8 +61,12 @@ class DesignForm(v.Form):
                     self.max.v_model = 1
                     self.select_relax.class_ = ''
                 else:
-                    self.min.v_model = self.params[self.select_param.v_model]
-                    self.max.v_model = self.params[self.select_param.v_model]
+                    if hasattr(self.params[self.select_param.v_model], 'value'):
+                        value = self.params[self.select_param.v_model].value
+                    else:
+                        value = self.params[self.select_param.v_model]
+                    self.min.v_model = value
+                    self.max.v_model = value
                     self.select_relax.class_ = 'd-none'
                     self.select_relax.v_model = []
                 self.min.class_ = ''
@@ -40,7 +77,6 @@ class DesignForm(v.Form):
     def select_relax_rules(self, change):
         with out:
             if self.select_param.v_model == 'relaxation parameters':
-                print(self.select_relax.v_model)
                 if self.select_relax.v_model == []:
                     self.select_relax.rules = ['You must select at least one relaxation parameter']
                     self.select_relax.error = True
@@ -203,7 +239,7 @@ class Design_widget:
             ]),
         ])
 
-        chip_group = v.ChipGroup(children=[], column=True)
+        self.chip_group = v.ChipGroup(children=[], column=True)
         add_button = v.Btn(children=[v.Icon(children=['mdi-plus']), create_dialog], fab=True, color='pink', small=True, icon=True)
 
         def close_click(widget, event, data):
@@ -221,17 +257,17 @@ class Design_widget:
                                         max=float(form.max.v_model),
                                         children=[f'{form}']
                                         , close=True)
-                    new_chip_index = len(chip_group.children)
-                    chip_group.children.append(new_chip)
+                    new_chip_index = len(self.chip_group.children)
+                    self.chip_group.children.append(new_chip)
                     create_dialog.v_model = False
 
                     def close_chip(widget, event, data):
-                        chip_group.children.remove(widget)
-                        chip_group.notify_change({'name': 'children', 'type': 'change'})
+                        self.chip_group.children.remove(widget)
+                        self.chip_group.notify_change({'name': 'children', 'type': 'change'})
 
                     new_chip.on_event('click:close', close_chip)
                     new_chip.on_event('click', new_chip.update_chip)
-                    chip_group.notify_change({'name': 'children', 'type': 'change'})
+                    self.chip_group.notify_change({'name': 'children', 'type': 'change'})
 
         create_close.on_event('click', close_click)
         create_add.on_event('click', add_click)
@@ -244,6 +280,16 @@ class Design_widget:
         add_button.on_event('click', on_add_click)
 
         self.widget = v.Card(children=[
-            v.CardText(children=[chip_group]),
+            v.CardText(children=[self.chip_group]),
             v.CardActions(children=[v.Spacer(), add_button])
         ])
+
+    def design_space(self):
+        with out:
+            output = {}
+            for c in self.chip_group.children:
+                if c.relax:
+                    output.update({tuple(c.relax): (c.min, c.max)})
+                else:
+                    output.update({c.param: (c.min, c.max)})
+            return output

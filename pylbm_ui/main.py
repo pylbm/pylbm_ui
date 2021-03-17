@@ -70,7 +70,6 @@ def main():
 
     tc = Test_case_widget(cases, default_case)
     lb = LB_scheme_widget(tc, known_cases)
-    # lb = LB_scheme_widget(schemeDic, default_scheme, known_cases)
 
     tab_contents = {'Test case': tc.widget,
                     'Scheme': lb.widget,

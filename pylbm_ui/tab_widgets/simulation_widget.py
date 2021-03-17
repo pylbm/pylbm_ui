@@ -155,8 +155,9 @@ class simulation_widget:
             period = v.TextField(label='Period', v_model=16, type='number')
             self.plot = None
             self.cb = None
-            fig, ax = prepare_simu_fig()
-            plot_output = fig.canvas
+            self.fig = None
+            self.ax = None
+            plot_output = v.Row()
 
             right_panel = [
                 v.Row(children=[start, pause]),
@@ -166,7 +167,7 @@ class simulation_widget:
                     v.Col(children=[period], sm=5),
                     v.Col(children=[v.Btn(children=['Snapshot'])], sm=2),
                 ], align='center', justify='center'),
-                v.Row(children=[plot_output])
+                plot_output
             ]
 
             def stop_simulation(change):
@@ -175,7 +176,6 @@ class simulation_widget:
                 start.color = 'success'
                 pause.disabled = True
                 pause.v_model = False
-                progress_bar.value = 0
 
             def update_result(change):
                 simu.init_fields(lb_scheme_widget.get_case().equation.get_fields())
@@ -189,16 +189,16 @@ class simulation_widget:
                 t, x, data = simu.get_data(result.v_model)
 
                 if simu.sol.dim == 1:
-                    self.plot = plot_1d(ax, None, t, x, data)
+                    self.plot = plot_1d(self.ax, None, t, x, data)
                 elif simu.sol.dim == 2:
                     if self.cb:
                         self.cb.remove()
-                    self.plot, self.cb = plot_2d(fig, ax, None, t, data)
-                plot_output.draw_idle()
+                    self.plot, self.cb = plot_2d(self.fig, self.ax, None, t, data)
+                plot_output.children[0].draw_idle()
 
                 await asyncio.sleep(0.01)
                 while simu.sol.t <= test_case.duration:
-                    progress_bar.value = simu.sol.t/test_case.duration*100
+                    progress_bar.value = float(simu.sol.t)/test_case.duration*100
 
                     if not pause.v_model:
                         simu.sol.one_time_step()
@@ -208,10 +208,10 @@ class simulation_widget:
                                 nite = 1
                                 t, x, data = simu.get_data(result.v_model)
                                 if simu.sol.dim == 1:
-                                    self.plot = plot_1d(ax, self.plot, t, x, data)
+                                    self.plot = plot_1d(self.ax, self.plot, t, x, data)
                                 elif simu.sol.dim == 2:
-                                    self.plot = plot_2d(fig, ax, self.plot, t, data)
-                                plot_output.draw_idle()
+                                    self.plot = plot_2d(self.fig, self.ax, self.plot, t, data)
+                                plot_output.children[0].draw_idle()
 
                         nite += 1
 
@@ -227,15 +227,16 @@ class simulation_widget:
                         start.children = ['Stop']
                         start.color = 'error'
                         pause.disabled = False
+                        progress_bar.value = 0
+
+                        self.fig, self.ax = prepare_simu_fig()
+                        plot_output.children = [self.fig.canvas]
 
                         test_case = test_case_widget.get_case()
                         lb_scheme = lb_scheme_widget.get_case()
 
-                        print('init simu')
-
                         simu.init_sol(test_case, lb_scheme, codegen, discret)
 
-                        print('run simu')
                         asyncio.ensure_future(run_simu(simu))
                     else:
                         stop_simulation(None)
@@ -244,18 +245,19 @@ class simulation_widget:
                 pause.v_model = not pause.v_model
 
             def replot(change):
-                t, x, data = simu.get_data(result.v_model)
-                if simu.sol.dim == 1:
-                    self.plot = plot_1d(ax, self.plot, t, x, data)
-                elif simu.sol.dim == 2:
-                    self.plot = plot_2d(fig, ax, self.plot, t, data)
-                plot_output.draw_idle()
+                if self.fig:
+                    t, x, data = simu.get_data(result.v_model)
+                    if simu.sol.dim == 1:
+                        self.plot = plot_1d(self.ax, self.plot, t, x, data)
+                    elif simu.sol.dim == 2:
+                        self.plot = plot_2d(self.fig, self.ax, self.plot, t, data)
+                    plot_output.children[0].draw_idle()
 
             start.on_event('click', start_simulation)
             pause.on_event('click', on_pause_click)
             result.observe(replot, 'v_model')
 
-            test_case_widget.case.observe(stop_simulation, 'v_model')
+            test_case_widget.select_case.observe(stop_simulation, 'v_model')
             lb_scheme_widget.select_case.observe(stop_simulation, 'v_model')
             lb_scheme_widget.select_case.observe(update_result, 'v_model')
 

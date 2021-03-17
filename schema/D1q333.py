@@ -2,16 +2,15 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import Euler1D
-from .utils import Scheme, RelaxationParameter
+from .utils import LBM_scheme, RelaxationParameter
 
-class D1Q333(BaseModel, Scheme):
-    s_rho: RelaxationParameter
-    s_u: RelaxationParameter
-    s_p: RelaxationParameter
-    s_rhox: RelaxationParameter
-    s_ux: RelaxationParameter
-    s_px: RelaxationParameter
-    la: float
+class D1Q333(LBM_scheme):
+    s_rho: RelaxationParameter('s_rho')
+    s_u: RelaxationParameter('s_u')
+    s_p: RelaxationParameter('s_p')
+    s_rhox: RelaxationParameter('s_rhox')
+    s_ux: RelaxationParameter('s_ux')
+    s_px: RelaxationParameter('s_px')
 
     equation = Euler1D()
     dim = 1
@@ -33,12 +32,13 @@ class D1Q333(BaseModel, Scheme):
         sigma_ux = sp.symbols('sigma_ux', constants=True)
         sigma_px = sp.symbols('sigma_px', constants=True)
 
-        s_rho = sp.symbols('s_rho', constants=True)
-        s_u = sp.symbols('s_u', constants=True)
-        s_p = sp.symbols('s_p', constants=True)
-        s_rhox = sp.symbols('s_rhox', constants=True)
-        s_ux = sp.symbols('s_ux', constants=True)
-        s_px = sp.symbols('s_px', constants=True)
+        la_, la = self.la.symb, self.la.value
+        s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
+        s_u_, s_u = self.s_u.symb, self.s_u.value
+        s_p_, s_p = self.s_p.symb, self.s_p.value
+        s_rhox_, s_rhox = self.s_rhox.symb, self.s_rhox.value
+        s_ux_, s_ux = self.s_ux.symb, self.s_ux.value
+        s_px_, s_px = self.s_px.symb, self.s_px.value
 
         symb_s_rho = 1/(.5+sigma_rho)      # symbolic relaxation parameter
         symb_s_u = 1/(.5+sigma_u)          # symbolic relaxation parameter
@@ -47,14 +47,13 @@ class D1Q333(BaseModel, Scheme):
         symb_s_ux = 1/(.5+sigma_ux)        # symbolic relaxation parameter
         symb_s_px = 1/(.5+sigma_px)        # symbolic relaxation parameter
 
-        LA = sp.symbols('lambda', constants=True)
         X = sp.symbols('X')
 
         d_rho, d_u, d_p = .5, .5, .5
 
         return {
             'dim': 1,
-            'scheme_velocity': LA,
+            'scheme_velocity': la_,
             'schemes': [
                 {
                     'velocities': [0, 1, 2],
@@ -64,7 +63,7 @@ class D1Q333(BaseModel, Scheme):
                     'equilibrium': [
                         rho,
                         q,
-                        d_rho * LA**2/2*rho + (1-d_rho) * E
+                        d_rho * la_**2/2*rho + (1-d_rho) * E
                     ]
                 },
                 {
@@ -75,7 +74,7 @@ class D1Q333(BaseModel, Scheme):
                     'equilibrium': [
                         q,
                         (gamma-1)*E+(3-gamma)/2*rho*u**2,
-                        d_u * LA**2/2*q + (1-d_u) * (3*E-rho*u**2)*u
+                        d_u * la_**2/2*q + (1-d_u) * (3*E-rho*u**2)*u
                     ]
                 },
                 {
@@ -86,24 +85,24 @@ class D1Q333(BaseModel, Scheme):
                     'equilibrium': [
                         E,
                         gamma*E*u-(gamma-1)/2*rho*u**3,
-                        d_p * LA**2/2*E + (1-d_p)*(6*E**2/rho-rho*u**4)
+                        d_p * la_**2/2*E + (1-d_p)*(6*E**2/rho-rho*u**4)
                     ]
                 },
             ],
             'parameters': {
-                LA: self.la,
-                s_rho: self.s_rho,
-                s_u: self.s_u,
-                s_p: self.s_p,
-                s_rhox: self.s_rhox,
-                s_ux: self.s_ux,
-                s_px: self.s_px,
-                sigma_rho: 1/s_rho-.5,
-                sigma_u: 1/s_u-.5,
-                sigma_p: 1/s_p-.5,
-                sigma_rhox: 1/s_rhox-.5,
-                sigma_ux: 1/s_ux-.5,
-                sigma_px: 1/s_px-.5,
+                la_: la,
+                s_rho_: s_rho,
+                s_u_: s_u,
+                s_p_: s_p,
+                s_rhox_: s_rhox,
+                s_ux_: s_ux,
+                s_px_: s_px,
+                sigma_rho: 1/s_rho_-.5,
+                sigma_u: 1/s_u_-.5,
+                sigma_p: 1/s_p_-.5,
+                sigma_rhox: 1/s_rhox_-.5,
+                sigma_ux: 1/s_ux_-.5,
+                sigma_px: 1/s_px_-.5,
                 gamma: 1.4,
             },
             'generator': 'numpy'

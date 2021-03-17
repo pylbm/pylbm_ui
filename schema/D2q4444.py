@@ -3,19 +3,18 @@ import sympy as sp
 import pylbm
 import traitlets
 from .equation_type import EquationType, Euler2D
-from .utils import Scheme, RelaxationParameter
+from .utils import LBM_scheme, RelaxationParameter
 
 from .boundary2D import *
 
 
-class D2Q4444(BaseModel, Scheme):
-    s_rho: RelaxationParameter
-    s_u: RelaxationParameter
-    s_p: RelaxationParameter
-    s_rho2: RelaxationParameter
-    s_u2: RelaxationParameter
-    s_p2: RelaxationParameter
-    la: float
+class D2Q4444(LBM_scheme):
+    s_rho: RelaxationParameter('s_rho')
+    s_u: RelaxationParameter('s_u')
+    s_p: RelaxationParameter('s_p')
+    s_rho2: RelaxationParameter('s_rho2')
+    s_u2: RelaxationParameter('s_u2')
+    s_p2: RelaxationParameter('s_p2')
 
     equation = Euler2D()
     dim = 2
@@ -33,12 +32,14 @@ class D2Q4444(BaseModel, Scheme):
         uy = qy/rho
         EpP = gamma*E - (gamma-1)*rho/2*(ux**2+uy**2)
 
-        s_rho_ = sp.symbols('s_rho', constants=True)
-        s_u_ = sp.symbols('s_u', constants=True)
-        s_p_ = sp.symbols('s_p', constants=True)
-        s_rho2_ = sp.symbols('s_rho2', constants=True)
-        s_u2_ = sp.symbols('s_u2', constants=True)
-        s_p2_ = sp.symbols('s_p2', constants=True)
+        la_, la = self.la.symb, self.la.value
+        s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
+        s_u_, s_u = self.s_u.symb, self.s_u.value
+        s_p_, s_p = self.s_p.symb, self.s_p.value
+        s_rho2_, s_rho2 = self.s_rho2.symb, self.s_rho2.value
+        s_u2_, s_u2 = self.s_u2.symb, self.s_u2.value
+        s_p2_, s_p2 = self.s_p2.symb, self.s_p2.value
+
         sigma_rho = sp.symbols('sigma_rho', constants=True)
         sigma_u = sp.symbols('sigma_u', constants=True)
         sigma_p = sp.symbols('sigma_p', constants=True)
@@ -46,13 +47,12 @@ class D2Q4444(BaseModel, Scheme):
         sigma_u2 = sp.symbols('sigma_u2', constants=True)
         sigma_p2 = sp.symbols('sigma_p2', constants=True)
 
-        LA = sp.symbols('lambda', constants=True)
         X = sp.symbols('X')
         Y = sp.symbols('Y')
 
         return {
             'dim': self.dim,
-            'scheme_velocity': LA,
+            'scheme_velocity': la_,
             'schemes': [
                 {
                     'velocities': list(range(1, 5)),
@@ -99,13 +99,13 @@ class D2Q4444(BaseModel, Scheme):
                 },
             ],
             'parameters': {
-                LA: self.la,
-                s_rho_: self.s_rho,
-                s_u_: self.s_u,
-                s_p_: self.s_p,
-                s_rho2_: self.s_rho2,
-                s_u2_: self.s_u2,
-                s_p2_: self.s_p2,
+                la_: la,
+                s_rho_: s_rho,
+                s_u_: s_u,
+                s_p_: s_p,
+                s_rho2_: s_rho2,
+                s_u2_: s_u2,
+                s_p2_: s_p2,
                 sigma_rho: 1/s_rho_-.5,
                 sigma_u: 1/s_u_-.5,
                 sigma_p: 1/s_p_-.5,

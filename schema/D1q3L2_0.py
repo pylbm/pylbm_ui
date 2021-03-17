@@ -2,15 +2,13 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import EquationType, Euler1D
-from .utils import HashBaseModel, Scheme, RelaxationParameter
+from .utils import LBM_scheme, RelaxationParameter
 
-
-class D1Q3L2(HashBaseModel, Scheme):
-    s_rho: RelaxationParameter
-    s_u: RelaxationParameter
-    s_p: RelaxationParameter
+class D1Q3L2(LBM_scheme):
+    s_rho: RelaxationParameter('s_rho')
+    s_u: RelaxationParameter('s_u')
+    s_p: RelaxationParameter('s_p')
     alpha: float
-    la: float
     equation = Euler1D()
     dim = 1
     name = 'D1Q3L2'
@@ -21,6 +19,11 @@ class D1Q3L2(HashBaseModel, Scheme):
         q = self.equation.q
         E = self.equation.E
         gamma = self.equation.gamma
+
+        la_, la = self.la.symb, self.la.value
+        s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
+        s_u_, s_u = self.s_u.symb, self.s_u.value
+        s_p_, s_p = self.s_p.symb, self.s_p.value
 
         sigma_1 = sp.symbols('sigma_1', constants=True)
         sigma_2 = sp.symbols('sigma_2', constants=True)
@@ -34,10 +37,9 @@ class D1Q3L2(HashBaseModel, Scheme):
         symb_s_2 = 1/(.5+sigma_2)          # symbolic relaxation parameter
         symb_s_3 = 1/(.5+sigma_3)          # symbolic relaxation parameter
 
-        LA = sp.symbols('lambda', constants=True)
         ALPHA = sp.symbols('alpha', constants=True)
 
-        LA2 = LA**2
+        la2 = la_**2
         u = q/rho
         EI = E - q**2/rho/2
         ee = (E/rho-u**2/2) / ALPHA  # p/rho / (gamma-1) / alpha
@@ -48,21 +50,21 @@ class D1Q3L2(HashBaseModel, Scheme):
         M = sp.Matrix(
             [
                 [1, 1, 1, 1, 1, 1],
-                [0, LA, -LA, 0, LA, -LA],
+                [0, la_, -la_, 0, la_, -la_],
                 [
-                    0, LA2/2, LA2/2,
-                    ALPHA, LA2/2+ALPHA, LA2/2+ALPHA
+                    0, la2/2, la2/2,
+                    ALPHA, la2/2+ALPHA, la2/2+ALPHA
                 ],
                 [1, 1, 1, -1, -1, -1],
-                [0, LA, -LA, 0, -LA, LA],
+                [0, la_, -la_, 0, -la_, la_],
                 [
-                    0, LA2/2, LA2/2,
-                    -ALPHA, -LA2/2-ALPHA, -LA2/2-ALPHA
+                    0, la2/2, la2/2,
+                    -ALPHA, -la2/2-ALPHA, -la2/2-ALPHA
                 ],
             ]
         )
         deltarho = rho*(1-(3-gamma)*ee)
-        deltaq = q * (1 + (LA**2-u**2)/ALPHA - 2*gamma*ee)
+        deltaq = q * (1 + (la_**2-u**2)/ALPHA - 2*gamma*ee)
         # deltaEc = .25*(
         #     (q+deltaq)**2/(rho+deltarho)
         #     - (q-deltaq)**2/(rho-deltarho)
@@ -70,13 +72,12 @@ class D1Q3L2(HashBaseModel, Scheme):
         # deltaE = deltaEc + p/(gamma-1) * (
         #     .5 - ee
         # )
-        deltaE = E + p/(gamma-1) * (
-            2 - (3-gamma)/2*u**2/ALPHA
+        deltaE = E + p/(gamma-1) * (2 - (3-gamma)/2*u**2/ALPHA
         )
 
         return {
             'dim': 1,
-            'scheme_velocity': LA,
+            'scheme_velocity': la_,
             'schemes': [
                 {
                     'velocities': v,
@@ -93,14 +94,14 @@ class D1Q3L2(HashBaseModel, Scheme):
                 },
             ],
             'parameters': {
-                LA: self.la,
+                la_: la,
                 ALPHA: self.alpha,
-                s1_: self.s_rho,
-                s2_: self.s_u,
-                s3_: self.s_p,
-                sigma_1: 1/s1_-.5,
-                sigma_2: 1/s2_-.5,
-                sigma_3: 1/s3_-.5,
+                s_rho_: s_rho,
+                s_u_: s_u,
+                s_p_: s_p,
+                sigma_1: 1/s_rho_-.5,
+                sigma_2: 1/s_u_-.5,
+                sigma_3: 1/s_p_-.5,
                 gamma: 1.4,
             },
             'generator': 'numpy'
@@ -140,57 +141,3 @@ Other:
 
 - alpha: ???
     """
-
-    def get_default_parameters(self, test_case_name='none', printFlg=False):
-        alpha = 0.125
-        if test_case_name == "Toro_1":
-            dx, la = 1/256, 5
-            srho, su, sp = 1.5, 1.5, 1.5
-        elif test_case_name == "Toro_2":
-            dx, la = 1/256, 4
-            srho, su, sp = 1.7, 1.7, 1.7
-        elif test_case_name == "Toro_3":
-            dx, la = 1/512, 60
-            srho, su, sp = 1.5, 1.5, 1.5
-        elif test_case_name == "Toro_4":
-            dx, la = 1/2048, 50
-            srho, su, sp = 1.8, 1.8, 1.8
-        elif test_case_name == "Toro_5":
-            dx, la = 1/512, 40
-            srho, su, sp = 1.85, 1.8, 1.6
-        else:
-            dx, la = 1/256, 1
-            srho, su, sp = 1, 1, 1
-
-        if printFlg:
-            #print("Test case: {}".format(test_case_name))
-            print("""Proposition of parameters for selected test case: {}
-(!valid for default test case parameters only!)
-    dx =              {}
-    la = {}
-    alpha =           {}
-    s_rho =           {}
-    s_u =             {}
-    s_p =             {}
-       """.format(test_case_name, dx, la, alpha, srho, su, sp))
-
-        defParam = {
-            'dx': dx,
-            'la': la,
-            's_rho': srho,
-            's_u': su,
-            's_p': sp,
-            'alpha': alpha
-            }
-
-        return defParam
-
-    def get_S(self):
-        return {'s_rho': self.s_rho,
-                's_u': self.s_u,
-                's_p': self.s_p}
-    def get_Disc(self):
-        return {'dx': self.dx,
-                'la': self.la}
-    def get_EquParams(self):
-        return {'alpha': self.alpha}

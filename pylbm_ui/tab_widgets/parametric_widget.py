@@ -2,7 +2,7 @@ import ipyvuetify as v
 import markdown
 import plotly.graph_objects as go
 import numpy as np
-from skopt.sampler import Lhs, Sobol
+from skopt.sampler import Lhs, Sobol, Halton, Hammersly
 import copy
 import pylbm
 import tempfile
@@ -35,6 +35,11 @@ def run_simulation(args):
 
     return True
 
+skopt_method = {'Latin hypercube': Lhs,
+                'Sobol': Sobol,
+                'Halton': Halton,
+                'Hammersly': Hammersly,
+}
 class parametric_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
@@ -44,6 +49,9 @@ class parametric_widget:
             design = Design_widget(test_case_widget, lb_scheme_widget)
             run = v.Btn(v_model=True, children=['Run parametric study'], class_="ma-5", color='success')
             plotly_plot = v.Container(align_content_center=True)
+
+            sampling_method = v.Select(label='Method', items=list(skopt_method.keys()), v_model=list(skopt_method.keys())[0])
+            sample_size = v.TextField(label='Number of samples', v_model=10, type='number')
 
             left_panel = [
                 space_step,
@@ -57,7 +65,8 @@ class parametric_widget:
                         v.ExpansionPanelHeader(children=['Responses']),
                     ]),
                     v.ExpansionPanel(children=[
-                        v.ExpansionPanelHeader(children=['Methods']),
+                        v.ExpansionPanelHeader(children=['Sampling method']),
+                        v.ExpansionPanelContent(children=[sampling_method, sample_size]),
                     ]),
                 ], multiple=True),
                 v.Row(children=[run], align='center', justify='center'),
@@ -99,7 +108,7 @@ class parametric_widget:
                                     alert
                                     ], align='center', justify='center')
                             ]
-                            sampling = np.asarray(Lhs().generate(list(design_space.values()), 10))
+                            sampling = np.asarray(skopt_method[sampling_method.v_model]().generate(list(design_space.values()), int(sample_size.v_model)))
 
                             output = np.zeros(sampling.shape[0])
 

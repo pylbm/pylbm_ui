@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from pydantic import BaseModel
+from pydantic.utils import  Representation
 import numbers
 import sympy as sp
 
@@ -57,7 +58,7 @@ class Scheme:
 
         return stab
 
-class SchemeVelocity:
+class SchemeVelocity(Representation):
     def __init__(self, value):
         self.symb = sp.symbols('lambda', constants=True)
         self.value = value
@@ -78,8 +79,11 @@ class SchemeVelocity:
             raise ValueError('strictly positive number required')
         return cls(v)
 
-    def __repr__(self):
-        return f'SchemeVelocity({self.value})'
+    def __str__(self):
+        return self.value
+
+    def __repr_args__(self):
+        return [(None, self.value), ['symbol', self.symb]]
 
 class RelaxationParameter:
     def __new__(cls, symb):
@@ -116,6 +120,10 @@ class RelaxationParameterFinal:
 class LBM_scheme(HashBaseModel, Scheme):
     la: SchemeVelocity
 
+from pydantic.json import ENCODERS_BY_TYPE
 
-
+ENCODERS_BY_TYPE.update({
+    SchemeVelocity: lambda o: o.value,
+    RelaxationParameterFinal: lambda o: o.value
+    })
 

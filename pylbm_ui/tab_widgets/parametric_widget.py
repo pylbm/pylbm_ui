@@ -74,7 +74,6 @@ class parametric_widget:
             #
             # Right panel
             #
-
             right_panel = [
                 v.Row(children=[plotly_plot])
             ]
@@ -112,39 +111,9 @@ class parametric_widget:
 
                             output = np.zeros(sampling.shape[0])
 
-                            simu_cfg = test_case.get_dictionary()
-                            param = simu_cfg['parameters']
-                            simu_cfg.update(lb_scheme.get_dictionary())
-                            param.update(simu_cfg['parameters'])
-                            simu_cfg['parameters'] = param
-                            if codegen.v_model != 'auto':
-                                simu_cfg['generator'] = codegen.v_model
-                            simu_cfg['codegen_option'] = {'directory': tmp_dir.name}
-                            simu_cfg['space_step'] = float(space_step.v_model)
-
-                            bound_cfg = {}
-                            bound_tc = test_case.get_boundary()
-                            bound_sc = lb_scheme.get_boundary()
-                            for key, val in bound_tc.items():
-                                bound_cfg[key] = bound_sc[val]
-
-                            simu_cfg.pop('dim')
-                            simu_cfg['boundary_conditions'] = bound_cfg
-
-                            keys = list(simu_cfg['parameters'].keys())
-                            str_keys = [str(k) for k in simu_cfg['parameters'].keys()]
-                            for ik, k in enumerate(design_space.keys()):
-                                if isinstance(k, tuple):
-                                    for kk in k:
-                                        if kk in str_keys:
-                                            simu_cfg['parameters'].pop(keys[str_keys.index(kk)])
-                                else:
-                                    if k in str_keys:
-                                        simu_cfg['parameters'].pop(keys[str_keys.index(k)])
-
                             alert.children = ['Prepare the simulation...']
-
-                            pylbm.Simulation(simu_cfg, initialize=False)
+                            simu = simulation()
+                            simu.reset_sol(test_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=tmp_dir.name)
 
                             args = []
                             for s in sampling:
@@ -157,7 +126,7 @@ class parametric_widget:
                                         if k == 'lambda':
                                             design_sample['lambda_'] = s[ik]
                                         design_sample[k] = s[ik]
-                                args.append((simu_cfg, design_sample, test_case.duration))
+                                args.append((simu.simu_cfg, design_sample, test_case.duration))
 
                             alert.children = ['Run simulations on the sampling...']
 
@@ -214,6 +183,7 @@ class parametric_widget:
 
             def purge(change):
                 design.purge()
+                plotly_plot.children = []
                 try:
                     shutil.rmtree(tmp_dir.name)
                 except OSError:

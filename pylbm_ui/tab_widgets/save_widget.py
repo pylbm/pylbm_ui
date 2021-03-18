@@ -30,7 +30,6 @@ class SaveForm(v.Form):
         if 'all' in self.select_field.v_model:
             self.select_field.v_model = self.fields
 
-
     def select_fields_rules(self, change):
         if self.select_field.v_model is None:
             self.select_field.rules = ['You must select at least one field']

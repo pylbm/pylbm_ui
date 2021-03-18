@@ -1,87 +1,121 @@
 import ipywidgets as widgets
 import pylbm
 import asyncio
+import os
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-
+import json
 import ipyvuetify as v
 
 from .save_widget import Save_widget
 from .pylbmwidget import out
+from ..config import default_path
+from ..simulation import simulation, Plot
 
-class simulation:
-    def __init__(self):
-        self.sol = None
-        self.fields = None
+# def save_simulation_config(path, test_case, lb_scheme, dx=None, duration=None):
+#     json.dump(
+#         {
+#             'test_case': {
+#                 'module': test_case.__module__,
+#                 'class': test_case.__class__.__name__,
+#                 'args': json.loads(test_case.json(skip_defaults=True)),
+#             },
+#             'lb_scheme': {
+#                 'module': lb_scheme.__module__,
+#                 'class': lb_scheme.__class__.__name__,
+#                 'args': json.loads(lb_scheme.json(skip_defaults=True)),
+#             },
+#         },
+#         open(os.path.join(path, 'simu_config.json'), 'w'),
+#         sort_keys=True,
+#         indent=4,
+#     )
 
-    def init_fields(self, fields):
-        self.fields = fields
-        self.func = {}
-        for k, v in fields.items():
-            self.func[k] = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
+# class simulation:
+#     def __init__(self):
+#         self.sol = None
+#         self.fields = None
 
-    def init_sol(self, test_case, lb_scheme, codegen, discret):
-        simu_cfg = test_case.get_dictionary()
-        param = simu_cfg['parameters']
-        simu_cfg.update(lb_scheme.get_dictionary())
-        param.update(simu_cfg['parameters'])
-        simu_cfg['parameters'] = param
-        simu_cfg['space_step'] = float(discret['dx'].v_model)
-        if codegen.v_model != 'auto':
-            simu_cfg['generator'] = codegen.v_model
+#     def init_fields(self, fields):
+#         self.fields = fields
+#         self.func = {}
+#         for k, v in fields.items():
+#             self.func[k] = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
 
-        bound_cfg = {}
-        bound_tc = test_case.get_boundary()
-        bound_sc = lb_scheme.get_boundary()
-        for key, val in bound_tc.items():
-            bound_cfg[key] = bound_sc[val]
+#     def init_sol(self, test_case, lb_scheme, codegen, discret):
+#         simu_cfg = test_case.get_dictionary()
+#         param = simu_cfg['parameters']
+#         simu_cfg.update(lb_scheme.get_dictionary())
+#         param.update(simu_cfg['parameters'])
+#         simu_cfg['parameters'] = param
+#         simu_cfg['space_step'] = float(discret['dx'].v_model)
+#         if codegen.v_model != 'auto':
+#             simu_cfg['generator'] = codegen.v_model
 
-        simu_cfg.pop('dim')
-        simu_cfg['boundary_conditions'] = bound_cfg
+#         bound_cfg = {}
+#         bound_tc = test_case.get_boundary()
+#         bound_sc = lb_scheme.get_boundary()
+#         for key, val in bound_tc.items():
+#             bound_cfg[key] = bound_sc[val]
 
-        self.sol = pylbm.Simulation(simu_cfg)
+#         simu_cfg.pop('dim')
+#         simu_cfg['boundary_conditions'] = bound_cfg
 
-    def get_data(self, field):
-        to_subs = {str(k): self.sol.m[k] for k in self.sol.scheme.consm.keys()}
-        to_subs.update({str(k): v for k, v in self.sol.scheme.param.items()})
+#         self.sol = pylbm.Simulation(simu_cfg)
 
-        args = {str(s): to_subs[str(s)] for s in self.fields[field].atoms(sp.Symbol)}
-        return self.sol.t, self.sol.domain.x, self.func[field](**args)
+#     def get_data(self, field):
+#         to_subs = {str(k): self.sol.m[k] for k in self.sol.scheme.consm.keys()}
+#         to_subs.update({str(k): v for k, v in self.sol.scheme.param.items()})
 
-def plot_1d(ax, scatter_plot, t, x, data):
-    if scatter_plot is None:
-        scatter_plot = ax.scatter(x, data, color='cadetblue', s=1)
-    else:
-        scatter_plot.set_offsets(np.c_[x, data])
-        xmin, xmax = x[0], x[-1]
-        ymin, ymax = np.amin(data), np.amax(data)
-        xeps = 0.1*(xmax - xmin)
-        yeps = 0.1*(ymax - ymin)
-        ax.set_xlim(xmin - xeps, xmax + xeps)
-        ax.set_ylim(ymin - yeps, ymax + yeps)
-    plt.title(f"time: {t} s")
-    return scatter_plot
+#         args = {str(s): to_subs[str(s)] for s in self.fields[field].atoms(sp.Symbol)}
+#         return self.sol.t, self.sol.domain.x, self.func[field](**args)
 
-def plot_2d(fig, ax, imshow_plot, t, data):
-    ax.title.set_text(f"time: {t} s")
+#     def save_data(self, path, field):
+#         if not os.path.exists(path):
+#             os.makedirs(path)
 
-    if imshow_plot is None:
-        ax.clear()
-        imshow_plot = ax.imshow(data.T, origin='lower')
-        cb = fig.colorbar(imshow_plot, ax=ax)
-        return imshow_plot, cb
-    else:
-        imshow_plot.set_array(data.T)
-        imshow_plot.set_clim(vmin=np.amin(data), vmax=np.amax(data))
-        return imshow_plot
+#         h5 = pylbm.H5File(self.sol.domain.mpi_topo, f'{field}', path, self.sol.nt)
+#         h5.set_grid(self.sol.domain.x)
+#         t, x, data = self.get_data(field)
+#         h5.add_scalar(str(field), data)
+#         h5.save()
 
-def prepare_simu_fig():
-    plt.ioff()
-    fig, ax = plt.subplots(figsize=(10,5))
-    fig.canvas.header_visible = False
+# def plot_1d(ax, scatter_plot, t, x, data, field):
+#     if scatter_plot is None:
+#         scatter_plot = ax.scatter(x, data, color='cadetblue', s=1)
+#     else:
+#         scatter_plot.set_offsets(np.c_[x, data])
+#         xmin, xmax = x[0], x[-1]
+#         ymin, ymax = np.amin(data), np.amax(data)
+#         xeps = 0.1*(xmax - xmin)
+#         yeps = 0.1*(ymax - ymin)
+#         ax.set_xlim(xmin - xeps, xmax + xeps)
+#         ax.set_ylim(ymin - yeps, ymax + yeps)
+#         ax.set_xlabel('x')
+#         ax.set_ylabel(field)
+#     plt.title(f"time: {t} s")
+#     return scatter_plot
 
-    return fig, ax
+# def plot_2d(fig, ax, imshow_plot, t, data):
+#     ax.title.set_text(f"time: {t} s")
+
+#     if imshow_plot is None:
+#         ax.clear()
+#         imshow_plot = ax.imshow(data.T, origin='lower')
+#         cb = fig.colorbar(imshow_plot, ax=ax)
+#         return imshow_plot, cb
+#     else:
+#         imshow_plot.set_array(data.T)
+#         imshow_plot.set_clim(vmin=np.amin(data), vmax=np.amax(data))
+#         return imshow_plot
+
+# def prepare_simu_fig():
+#     plt.ioff()
+#     fig, ax = plt.subplots(figsize=(10,5))
+#     fig.canvas.header_visible = False
+
+#     return fig, ax
 
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
@@ -91,7 +125,7 @@ class simulation_widget:
             lb_param = lb_scheme_widget.parameters
 
             simu = simulation()
-            simu.init_fields(lb_scheme_widget.get_case().equation.get_fields())
+            simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
 
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
             nx = 201
@@ -156,11 +190,8 @@ class simulation_widget:
             progress_bar = v.ProgressLinear(height=20, value=0, color="light-blue", striped=True)
             result = v.Select(items=list(simu.fields.keys()), v_model=list(simu.fields.keys())[0])
             period = v.TextField(label='Period', v_model=16, type='number')
-            self.plot = None
-            self.cb = None
-            self.fig = None
-            self.ax = None
-            plot_output = v.Row()
+            self.plot = Plot()
+            plot_output = v.Row(align='center', justify='center')
 
             right_panel = [
                 v.Row(children=[start, pause]),
@@ -181,47 +212,38 @@ class simulation_widget:
                 pause.v_model = False
 
             def update_result(change):
-                simu.init_fields(lb_scheme_widget.get_case().equation.get_fields())
+                simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
                 result.items = list(simu.fields.keys())
                 result.v_model = list(simu.fields.keys())[0]
 
             async def run_simu(simu):
-                nite = 1
+            # def run_simu(simu):
+            #     with out:
+                    nite = 1
 
-                test_case = test_case_widget.get_case()
-                t, x, data = simu.get_data(result.v_model)
-
-                if simu.sol.dim == 1:
-                    self.plot = plot_1d(self.ax, None, t, x, data)
-                elif simu.sol.dim == 2:
-                    if self.cb:
-                        self.cb.remove()
-                    self.plot, self.cb = plot_2d(self.fig, self.ax, None, t, data)
-                plot_output.children[0].draw_idle()
-
-                await asyncio.sleep(0.01)
-                while simu.sol.t <= test_case.duration:
-                    progress_bar.value = float(simu.sol.t)/test_case.duration*100
-
-                    if not pause.v_model:
-                        simu.sol.one_time_step()
-
-                        if period.v_model != '' and period.v_model != 0:
-                            if nite >= int(period.v_model):
-                                nite = 1
-                                t, x, data = simu.get_data(result.v_model)
-                                if simu.sol.dim == 1:
-                                    self.plot = plot_1d(self.ax, self.plot, t, x, data)
-                                elif simu.sol.dim == 2:
-                                    self.plot = plot_2d(self.fig, self.ax, self.plot, t, data)
-                                plot_output.children[0].draw_idle()
-
-                        nite += 1
+                    simu.plot(self.plot, result.v_model)
+                    plot_output.children[0].draw_idle()
 
                     await asyncio.sleep(0.01)
-                    if start.v_model:
-                        break
-                stop_simulation(None)
+                    while simu.sol.t <= simu.duration:
+                        progress_bar.value = float(simu.sol.t)/simu.duration*100
+
+                        if not pause.v_model:
+                            simu.sol.one_time_step()
+
+                            if period.v_model != '' and period.v_model != 0:
+                                if nite >= int(period.v_model):
+                                    nite = 1
+                                    simu.save_data(result.v_model)
+                                    simu.plot(self.plot, result.v_model)
+                                    plot_output.children[0].draw_idle()
+
+                            nite += 1
+
+                        await asyncio.sleep(0.01)
+                        if start.v_model:
+                            break
+                    stop_simulation(None)
 
             def start_simulation(widget, event, data):
                 with out:
@@ -232,15 +254,18 @@ class simulation_widget:
                         pause.disabled = False
                         progress_bar.value = 0
 
-                        self.fig, self.ax = prepare_simu_fig()
-                        plot_output.children = [self.fig.canvas]
+                        self.plot = Plot()
+                        plot_output.children = [self.plot.fig.canvas]
 
                         test_case = test_case_widget.get_case()
                         lb_scheme = lb_scheme_widget.get_case()
 
-                        simu.init_sol(test_case, lb_scheme, codegen, discret)
+                        simu.reset_path(os.path.join(default_path, simulation_name.v_model))
+                        simu.reset_sol(test_case, lb_scheme, float(discret['dx'].v_model), codegen.v_model)
+                        simu.save_config()
 
                         asyncio.ensure_future(run_simu(simu))
+                        # run_simu(simu)
                     else:
                         stop_simulation(None)
 
@@ -248,12 +273,8 @@ class simulation_widget:
                 pause.v_model = not pause.v_model
 
             def replot(change):
-                if self.fig:
-                    t, x, data = simu.get_data(result.v_model)
-                    if simu.sol.dim == 1:
-                        self.plot = plot_1d(self.ax, self.plot, t, x, data)
-                    elif simu.sol.dim == 2:
-                        self.plot = plot_2d(self.fig, self.ax, self.plot, t, data)
+                if self.plot:
+                    simu.plot(self.plot, result.v_model)
                     plot_output.children[0].draw_idle()
 
             start.on_event('click', start_simulation)

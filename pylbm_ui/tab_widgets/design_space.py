@@ -3,7 +3,7 @@ import ipyvuetify as v
 from .pylbmwidget import out
 
 import enum
-from traitlets import Unicode, Float, List
+from traitlets import Unicode, Float, List, Bool
 from ..utils import required_fields
 
 def get_parameters(test_case, lb_case):
@@ -25,6 +25,7 @@ class DesignForm(v.Form):
 
         self.select_param = v.Select(label='Parameters', v_model=None, items=[], multiple=False, required=True)
         self.select_relax = v.Select(label='Relaxation parameters', v_model=[], items=[], multiple=True, required=True, class_='d-none')
+        self.srt_relax = v.Switch(label='Single relaxation time', v_model=True, class_='d-none')
         self.min = v.TextField(label='Enter the minimum', v_model=None, required=True, class_='d-none')
         self.max = v.TextField(label='Enter the maximum', v_model=None, required=True, class_='d-none')
 
@@ -34,10 +35,11 @@ class DesignForm(v.Form):
         lb_scheme_widget.select_case.observe(self.update_select_fields, 'v_model')
         self.select_param.observe(self.select_param_changed, 'v_model')
         self.select_relax.observe(self.select_relax_rules, 'v_model')
+        self.select_relax.observe(self.select_relax_all, 'v_model')
         self.min.observe(self.minmax_rules, 'v_model')
         self.max.observe(self.minmax_rules, 'v_model')
 
-        super().__init__(v_model='valid', children=[self.select_param, self.select_relax, self.min, self.max])
+        super().__init__(v_model='valid', children=[self.select_param, self.select_relax, self.srt_relax, self.min, self.max])
 
     def update_select_fields(self, change):
         fields = required_fields(self.test_case_widget.get_case())
@@ -51,7 +53,7 @@ class DesignForm(v.Form):
         self.relax_params = {k: relax_params[k] for k in sorted(relax_params)}
 
         self.select_param.items = list(self.params.keys())
-        self.select_relax.items = list(self.relax_params.keys())
+        self.select_relax.items = ['all'] + list(self.relax_params.keys())
 
     def select_param_changed(self, change):
         with out:
@@ -60,6 +62,7 @@ class DesignForm(v.Form):
                     self.min.v_model = 1
                     self.max.v_model = 1
                     self.select_relax.class_ = ''
+                    self.srt_relax.class_ = ''
                 else:
                     if hasattr(self.params[self.select_param.v_model], 'value'):
                         value = self.params[self.select_param.v_model].value
@@ -68,11 +71,16 @@ class DesignForm(v.Form):
                     self.min.v_model = value
                     self.max.v_model = value
                     self.select_relax.class_ = 'd-none'
+                    self.srt_relax.class_ = 'd-none'
                     self.select_relax.v_model = []
                 self.min.class_ = ''
                 self.max.class_ = ''
                 self.min.notify_change({'name': 'v_model', 'type': 'change'})
                 self.max.notify_change({'name': 'v_model', 'type': 'change'})
+
+    def select_relax_all(self, change):
+        if 'all' in self.select_relax.v_model:
+            self.select_relax.v_model = list(self.relax_params.keys())
 
     def select_relax_rules(self, change):
         with out:
@@ -157,13 +165,14 @@ class DesignForm(v.Form):
 
     def __str__(self):
         if self.select_param.v_model == 'relaxation parameters':
-            return ', '.join(self.select_relax.v_model) + f'(min: {self.min.v_model}, max: {self.max.v_model})'
+            return ', '.join(self.select_relax.v_model) + f'(srt: {self.srt_relax.v_model}, min: {self.min.v_model}, max: {self.max.v_model})'
         else:
             return f'{self.select_param.v_model}(min: {self.min.v_model}, max: {self.max.v_model})'
 
 class DesignChip(v.Chip):
     param = Unicode()
     relax = List()
+    srt = Bool()
     min = Float()
     max = Float()
 
@@ -205,6 +214,7 @@ class DesignChip(v.Chip):
             if self.form.v_model:
                 self.param = self.form.select_param.v_model
                 self.relax = self.form.select_relax.v_model
+                self.srt = self.form.srt_relax.v_model
                 self.min = float(self.form.min.v_model)
                 self.max = float(self.form.max.v_model)
                 self.children = [f'{self.form}', self.update_dialog]
@@ -215,6 +225,7 @@ class DesignChip(v.Chip):
             self.form.reset_form()
             self.form.select_param.v_model = self.param
             self.form.select_relax.v_model = self.relax
+            self.form.srt_relax.v_model = self.srt
             self.form.min.v_model =  self.min
             self.form.max.v_model =  self.max
             self.update_dialog.v_model = True
@@ -253,6 +264,7 @@ class Design_widget:
                     new_chip = DesignChip(parameters, relax_parameters,
                                         param=form.select_param.v_model,
                                         relax=form.select_relax.v_model,
+                                        srt=form.srt_relax.v_model,
                                         min=float(form.min.v_model),
                                         max=float(form.max.v_model),
                                         children=[f'{form}']
@@ -292,7 +304,10 @@ class Design_widget:
             output = {}
             for c in self.chip_group.children:
                 if c.relax:
-                    output.update({tuple(c.relax): (c.min, c.max)})
+                    if c.srt:
+                        output.update({tuple(c.relax): (c.min, c.max)})
+                    else:
+                        output.update({r: (c.min, c.max) for r in c.relax})
                 else:
                     output.update({c.param: (c.min, c.max)})
             return output

@@ -14,15 +14,22 @@ class SaveType(enum.Enum):
 
 class SaveForm(v.Form):
     def __init__(self, fields):
-        self.select_field = v.Select(label='Fields', v_model=None, items=fields, required=True, multiple=True)
+        self.fields = fields
+        self.select_field = v.Select(label='Fields', v_model=None, items=['all'] + fields, required=True, multiple=True)
         self.select_when = v.Select(label='When', v_model=None, items=[t.value for t in SaveType], required=True)
         self.when_properties = v.TextField(label='when save the fields?', v_model=None, required=True)
         self.select_field.observe(self.select_fields_rules, 'v_model')
+        self.select_field.observe(self.select_fields_all, 'v_model')
         self.select_when.observe(self.select_when_rules, 'v_model')
         self.select_when.observe(self.when_properties_rules, 'v_model')
         self.when_properties.observe(self.when_properties_rules, 'v_model')
 
         super().__init__(v_model='valid', children=[self.select_field, self.select_when,self.when_properties,])
+
+    def select_fields_all(self, change):
+        if 'all' in self.select_field.v_model:
+            self.select_field.v_model = self.fields
+
 
     def select_fields_rules(self, change):
         if self.select_field.v_model is None:

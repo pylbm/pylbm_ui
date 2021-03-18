@@ -93,6 +93,7 @@ class simulation_widget:
             simu = simulation()
             simu.init_fields(lb_scheme_widget.get_case().equation.get_fields())
 
+            simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
             nx = 201
             dx = test_case.size()/201
             dt = dx*float(lb_param['la'].v_model)
@@ -105,44 +106,46 @@ class simulation_widget:
             }
 
             codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
-            left_panel = v.ExpansionPanels(children=[
-                v.ExpansionPanel(children=[
-                    v.ExpansionPanelHeader(children=['Discretization']),
-                    v.ExpansionPanelContent(children=[
-                        v.Card(children=[
-                            v.CardTitle(children=['In space']),
-                            v.CardText(children=[
-                                discret['nx'],
-                                discret['dx'],
-                            ]),
-                        ], class_="ma-2"),
-                        v.Card(children=[
-                            v.CardTitle(children=['In time']),
-                            v.CardText(children=[
-                                discret['nt'],
-                                discret['dt'],
-                            ]),
-                        ], class_="ma-2"),
-                        v.Card(children=[
-                            v.CardTitle(children=['Scheme velocity']),
-                            v.CardText(children=[
-                                lb_param['la']
-                            ]),
-                        ], class_="ma-2"),
+            left_panel = [
+                simulation_name,
+                v.ExpansionPanels(children=[
+                    v.ExpansionPanel(children=[
+                        v.ExpansionPanelHeader(children=['Discretization']),
+                        v.ExpansionPanelContent(children=[
+                            v.Card(children=[
+                                v.CardTitle(children=['In space']),
+                                v.CardText(children=[
+                                    discret['nx'],
+                                    discret['dx'],
+                                ]),
+                            ], class_="ma-2"),
+                            v.Card(children=[
+                                v.CardTitle(children=['In time']),
+                                v.CardText(children=[
+                                    discret['nt'],
+                                    discret['dt'],
+                                ]),
+                            ], class_="ma-2"),
+                            v.Card(children=[
+                                v.CardTitle(children=['Scheme velocity']),
+                                v.CardText(children=[
+                                    lb_param['la']
+                                ]),
+                            ], class_="ma-2"),
+                        ]),
                     ]),
-                ]),
-                v.ExpansionPanel(children=[
-                    v.ExpansionPanelHeader(children=['Code generator']),
-                    v.ExpansionPanelContent(children=[codegen]),
-                ]),
-                v.ExpansionPanel(children=[
-                    v.ExpansionPanelHeader(children=['Field output request']),
-                    v.ExpansionPanelContent(children=[
-                        Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys())).widget
+                    v.ExpansionPanel(children=[
+                        v.ExpansionPanelHeader(children=['Code generator']),
+                        v.ExpansionPanelContent(children=[codegen]),
                     ]),
-                ]),
-            ], multiple=True)
-
+                    v.ExpansionPanel(children=[
+                        v.ExpansionPanelHeader(children=['Field output request']),
+                        v.ExpansionPanelContent(children=[
+                            Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys())).widget
+                        ]),
+                    ]),
+                ], multiple=True)
+            ]
 
             #
             # Right panel
@@ -300,6 +303,6 @@ class simulation_widget:
             lb_param['la'].observe(observer, 'v_model')
 
             self.widget = v.Row(children=[
-                v.Col(children=[v.FileInput(), left_panel], sm=3),
+                v.Col(children=left_panel, sm=3),
                 v.Col(children=right_panel)
             ])

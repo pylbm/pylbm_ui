@@ -116,7 +116,7 @@ class simulation_widget:
 
             async def run_simu(simu):
             # def run_simu(simu):
-            #     with out:
+                with out:
                     nite = 1
 
                     simu.plot(self.plot, result.v_model)
@@ -179,7 +179,7 @@ class simulation_widget:
 
             def take_snapshot(widget, event, data):
                 if self.plot:
-                    self.plot.fig.savefig(os.path.join(simu.path, f'snapshot_{result.v_model}_{self.iplot}.png'), dpi=300)
+                    self.plot.fig.savefig(os.path.join(simu.path, f'snapshot_{result.v_model}_{self.iplot}.png'), dpi=300,  bbox_inches='tight')
 
             start.on_event('click', start_simulation)
             pause.on_event('click', on_pause_click)

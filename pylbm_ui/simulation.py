@@ -3,8 +3,10 @@ import json
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
+import matplotlib
 import pylbm
 
+from .config import plot_config
 class Plot:
     def __init__(self, figsize=(10, 5)):
         plt.ioff()
@@ -14,14 +16,19 @@ class Plot:
         self.color_bar = None
 
     def plot(self, t, domain, field, data):
-        self.ax.title.set_text(f"time: {t} s")
+        self.ax.title.set_text(f"time: {t} s")#, fontsize=18)
 
         if domain.dim == 1:
             x = domain.x
             if self.plot_type is None:
-                self.plot_type = self.ax.scatter(x, data, color='cadetblue', s=1)
+                self.plot_type = self.ax.plot(x, data,
+                                              color=plot_config['color'][0],
+                                              alpha=plot_config['alpha'],
+                                              linewidth=plot_config['linewidth'],
+                                              marker=plot_config['marker'],
+                                              markersize=plot_config['markersize'])[0]
             else:
-                self.plot_type.set_offsets(np.c_[x, data])
+                self.plot_type.set_ydata(data)
             xmin, xmax = x[0], x[-1]
             ymin, ymax = np.amin(data), np.amax(data)
             xeps = 0.1*(xmax - xmin)
@@ -32,11 +39,13 @@ class Plot:
             self.ax.set_ylabel(field)
         elif domain.dim == 2:
             if self.plot_type is None:
-                self.plot_type = self.ax.imshow(data.T, origin='lower')
+                cmap = plot_config['cmap']
+                cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
+                self.plot_type = self.ax.imshow(data.T, origin='lower', cmap=cmap)
                 self.color_bar = self.fig.colorbar(self.plot_type, ax=self.ax)
             else:
                 self.plot_type.set_array(data.T)
-                self.plot_type.set_clim(vmin=np.nanmin(data), vmax=np.nanmax(data))
+            self.plot_type.set_clim(vmin=np.nanmin(data), vmax=np.nanmax(data))
             self.color_bar.set_label(label=field)
 
 class simulation:

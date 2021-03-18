@@ -213,6 +213,7 @@ class parametric_widget:
             run.on_event('click', run_study)
 
             def purge(change):
+                design.purge()
                 try:
                     shutil.rmtree(tmp_dir.name)
                 except OSError:

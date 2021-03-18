@@ -284,6 +284,9 @@ class Design_widget:
             v.CardActions(children=[v.Spacer(), add_button])
         ])
 
+    def purge(self):
+        self.chip_group.children = []
+
     def design_space(self):
         with out:
             output = {}

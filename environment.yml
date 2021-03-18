@@ -12,3 +12,5 @@ dependencies:
   - jupyterlab
   - pathos
   - scikit-optimize
+  - nodejs
+  - plotly

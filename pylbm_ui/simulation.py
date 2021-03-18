@@ -41,7 +41,9 @@ class Plot:
             if self.plot_type is None:
                 cmap = plot_config['cmap']
                 cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
-                self.plot_type = self.ax.imshow(data.T, origin='lower', cmap=cmap)
+                x, y = domain.x, domain.y
+                extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
+                self.plot_type = self.ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent)
                 self.color_bar = self.fig.colorbar(self.plot_type, ax=self.ax)
             else:
                 self.plot_type.set_array(data.T)

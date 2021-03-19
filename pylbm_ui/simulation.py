@@ -22,7 +22,7 @@ class Plot:
             x = domain.x
             if self.plot_type is None:
                 self.plot_type = self.ax.plot(x, data,
-                                              color=plot_config['color'][0],
+                                              color=plot_config['colors'][0],
                                               alpha=plot_config['alpha'],
                                               linewidth=plot_config['linewidth'],
                                               marker=plot_config['marker'],

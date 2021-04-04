@@ -6,6 +6,12 @@ import IPython.display as ipydisplay
 
 out = widgets.Output()
 
+def debug_widget(f):
+    def wrapper(*args, **kwargs):
+        with out:
+            return f(*args, **kwargs)
+    return wrapper
+
 class PylbmWidget(v.VuetifyWidget):
     """
     Custom vuetifyWidget to add specific methods

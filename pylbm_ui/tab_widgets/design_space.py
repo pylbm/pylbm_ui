@@ -56,27 +56,26 @@ class DesignForm(v.Form):
         self.select_relax.items = ['all'] + list(self.relax_params.keys())
 
     def select_param_changed(self, change):
-        with out:
-            if self.select_param.v_model:
-                if self.select_param.v_model == 'relaxation parameters':
-                    self.min.v_model = 1
-                    self.max.v_model = 1
-                    self.select_relax.class_ = ''
-                    self.srt_relax.class_ = ''
+        if self.select_param.v_model:
+            if self.select_param.v_model == 'relaxation parameters':
+                self.min.v_model = 1
+                self.max.v_model = 1
+                self.select_relax.class_ = ''
+                self.srt_relax.class_ = ''
+            else:
+                if hasattr(self.params[self.select_param.v_model], 'value'):
+                    value = self.params[self.select_param.v_model].value
                 else:
-                    if hasattr(self.params[self.select_param.v_model], 'value'):
-                        value = self.params[self.select_param.v_model].value
-                    else:
-                        value = self.params[self.select_param.v_model]
-                    self.min.v_model = value
-                    self.max.v_model = value
-                    self.select_relax.class_ = 'd-none'
-                    self.srt_relax.class_ = 'd-none'
-                    self.select_relax.v_model = []
-                self.min.class_ = ''
-                self.max.class_ = ''
-                self.min.notify_change({'name': 'v_model', 'type': 'change'})
-                self.max.notify_change({'name': 'v_model', 'type': 'change'})
+                    value = self.params[self.select_param.v_model]
+                self.min.v_model = value
+                self.max.v_model = value
+                self.select_relax.class_ = 'd-none'
+                self.srt_relax.class_ = 'd-none'
+                self.select_relax.v_model = []
+            self.min.class_ = ''
+            self.max.class_ = ''
+            self.min.notify_change({'name': 'v_model', 'type': 'change'})
+            self.max.notify_change({'name': 'v_model', 'type': 'change'})
 
     def select_relax_all(self, change):
         if 'all' in self.select_relax.v_model:
@@ -166,70 +165,84 @@ class DesignForm(v.Form):
 
     def __str__(self):
         if self.select_param.v_model == 'relaxation parameters':
-            return ', '.join(self.select_relax.v_model) + f'(srt: {self.srt_relax.v_model}, min: {self.min.v_model}, max: {self.max.v_model})'
+            return ', '.join(self.select_relax.v_model) + f' (srt: {self.srt_relax.v_model}, min: {self.min.v_model}, max: {self.max.v_model})'
         else:
-            return f'{self.select_param.v_model}(min: {self.min.v_model}, max: {self.max.v_model})'
+            return f'{self.select_param.v_model} (min: {self.min.v_model}, max: {self.max.v_model})'
 
-class DesignChip(v.Chip):
+class DesignItem(v.ListItem):
     param = Unicode()
     relax = List()
     srt = Bool()
     min = Float()
     max = Float()
 
-    def __init__(self, parameters, relax_parameters, **kwargs):
-        with out:
-            self.form = DesignForm(parameters, relax_parameters)
+    def __init__(self, content, parameters, relax_parameters, **kwargs):
+        self.form = DesignForm(parameters, relax_parameters)
 
-            update_btn = v.Btn(children=['update'], color='success')
-            close_btn = v.Btn(children=['close'], color='error')
+        update_btn = v.Btn(children=['update'], color='success')
+        close_btn = v.Btn(children=['close'], color='error')
 
-            self.update_dialog = v.Dialog(
-                width='500',
-                v_model=False,
+        self.update_dialog = v.Dialog(
+            width='500',
+            v_model=False,
+            children=[
+                v.Card(children=[
+                    v.CardTitle(class_='headline gray lighten-2', primary_title=True, children=[
+                        "Update field range configuration"
+                    ]),
+                    v.CardText(children=[self.form]),
+                    v.CardActions(children=[v.Spacer(), update_btn, close_btn])
+            ]),
+        ])
+
+        update_btn.on_event('click', self.update_click)
+        close_btn.on_event('click', self.close_click)
+
+        self.content = v.CardText(children=[content])
+
+        self.btn = v.Btn(children=[v.Icon(children=['mdi-close'])],
+                        fab=True,
+                        color='error',
+                        dark=True,
+                        x_small=True,
+        )
+
+        super().__init__(children=[
+            v.ListItemAction(children=[self.btn]),
+            v.ListItemContent(
                 children=[
-                    v.Card(children=[
-                        v.CardTitle(class_='headline gray lighten-2', primary_title=True, children=[
-                            "Update field range configuration"
-                        ]),
-                        v.CardText(children=[self.form]),
-                        v.CardActions(children=[v.Spacer(), update_btn, close_btn])
+                    v.Card(children=[self.content],
+                        flat=True,
+                        color='transparent',
+                        light=True,
+                    ),
+                self.update_dialog
                 ]),
-            ])
-
-            update_btn.on_event('click', self.update_click)
-            close_btn.on_event('click', self.close_click)
-
-            children = kwargs.get('children', [])
-            children.append(self.update_dialog)
-            kwargs.pop('children')
-            super().__init__(children=children, **kwargs)
+            ], **kwargs)
 
     def close_click(self, widget, event, data):
         self.update_dialog.v_model = False
 
     def update_click(self, widget, event, data):
-        with out:
-            self.form.check_rules()
+        self.form.check_rules()
 
-            if self.form.v_model:
-                self.param = self.form.select_param.v_model
-                self.relax = self.form.select_relax.v_model
-                self.srt = self.form.srt_relax.v_model
-                self.min = float(self.form.min.v_model)
-                self.max = float(self.form.max.v_model)
-                self.children = [f'{self.form}', self.update_dialog]
-                self.update_dialog.v_model = False
+        if self.form.v_model:
+            self.param = self.form.select_param.v_model
+            self.relax = self.form.select_relax.v_model
+            self.srt = self.form.srt_relax.v_model
+            self.min = float(self.form.min.v_model)
+            self.max = float(self.form.max.v_model)
+            self.content.children = [f'{self.form}']
+            self.update_dialog.v_model = False
 
     def update_chip(self, widget, event, data):
-        with out:
-            self.form.reset_form()
-            self.form.select_param.v_model = self.param
-            self.form.select_relax.v_model = self.relax
-            self.form.srt_relax.v_model = self.srt
-            self.form.min.v_model =  self.min
-            self.form.max.v_model =  self.max
-            self.update_dialog.v_model = True
+        self.form.reset_form()
+        self.form.select_param.v_model = self.param
+        self.form.select_relax.v_model = self.relax
+        self.form.srt_relax.v_model = self.srt
+        self.form.min.v_model =  self.min
+        self.form.max.v_model =  self.max
+        self.update_dialog.v_model = True
 
 class Design_widget:
     def __init__(self, parameters, relax_parameters):
@@ -251,36 +264,40 @@ class Design_widget:
             ]),
         ])
 
-        self.chip_group = v.ChipGroup(children=[], column=True)
-        add_button = v.Btn(children=[v.Icon(children=['mdi-plus']), create_dialog], fab=True, color='pink', small=True, icon=True)
+        self.design_list = v.List(children=[])
+        add_button = v.Btn(children=[v.Icon(children=['mdi-plus']), create_dialog],
+                           fab=True,
+                           color='primary',
+                           small=True,
+                           dark=True,
+        )
 
         def close_click(widget, event, data):
             create_dialog.v_model = False
 
         def add_click(widget, event, data):
-            with out:
-                form.check_rules()
+            form.check_rules()
 
-                if form.v_model:
-                    new_chip = DesignChip(parameters, relax_parameters,
+            if form.v_model:
+                new_item = DesignItem(f'{form}', parameters, relax_parameters,
                                         param=form.select_param.v_model,
                                         relax=form.select_relax.v_model,
                                         srt=form.srt_relax.v_model,
                                         min=float(form.min.v_model),
                                         max=float(form.max.v_model),
-                                        children=[f'{form}']
-                                        , close=True)
-                    new_chip_index = len(self.chip_group.children)
-                    self.chip_group.children.append(new_chip)
-                    create_dialog.v_model = False
+                                        class_='ma-1',
+                                        style_='background-color: #F8F8F8;'
+                )
+                self.design_list.children.append(new_item)
+                create_dialog.v_model = False
 
-                    def close_chip(widget, event, data):
-                        self.chip_group.children.remove(widget)
-                        self.chip_group.notify_change({'name': 'children', 'type': 'change'})
+                def remove_item(widget, event, data):
+                    self.design_list.children.remove(new_item)
+                    self.design_list.notify_change({'name': 'children', 'type': 'change'})
 
-                    new_chip.on_event('click:close', close_chip)
-                    new_chip.on_event('click', new_chip.update_chip)
-                    self.chip_group.notify_change({'name': 'children', 'type': 'change'})
+                new_item.btn.on_event('click', remove_item)
+                new_item.on_event('click', new_item.update_chip)
+                self.design_list.notify_change({'name': 'children', 'type': 'change'})
 
         create_close.on_event('click', close_click)
         create_add.on_event('click', add_click)
@@ -293,22 +310,18 @@ class Design_widget:
         add_button.on_event('click', on_add_click)
 
         self.widget = v.Card(children=[
-            v.CardText(children=[self.chip_group]),
+            v.CardText(children=[self.design_list]),
             v.CardActions(children=[v.Spacer(), add_button])
         ])
 
-    def purge(self):
-        self.chip_group.children = []
-
     def design_space(self):
-        with out:
-            output = {}
-            for c in self.chip_group.children:
-                if c.relax:
-                    if c.srt:
-                        output.update({tuple(c.relax): (c.min, c.max)})
-                    else:
-                        output.update({r: (c.min, c.max) for r in c.relax})
+        output = {}
+        for c in self.design_list.children:
+            if c.relax:
+                if c.srt:
+                    output.update({tuple(c.relax): (c.min, c.max)})
                 else:
-                    output.update({c.param: (c.min, c.max)})
-            return output
+                    output.update({r: (c.min, c.max) for r in c.relax})
+            else:
+                output.update({c.param: (c.min, c.max)})
+        return output

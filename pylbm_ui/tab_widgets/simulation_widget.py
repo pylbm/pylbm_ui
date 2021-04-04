@@ -9,7 +9,7 @@ import json
 import ipyvuetify as v
 
 from .save_widget import Save_widget
-from .pylbmwidget import out
+from .pylbmwidget import out, debug_widget
 from ..config import default_path
 from ..simulation import simulation, Plot
 
@@ -26,8 +26,8 @@ class simulation_widget:
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
             nx = 201
             dx = test_case.size()/201
-            dt = dx*float(lb_param['la'].v_model)
-            nt = test_case.duration/dt
+            dt = dx/float(lb_param['la'].v_model)
+            nt = int(test_case.duration/dt)
             discret = {
                 'nx': v.TextField(label='Number of points', v_model=nx, value=nx, type='number'),
                 'dx': v.TextField(label='Space step', v_model=dx, value=dx, type='number'),
@@ -36,6 +36,7 @@ class simulation_widget:
             }
 
             codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
+            save_fields = Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys()))
             left_panel = [
                 simulation_name,
                 v.ExpansionPanels(children=[
@@ -71,7 +72,7 @@ class simulation_widget:
                     v.ExpansionPanel(children=[
                         v.ExpansionPanelHeader(children=['Field output request']),
                         v.ExpansionPanelContent(children=[
-                            Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys())).widget
+                            save_fields.widget
                         ]),
                     ]),
                 ], multiple=True)
@@ -122,6 +123,8 @@ class simulation_widget:
                     simu.plot(self.plot, result.v_model)
                     plot_output.children[0].draw_idle()
 
+                    ite_to_save = save_fields.get_save_time(simu.sol.dt, simu.duration)
+
                     await asyncio.sleep(0.01)
                     while simu.sol.t <= simu.duration:
                         progress_bar.value = float(simu.sol.t)/simu.duration*100
@@ -135,6 +138,9 @@ class simulation_widget:
                                     simu.save_data(result.v_model)
                                     simu.plot(self.plot, result.v_model)
                                     plot_output.children[0].draw_idle()
+
+                            if simu.sol.nt in ite_to_save:
+                                simu.save_data(ite_to_save[simu.sol.nt])
 
                             nite += 1
                             self.iplot += 1
@@ -198,31 +204,30 @@ class simulation_widget:
                             key = k
                             break
 
-
                     problem_size = test_case_widget.get_case().size()
                     la = float(lb_param['la'].v_model)
 
                     if key == 'nx' or key is None:
-                        nx = float(discret['nx'].v_model)
+                        nx = int(discret['nx'].v_model)
                         dx = problem_size/nx
                         discret['dx'].v_model = dx
-                        discret['nt'].v_model = la*nx
+                        discret['nt'].v_model = int(la*nx)
                         discret['dt'].v_model = dx/la
                     elif key == 'dx':
                         dx = float(discret['dx'].v_model)
-                        discret['nx'].v_model = problem_size/dx
-                        discret['nt'].v_model = la*discret['nx'].v_model
+                        discret['nx'].v_model = int(problem_size/dx)
+                        discret['nt'].v_model = int(la*discret['nx'].v_model)
                         discret['dt'].v_model = dx/la
                     elif key == 'nt':
-                        nt = float(discret['nt'].v_model)
-                        discret['nx'].v_model = nt/la
+                        nt = int(discret['nt'].v_model)
+                        discret['nx'].v_model = int(nt/la)
                         discret['dx'].v_model = problem_size/discret['nx'].v_model
                         discret['dt'].v_model = discret['dx'].v_model/la
                     elif key == 'dt':
                         dt = float(discret['dt'].v_model)
                         discret['dx'].v_model = dt*la
-                        discret['nx'].v_model = problem_size/discret['dx'].v_model
-                        discret['nt'].v_model = la*discret['nx'].v_model
+                        discret['nx'].v_model = int(problem_size/discret['dx'].v_model)
+                        discret['nt'].v_model = int(la*discret['nx'].v_model)
 
             for value in discret.values():
                 value.observe(observer, 'v_model')

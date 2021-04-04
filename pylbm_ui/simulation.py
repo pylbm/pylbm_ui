@@ -1,5 +1,6 @@
 import os
 import json
+
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
@@ -134,13 +135,26 @@ class simulation:
         return data
 
     def save_data(self, field):
-        h5 = pylbm.H5File(self.sol.domain.mpi_topo, f'{field}', self.path, self.sol.nt)
+        if isinstance(field, set):
+            filename = 'solution'
+        else:
+            filename = f'{field}'
+
+        h5 = pylbm.H5File(self.sol.domain.mpi_topo, filename, self.path, self.sol.nt)
+
         if self.sol.dim == 1:
             h5.set_grid(self.sol.domain.x)
         elif self.sol.dim == 2:
             h5.set_grid(self.sol.domain.x, self.sol.domain.y)
-        data = self.get_data(field)
-        h5.add_scalar(field, data)
+
+        if isinstance(field, set):
+            for f in field:
+                data = self.get_data(f)
+                h5.add_scalar(f, data)
+        else:
+            data = self.get_data(field)
+            h5.add_scalar(field, data)
+
         h5.save()
 
     def plot(self, fig, field):

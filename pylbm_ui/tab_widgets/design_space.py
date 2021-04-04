@@ -280,13 +280,13 @@ class Design_widget:
 
             if form.v_model:
                 new_item = DesignItem(f'{form}', parameters, relax_parameters,
-                                        param=form.select_param.v_model,
-                                        relax=form.select_relax.v_model,
-                                        srt=form.srt_relax.v_model,
-                                        min=float(form.min.v_model),
-                                        max=float(form.max.v_model),
-                                        class_='ma-1',
-                                        style_='background-color: #F8F8F8;'
+                                      param=form.select_param.v_model,
+                                      relax=form.select_relax.v_model,
+                                      srt=form.srt_relax.v_model,
+                                      min=float(form.min.v_model),
+                                      max=float(form.max.v_model),
+                                      class_='ma-1',
+                                      style_='background-color: #F8F8F8;'
                 )
                 self.design_list.children.append(new_item)
                 create_dialog.v_model = False

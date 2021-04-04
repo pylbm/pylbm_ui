@@ -242,11 +242,11 @@ class Save_widget:
                 self.request_list.children.append(new_item)
                 create_dialog.v_model = False
 
-                def close_chip(widget, event, data):
+                def remove_item(widget, event, data):
                     self.request_list.children.remove(new_item)
                     self.request_list.notify_change({'name': 'children', 'type': 'change'})
 
-                new_item.btn.on_event('click', close_chip)
+                new_item.btn.on_event('click', remove_item)
                 new_item.on_event('click', new_item.update_item)
                 self.request_list.notify_change({'name': 'children', 'type': 'change'})
 

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import ipyvuetify as v
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
+from .pylbmwidget import Markdown, ParametersPanel, Tabs
 
 class Test_case_widget:
 
@@ -42,21 +42,20 @@ class Test_case_widget:
                 fig.canvas.draw_idle()
 
         def change_case(change):
-            with out:
-                panels.children[0].unbind(change_param)
-                v_model = tabs.v_model
-                description.update_content(cases[select_case.v_model].description)
-                self.parameters = schema_to_widgets(self.parameters, cases[select_case.v_model])
-                panels.children[0].update(self.parameters.values())
-                panels.children[0].bind(change_param)
-                tabs.v_model = v_model
+            panels.children[0].unbind(change_param)
+            v_model = tabs.v_model
+            description.update_content(cases[select_case.v_model].description)
+            self.parameters = schema_to_widgets(self.parameters, cases[select_case.v_model])
+            panels.children[0].update(self.parameters.values())
+            panels.children[0].bind(change_param)
+            tabs.v_model = v_model
 
-                if not tabs.viz:
-                    tabs.show()
-                    panels.children[0].show()
+            if not tabs.viz:
+                tabs.show()
+                panels.children[0].show()
 
-                change_param(None)
-                panels.children[0].bind(change_param)
+            change_param(None)
+            panels.children[0].bind(change_param)
 
         select_case.observe(change_case, 'v_model')
         panels.children[0].bind(change_param)

@@ -2,6 +2,7 @@ import pylbm
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
+import sympy as sp
 
 
 from .equation_type import EquationType, Euler1D
@@ -26,8 +27,6 @@ class ToroCase(HashBaseModel):
     equation = Euler1D()
     name = 'Toro'
     description = 'none'
-    responses = {}
-
 
     def get_dictionary(self):
         q_left = self.rho_left*self.u_left
@@ -86,7 +85,7 @@ class ToroCase(HashBaseModel):
                  self.equation.E: .5*self.rho_right*self.u_right**2 + self.p_right/(self.gamma-1.)},
         ]
 
-    def get_ref_solution(self, t, x, field=None):
+    def ref_solution(self, t, x, field=None):
         exact_solution = exact_solver({
             'jump abscissa': self.x_disc,
             'left state': [self.rho_left, self.u_left, self.p_left],
@@ -95,99 +94,80 @@ class ToroCase(HashBaseModel):
         })
         sol_e = exact_solution.evaluate(x, t)
 
-        if field:
-            if field == 'mass': return sol_e[0]
-            elif field == 'velocity': return sol_e[1]
-            elif field == 'pressure': return sol_e[2]
-            elif field == 'momentum': return sol_e[0]*sol_e[1]
-            elif field == 'energy': return .5*sol_e[0]*sol_e[1]**2 + sol_e[2]/(self.gamma-1.)
-            elif field == 'internal energy': return sol_e[2]/sol_e[0]/(self.gamma-1)
-            elif field == 'Mach number': return  np.sqrt((sol_e[0]*sol_e[1])**2/(self.gamma*sol_e[0]*sol_e[2]))
-            else: print("ERROR IN get_exact_solution")
+        to_subs = {self.equation.rho: sol_e[0],
+                   self.equation.q: sol_e[0]*sol_e[1],
+                   self.equation.E: .5*sol_e[0]*sol_e[1]**2 + sol_e[2]/(self.gamma-1.),
+                   self.equation.gamma: self.gamma}
 
-        return sol_e
+        if field:
+            expr = self.equation.get_fields()[field]
+            args = {str(s): to_subs[s] for s in expr.atoms(sp.Symbol)}
+            func = sp.lambdify(list(expr.atoms(sp.Symbol)), expr, "numpy", dummify=False)
+            output = func(**args)
+        else:
+            output = {}
+            for k, v in self.equation.get_fields().items():
+                args = {str(s): to_subs[s] for s in v.atoms(sp.Symbol)}
+                func = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
+                output[k] = func(**args)
+
+        return output
 
     def plot_ref_solution(self, fig):
         x_e = np.linspace(self.xmin, self.xmax, 1000)
         time_e = self.duration
-        sol_e = self.get_ref_solution(time_e, x_e)
+        sol_e = self.ref_solution(time_e, x_e)
 
-        rho_e = sol_e[0]
-        u_e = sol_e[1]
-        p_e = sol_e[2]
-        q_e = rho_e * u_e
-        rhoe_e = .5*rho_e*u_e**2 + p_e/(self.gamma-1.)
-        e_e = p_e/rho_e/(self.gamma-1)
-        mach_e = np.sqrt(q_e**2/(self.gamma*rho_e*p_e))
+        n_row, n_col = 2, 4
+        gs = fig.add_gridspec(n_row, n_col)
+        i_row, i_col = 0, 0
+        for k, v in sol_e.items():
+            ax = fig.add_subplot(gs[i_row, i_col])
+            ax.set_title(k)
+            ax.plot(x_e, v, color='black')
+            i_col += 1
+            if i_col == n_col:
+                i_col = 0
+                i_row += 1
 
-        gs = fig.add_gridspec(2, 4)
-        # gs.update(wspace=0.3, hspace=0.3)
-        ax = fig.add_subplot(gs[0, 0])
-        ax.set_title('Mass')
-        ax.plot(x_e, rho_e, color='black')
+    # def plot(self, sol=None):
+    #     xmid = .5*(self.xmin + self.xmax)
+    #     exact_solution = exact_solver({
+    #         'jump abscissa': xmid,
+    #         'left state': [self.rho_left, self.u_left, self.p_left],
+    #         'right state': [self.rho_right, self.u_right, self.p_right],
+    #         'gamma': self.gamma,
+    #     })
+    #     x_e = np.linspace(self.xmin, self.xmax, 1000)
+    #     sol_e = exact_solution.evaluate(x_e, self.duration)
 
-        ax = fig.add_subplot(gs[0, 1])
-        ax.set_title('Velocity')
-        ax.plot(x_e, u_e, color='black')
+    #     viewer = pylbm.viewer.matplotlib_viewer
+    #     fig = viewer.Fig(2, 4, figsize=(12, 8))
+    #     list_color = ['navy', 'orange', 'green', 'purple']
+    #     list_symb = ['^', '<', 'v', '>']
 
-        ax = fig.add_subplot(gs[0, 2])
-        ax.set_title('Pressure')
-        ax.plot(x_e, p_e, color='black')
+    #     rho_e = sol_e[0]
+    #     u_e = sol_e[1]
+    #     p_e = sol_e[2]
+    #     q_e = rho_e * u_e
+    #     rhoe_e = .5*rho_e*u_e**2 + p_e/(self.gamma-1.)
+    #     e_e = p_e/rho_e/(self.gamma-1)
+    #     mach_e = np.sqrt(q_e**2/(self.gamma*rho_e*p_e))
 
-        ax = fig.add_subplot(gs[0, 3])
-        ax.set_title('Energy')
-        ax.plot(x_e, rhoe_e, color='black')
-
-        ax = fig.add_subplot(gs[1, 0])
-        ax.set_title('Momentum')
-        ax.plot(x_e, q_e, color='black')
-
-        ax = fig.add_subplot(gs[1, 1])
-        ax.set_title('Internal energy')
-        ax.plot(x_e, e_e, color='black')
-
-        ax = fig.add_subplot(gs[1, 2])
-        ax.set_title('Mach number')
-        ax.plot(x_e, mach_e, color='black')
-
-    def plot(self, sol=None):
-        xmid = .5*(self.xmin + self.xmax)
-        exact_solution = exact_solver({
-            'jump abscissa': xmid,
-            'left state': [self.rho_left, self.u_left, self.p_left],
-            'right state': [self.rho_right, self.u_right, self.p_right],
-            'gamma': self.gamma,
-        })
-        x_e = np.linspace(self.xmin, self.xmax, 1000)
-        sol_e = exact_solution.evaluate(x_e, self.duration)
-
-        viewer = pylbm.viewer.matplotlib_viewer
-        fig = viewer.Fig(2, 4, figsize=(12, 8))
-        list_color = ['navy', 'orange', 'green', 'purple']
-        list_symb = ['^', '<', 'v', '>']
-
-        rho_e = sol_e[0]
-        u_e = sol_e[1]
-        p_e = sol_e[2]
-        q_e = rho_e * u_e
-        rhoe_e = .5*rho_e*u_e**2 + p_e/(self.gamma-1.)
-        e_e = p_e/rho_e/(self.gamma-1)
-        mach_e = np.sqrt(q_e**2/(self.gamma*rho_e*p_e))
-
-        fig[0, 0].CurveLine(x_e, rho_e, color='black', width=1)
-        fig[0, 0].title = 'mass'
-        fig[0, 1].CurveLine(x_e, u_e, color='black', width=1)
-        fig[0, 1].title = 'velocity'
-        fig[0, 2].CurveLine(x_e, p_e, color='black', width=1)
-        fig[0, 2].title = 'pressure'
-        fig[1, 0].CurveLine(x_e, rhoe_e, color='black', width=1)
-        fig[1, 0].title = 'energy'
-        fig[1, 1].CurveLine(x_e, q_e, color='black', width=1)
-        fig[1, 1].title = 'momentum'
-        fig[1, 2].CurveLine(x_e, e_e, color='black', width=1)
-        fig[1, 2].title = 'internal energy'
-        fig[1, 3].CurveLine(x_e, mach_e, color='black', width=1)
-        fig[1, 3].title = 'Mach number'
+    #     fig[0, 0].CurveLine(x_e, rho_e, color='black', width=1)
+    #     fig[0, 0].title = 'mass'
+    #     fig[0, 1].CurveLine(x_e, u_e, color='black', width=1)
+    #     fig[0, 1].title = 'velocity'
+    #     fig[0, 2].CurveLine(x_e, p_e, color='black', width=1)
+    #     fig[0, 2].title = 'pressure'
+    #     fig[1, 0].CurveLine(x_e, rhoe_e, color='black', width=1)
+    #     fig[1, 0].title = 'energy'
+    #     fig[1, 1].CurveLine(x_e, q_e, color='black', width=1)
+    #     fig[1, 1].title = 'momentum'
+    #     fig[1, 2].CurveLine(x_e, e_e, color='black', width=1)
+    #     fig[1, 2].title = 'internal energy'
+    #     fig[1, 3].CurveLine(x_e, mach_e, color='black', width=1)
+    #     fig[1, 3].title = 'Mach number'
 
 ##################################
 ### predefined cases

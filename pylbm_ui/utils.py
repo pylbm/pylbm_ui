@@ -9,18 +9,17 @@ def schema_to_widgets(parameter_widget, data):
 
         widgets = {}
         for field in required:
-            property = properties[field]
-            name = property['title']
             default = getattr(data, field)
             if hasattr(default, 'value'):
                 default_value = default.value
                 name = str(default.symb)
             else:
                 default_value = default
+                name = field
 
-            data_type = property.get('format', None)
+            data_type = properties[field].get('format', None)
             if data_type is None:
-                data_type = property['type']
+                data_type = properties[field]['type']
 
             if field not in parameter_widget:
                 widgets[field] = v.TextField(label=name, v_model=default_value, type='number')
@@ -37,18 +36,17 @@ def required_fields(data):
 
     fields = {}
     for field in required:
-        property = properties[field]
-        name = property['title']
         default = getattr(data, field)
         if hasattr(default, 'value'):
             default_value = default.value
             name = str(default.symb)
         else:
             default_value = default
+            name = field
 
-        data_type = property.get('format', None)
+        data_type = properties[field].get('format', None)
         if data_type is None:
-            data_type = property['type']
+            data_type = properties[field]['type']
 
         fields[field] = {'name': name, 'value': default_value, 'type': data_type}
 

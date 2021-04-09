@@ -51,6 +51,41 @@ class Plot:
             self.plot_type.set_clim(vmin=np.nanmin(data), vmax=np.nanmax(data))
             self.color_bar.set_label(label=field)
 
+def get_config(test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude=None, show_code=False):
+    simu_cfg = test_case.get_dictionary()
+    param = simu_cfg['parameters']
+    simu_cfg.update(lb_scheme.get_dictionary())
+    param.update(simu_cfg['parameters'])
+    simu_cfg['parameters'] = param
+    simu_cfg['space_step'] = dx
+
+    if codegen in ['numpy', 'cython']:
+        simu_cfg['generator'] = codegen
+    if codegen_dir:
+        simu_cfg['codegen_option'] = {'directory': codegen_dir}
+
+    bound_cfg = {}
+    bound_tc = test_case.get_boundary()
+    bound_sc = lb_scheme.get_boundary()
+    for key, val in bound_tc.items():
+        bound_cfg[key] = bound_sc[val]
+
+    simu_cfg.pop('dim')
+    simu_cfg['boundary_conditions'] = bound_cfg
+
+    simu_cfg['show_code'] = show_code
+
+    if exclude:
+        for ik, k in enumerate(exclude):
+            if isinstance(k, tuple):
+                for kk in k:
+                    if kk in simu_cfg['parameters']:
+                        simu_cfg['parameters'].pop(kk)
+            else:
+                if k in simu_cfg['parameters']:
+                    simu_cfg['parameters'].pop(k)
+
+    return simu_cfg
 class simulation:
     def __init__(self):
         self.sol = None
@@ -72,51 +107,18 @@ class simulation:
         for k, v in fields.items():
             self.func[k] = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
 
-    def reset_sol(self, test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude=None, initialize=True):
+    def reset_sol(self, test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude=None, initialize=True, show_code=False):
         self.test_case = test_case
         self.lb_scheme = lb_scheme
         self.dx = dx
-        simu_cfg = test_case.get_dictionary()
-        param = simu_cfg['parameters']
-        simu_cfg.update(lb_scheme.get_dictionary())
-        param.update(simu_cfg['parameters'])
-        simu_cfg['parameters'] = param
-        simu_cfg['space_step'] = dx
-
-        if codegen in ['numpy', 'cython']:
-            simu_cfg['generator'] = codegen
-        if codegen_dir:
-            simu_cfg['codegen_option'] = {'directory': codegen_dir}
-
-        bound_cfg = {}
-        bound_tc = test_case.get_boundary()
-        bound_sc = lb_scheme.get_boundary()
-        for key, val in bound_tc.items():
-            bound_cfg[key] = bound_sc[val]
-
-        simu_cfg.pop('dim')
-        simu_cfg['boundary_conditions'] = bound_cfg
-
-        if exclude:
-            keys = list(simu_cfg['parameters'].keys())
-            str_keys = [str(k) for k in simu_cfg['parameters'].keys()]
-            for ik, k in enumerate(exclude):
-                if isinstance(k, tuple):
-                    for kk in k:
-                        if kk in str_keys:
-                            simu_cfg['parameters'].pop(keys[str_keys.index(kk)])
-                else:
-                    if k in str_keys:
-                        simu_cfg['parameters'].pop(keys[str_keys.index(k)])
-
-        self.simu_cfg = simu_cfg
-        self.sol = pylbm.Simulation(simu_cfg, initialize=initialize)
+        self.simu_cfg = get_config(test_case, lb_scheme, dx, codegen, codegen_dir, exclude, show_code)
+        self.sol = pylbm.Simulation(self.simu_cfg, initialize=initialize)
 
     @property
     def duration(self):
         return self.test_case.duration
 
-    def get_data(self, field):
+    def get_data(self, field, solid_value=np.NaN):
         to_subs = {str(k): self.sol.m[k] for k in self.sol.scheme.consm.keys()}
         to_subs.update({str(k): v for k, v in self.sol.scheme.param.items()})
 
@@ -131,7 +133,7 @@ class simulation:
             ind.append(slice(vm, -vm))
         ind = np.asarray(ind)
 
-        data[solid_cells[tuple(ind)]] = np.NaN
+        data[solid_cells[tuple(ind)]] = solid_value
         return data
 
     def save_data(self, field):
@@ -164,6 +166,8 @@ class simulation:
     def save_config(self, filename='simu_config.json'):
         json.dump(
             {
+                'dx': self.dx,
+                # 'simu_cfg': self.simu_cfg,
                 'test_case': {
                     'module': self.test_case.__module__,
                     'class': self.test_case.__class__.__name__,

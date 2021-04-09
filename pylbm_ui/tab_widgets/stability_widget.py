@@ -80,6 +80,7 @@ class stability_widget:
 
                     alert.type = 'info'
                     alert.children = ['Check the stability for this state...']
+                    test_case = test_case_widget.get_case()
                     case = LB_scheme_widget.get_case()
                     stability = case.get_stability(test_case.state()[state.v_model], markers1, markers2)
                     stab_output.canvas.draw_idle()

@@ -3,21 +3,12 @@ import ipyvuetify as v
 from .pylbmwidget import out
 
 import enum
+import sympy as sp
 from traitlets import Unicode, Float, List, Bool
+
+from schema.utils import SchemeVelocity, RelaxationParameterFinal
 from ..utils import required_fields
 
-def get_parameters(test_case, lb_case):
-    fields = required_fields(test_case_widget.get_case())
-    fields.update(required_fields(lb_scheme_widget.get_case()))
-
-    parameters = {'relaxation parameters': None}
-    parameters.update({v['name']: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
-    relax_parameters = {v['name']: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
-
-    params = {k: params[k] for k in sorted(params)}
-    relax_params = {k: relax_params[k] for k in sorted(relax_params)}
-
-    return params, relax_params
 class DesignForm(v.Form):
     def __init__(self, test_case_widget, lb_scheme_widget):
         self.test_case_widget, self.lb_scheme_widget = test_case_widget, lb_scheme_widget
@@ -46,8 +37,8 @@ class DesignForm(v.Form):
         fields.update(required_fields(self.lb_scheme_widget.get_case()))
 
         params = {'relaxation parameters': None}
-        params.update({v['name']: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
-        relax_params = {v['name']: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
+        params.update({f: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
+        relax_params = {f: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
 
         self.params = {k: params[k] for k in sorted(params)}
         self.relax_params = {k: relax_params[k] for k in sorted(relax_params)}
@@ -56,26 +47,24 @@ class DesignForm(v.Form):
         self.select_relax.items = ['all'] + list(self.relax_params.keys())
 
     def select_param_changed(self, change):
-        if self.select_param.v_model:
-            if self.select_param.v_model == 'relaxation parameters':
-                self.min.v_model = 1
-                self.max.v_model = 1
-                self.select_relax.class_ = ''
-                self.srt_relax.class_ = ''
-            else:
-                if hasattr(self.params[self.select_param.v_model], 'value'):
-                    value = self.params[self.select_param.v_model].value
+        with out:
+            if self.select_param.v_model:
+                if self.select_param.v_model == 'relaxation parameters':
+                    self.min.v_model = 1
+                    self.max.v_model = 1
+                    self.select_relax.class_ = ''
+                    self.srt_relax.class_ = ''
                 else:
                     value = self.params[self.select_param.v_model]
-                self.min.v_model = value
-                self.max.v_model = value
-                self.select_relax.class_ = 'd-none'
-                self.srt_relax.class_ = 'd-none'
-                self.select_relax.v_model = []
-            self.min.class_ = ''
-            self.max.class_ = ''
-            self.min.notify_change({'name': 'v_model', 'type': 'change'})
-            self.max.notify_change({'name': 'v_model', 'type': 'change'})
+                    self.min.v_model = value
+                    self.max.v_model = value
+                    self.select_relax.class_ = 'd-none'
+                    self.srt_relax.class_ = 'd-none'
+                    self.select_relax.v_model = []
+                self.min.class_ = ''
+                self.max.class_ = ''
+                self.min.notify_change({'name': 'v_model', 'type': 'change'})
+                self.max.notify_change({'name': 'v_model', 'type': 'change'})
 
     def select_relax_all(self, change):
         if 'all' in self.select_relax.v_model:
@@ -149,6 +138,7 @@ class DesignForm(v.Form):
         self.select_relax.rules = []
         self.select_relax.error = False
         self.select_relax.class_ = 'd-none'
+        self.srt_relax = True
         self.srt_relax.class_ = 'd-none'
 
         self.min.v_model = None
@@ -170,14 +160,14 @@ class DesignForm(v.Form):
             return f'{self.select_param.v_model} (min: {self.min.v_model}, max: {self.max.v_model})'
 
 class DesignItem(v.ListItem):
-    param = Unicode()
-    relax = List()
-    srt = Bool()
-    min = Float()
-    max = Float()
+    def __init__(self, content, test_case_widget, lb_scheme_widget, form, **kwargs):
+        self.form = DesignForm(test_case_widget, lb_scheme_widget)
 
-    def __init__(self, content, parameters, relax_parameters, **kwargs):
-        self.form = DesignForm(parameters, relax_parameters)
+        self.param = form.select_param.v_model
+        self.relax = form.select_relax.v_model
+        self.srt = form.srt_relax.v_model
+        self.min = float(form.min.v_model)
+        self.max = float(form.max.v_model)
 
         update_btn = v.Btn(children=['update'], color='success')
         close_btn = v.Btn(children=['close'], color='error')
@@ -245,8 +235,11 @@ class DesignItem(v.ListItem):
         self.update_dialog.v_model = True
 
 class Design_widget:
-    def __init__(self, parameters, relax_parameters):
-        form = DesignForm(parameters, relax_parameters)
+    def __init__(self, test_case_widget, lb_scheme_widget):
+        self.test_case_widget = test_case_widget
+        self.lb_scheme_widget = lb_scheme_widget
+
+        form = DesignForm(test_case_widget, lb_scheme_widget)
 
         create_add = v.Btn(children=['add'], color='success')
         create_close = v.Btn(children=['close'], color='error')
@@ -279,12 +272,7 @@ class Design_widget:
             form.check_rules()
 
             if form.v_model:
-                new_item = DesignItem(f'{form}', parameters, relax_parameters,
-                                      param=form.select_param.v_model,
-                                      relax=form.select_relax.v_model,
-                                      srt=form.srt_relax.v_model,
-                                      min=float(form.min.v_model),
-                                      max=float(form.max.v_model),
+                new_item = DesignItem(f'{form}', test_case_widget, lb_scheme_widget, form,
                                       class_='ma-1',
                                       style_='background-color: #F8F8F8;'
                 )
@@ -314,14 +302,29 @@ class Design_widget:
             v.CardActions(children=[v.Spacer(), add_button])
         ])
 
+    def purge(self):
+        self.design_list.children = []
+
     def design_space(self):
+        test_case = self.test_case_widget.get_case()
+        lb_scheme = self.lb_scheme_widget.get_case()
+
         output = {}
         for c in self.design_list.children:
             if c.relax:
+                attrs = [getattr(lb_scheme, r).symb for r in c.relax]
                 if c.srt:
-                    output.update({tuple(c.relax): (c.min, c.max)})
+                    output.update({tuple(attrs): (c.min, c.max)})
                 else:
-                    output.update({r: (c.min, c.max) for r in c.relax})
+                    output.update({a: (c.min, c.max) for a in attrs})
             else:
-                output.update({c.param: (c.min, c.max)})
+                if hasattr(test_case, c.param):
+                    attr = getattr(test_case, c.param)
+                elif hasattr(lb_scheme, c.param):
+                    attr = getattr(lb_scheme, c.param)
+                    if isinstance(attr, SchemeVelocity):
+                        attr = attr.symb
+                if not isinstance(attr, sp.Symbol):
+                    attr = c.param
+                output.update({attr: (c.min, c.max)})
         return output

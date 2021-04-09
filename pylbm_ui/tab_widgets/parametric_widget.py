@@ -12,28 +12,49 @@ import pathos
 import pathos.pools as pp
 
 from .design_space import Design_widget
-from .simulation_widget import simulation
+from .responses import Responses_widget
+from ..responses import From_config, From_simulation
+from ..simulation import simulation, get_config
 from ..utils import required_fields
 from .pylbmwidget import out
 
 
 def run_simulation(args):
-    simu_cfg, sample, duration = args
+    simu_cfg, sample, duration, responses = args
     simu_cfg['codegen_option']['generate'] = False
+
+    output = [0]*len(responses)
 
     sol = pylbm.Simulation(simu_cfg, initialize=False)
     sol.extra_parameters = sample
-    sol._need_init = True
-    fluid_cells = sol.domain.in_or_out == sol.domain.valin
-    sol.t = 0
-    while sol.t <= duration:
-        sol.one_time_step()
-        for c in sol.scheme.consm:
-            data = sol.m_halo[c][fluid_cells]
-            if np.isnan(data).any() or np.any(np.abs(data)>1e10):
-                return False
 
-    return True
+    sol._need_init = True
+    solid_cells = sol.domain.in_or_out != sol.domain.valin
+
+    for i, r in enumerate(responses):
+        if isinstance(r, From_config):
+            output[i] = r(simu_cfg, sample)
+
+    nan_detected = False
+    nite = 0
+    while sol.t <= duration and not nan_detected:
+        sol.one_time_step()
+
+        if nite == 200:
+            nite = 0
+            c = list(sol.scheme.consm.keys())[0]
+            sol.m_halo[c][solid_cells] = 0
+            data = sol.m[c]
+            if np.isnan(np.sum(data)):
+                nan_detected = True
+        nite += 1
+
+
+    for i, r in enumerate(responses):
+        if isinstance(r, From_simulation):
+            output[i] = r(sol)
+
+    return [not nan_detected] + output
 
 skopt_method = {'Latin hypercube': Lhs,
                 'Sobol': Sobol,
@@ -47,6 +68,7 @@ class parametric_widget:
             codegen = v.Select(label='Code generator', items=['auto', 'numpy', 'cython'], v_model='auto')
 
             design = Design_widget(test_case_widget, lb_scheme_widget)
+            responses = Responses_widget(test_case_widget, lb_scheme_widget)
             run = v.Btn(v_model=True, children=['Run parametric study'], class_="ma-5", color='success')
             plotly_plot = v.Container(align_content_center=True)
 
@@ -63,6 +85,7 @@ class parametric_widget:
                     ]),
                     v.ExpansionPanel(children=[
                         v.ExpansionPanelHeader(children=['Responses']),
+                        v.ExpansionPanelContent(children=[responses.widget]),
                     ]),
                     v.ExpansionPanel(children=[
                         v.ExpansionPanelHeader(children=['Sampling method']),
@@ -89,6 +112,12 @@ class parametric_widget:
                     if run.v_model:
                         print(tmp_dir.name)
 
+                        try:
+                            shutil.rmtree(tmp_dir.name)
+                        except OSError:
+                            # Could be some issues on Windows
+                            pass
+
                         design_space = design.design_space()
                         if design_space:
                             run.v_model = False
@@ -109,24 +138,42 @@ class parametric_widget:
                             ]
                             sampling = np.asarray(skopt_method[sampling_method.v_model]().generate(list(design_space.values()), int(sample_size.v_model)))
 
-                            output = np.zeros(sampling.shape[0])
-
                             alert.children = ['Prepare the simulation...']
                             simu = simulation()
-                            simu.reset_sol(test_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=tmp_dir.name)
+                            simu.reset_sol(test_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=tmp_dir.name, show_code=False)
 
                             args = []
+                            tmp_case = test_case.copy()
                             for s in sampling:
                                 design_sample = {}
                                 for ik, k in enumerate(design_space.keys()):
-                                    if isinstance(k, tuple):
-                                        for kk in k:
-                                            design_sample[kk] = s[ik]
+                                    if k in test_case.__dict__:
+                                        setattr(test_case, k, s[ik])
                                     else:
-                                        if k == 'lambda':
-                                            design_sample['lambda_'] = s[ik]
-                                        design_sample[k] = s[ik]
-                                args.append((simu.simu_cfg, design_sample, test_case.duration))
+                                        if isinstance(k, tuple):
+                                            for kk in k:
+                                                design_sample[kk] = s[ik]
+                                        else:
+                                            design_sample[k] = s[ik]
+
+
+                                la = lb_scheme.la.value
+                                if lb_scheme.la.symb in design_sample:
+                                    la = design_sample[lb_scheme.la.symb]
+                                dx = float(space_step.v_model)
+                                dt = dx/la
+
+                                duration = test_case.duration
+                                if 'duration' in design_sample:
+                                    duration = design_sample['duration']
+
+                                tmp_case.duration = np.floor(test_case.duration/dt)*dt
+                                if tmp_case.duration%dt != 0:
+                                    tmp_case.duration += dt
+
+                                simu_cfg = get_config(tmp_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), codegen_dir=tmp_dir.name)
+
+                                args.append((simu_cfg, design_sample, tmp_case.duration, responses.get_list(tmp_case, simu_cfg)))
 
                             alert.children = ['Run simulations on the sampling...']
 
@@ -134,10 +181,19 @@ class parametric_widget:
                             def run_parametric_study():
                                 with out:
                                     from pathos.multiprocessing import ProcessingPool
-                                    pool = pp.ProcessPool(nodes=4)
-                                    output[:] = pool.map(run_simulation, args)
+                                    pool = pp.ProcessPool()
+                                    output = pool.map(run_simulation, args)
+
+                                    # output = []
+                                    # for a in args:
+                                    #     output.append(run_simulation(a))
+
                                     dimensions = [dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())]
-                                    dimensions.append(dict(values=output, label='stability'))
+
+                                    dimensions.append(dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability'))
+
+                                    for i, r in enumerate(responses.widget.v_model):
+                                        dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=r))
 
                                     fig = go.FigureWidget(
                                             data=go.Parcoords(
@@ -151,6 +207,7 @@ class parametric_widget:
                                         width=800,
                                         height=600,)
 
+                                    print(dimensions)
                                     plotly_plot.children = [v.Row(children=[fig], align='center', justify='center')]
                                     stop_simulation(None)
                             # asyncio.ensure_future(run_parametric_study())

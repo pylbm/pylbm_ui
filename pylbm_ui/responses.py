@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 import matplotlib
+import copy
 import pylbm
 
 class From_config:
@@ -118,7 +119,12 @@ class CFL(From_simulation):
 
         la = sol.scheme.la
         if isinstance(la, sp.Symbol):
-            la = sol.scheme.param[la]
+            if la in sol.scheme.param:
+                la = sol.scheme.param[la]
+            elif la in sol.extra_parameters:
+                la = sol.extra_parameters[la]
+            else:
+                raise KeyError(f'{la} not found')
 
         return output/la
 
@@ -164,7 +170,7 @@ class Plot(From_simulation):
                     )
         elif sol.dim == 2:
             x, y = sol.domain.x, sol.domain.y
-            cmap = matplotlib.cm.RdBu
+            cmap = copy.copy(matplotlib.cm.get_cmap("RdBu"))
             cmap.set_bad('black', 0.8)
             extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
             imshow = ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent)

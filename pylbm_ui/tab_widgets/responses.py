@@ -37,9 +37,11 @@ class Plot:
         self.expr = expr
 
     def __call__(self, path, test_case, simu_cfg):
-            domain = pylbm.Domain(simu_cfg)
-            time_e = test_case.duration
-            ref = test_case.ref_solution(time_e, domain.x, field=self.field)
+            ref = None
+            if hasattr(test_case, 'ref_solution'):
+                domain = pylbm.Domain(simu_cfg)
+                time_e = test_case.duration
+                ref = test_case.ref_solution(time_e, domain.x, field=self.field)
 
             return pylbm_responses.Plot(os.path.join(path, f'{self.field}.png'), self.expr, ref)
 
@@ -59,12 +61,12 @@ class Responses_widget:
             test_case = test_case_widget.get_case()
             lb_case = lb_scheme_widget.get_case()
 
-            if hasattr(test_case, 'ref_solution'):
-                fields = test_case.equation.get_fields()
-                for name, expr in fields.items():
+            fields = test_case.equation.get_fields()
+            for name, expr in fields.items():
+                self.responses[f'plot {name}'] = Plot(name, expr)
+                if hasattr(test_case, 'ref_solution'):
                     self.responses[f'error on {name}'] = Error(name, expr)
                     self.responses[f'relative error on {name}'] = Error(name, expr, relative=True)
-                    self.responses[f'plot {name}'] = Plot(name, expr)
 
             def add_relax(v):
                 self.responses[k] = pylbm_responses.S(v.symb)

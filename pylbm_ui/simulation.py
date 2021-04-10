@@ -8,6 +8,8 @@ import matplotlib
 import pylbm
 
 from .config import plot_config
+from .json import save_simu_config
+
 class Plot:
     def __init__(self, figsize=(10, 5)):
         plt.ioff()
@@ -164,22 +166,4 @@ class simulation:
         fig.plot(self.sol.t, self.sol.domain, field, data)
 
     def save_config(self, filename='simu_config.json'):
-        json.dump(
-            {
-                'dx': self.dx,
-                # 'simu_cfg': self.simu_cfg,
-                'test_case': {
-                    'module': self.test_case.__module__,
-                    'class': self.test_case.__class__.__name__,
-                    'args': json.loads(self.test_case.json(skip_defaults=True)),
-                },
-                'lb_scheme': {
-                    'module': self.lb_scheme.__module__,
-                    'class': self.lb_scheme.__class__.__name__,
-                    'args': json.loads(self.lb_scheme.json(skip_defaults=True)),
-                },
-            },
-            open(os.path.join(self.path, filename), 'w'),
-            sort_keys=True,
-            indent=4,
-        )
+        save_simu_cfg(self.path, filename, self.dx, self.test_case, self.lb_scheme)

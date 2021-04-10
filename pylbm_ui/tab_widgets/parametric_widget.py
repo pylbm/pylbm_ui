@@ -1,4 +1,5 @@
 import ipyvuetify as v
+import os
 import markdown
 import plotly.graph_objects as go
 import numpy as np
@@ -13,9 +14,11 @@ import pathos.pools as pp
 
 from .design_space import Design_widget
 from .responses import Responses_widget
+from ..config import default_path
 from ..responses import From_config, From_simulation
 from ..simulation import simulation, get_config
 from ..utils import required_fields
+from ..json import save_simu_config
 from .pylbmwidget import out
 
 
@@ -64,6 +67,8 @@ skopt_method = {'Latin hypercube': Lhs,
 class parametric_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
+            study_name = v.TextField(label='Study name', v_model='PS_0')
+
             space_step = v.TextField(label='Space step', v_model=0.01, type='number')
             codegen = v.Select(label='Code generator', items=['auto', 'numpy', 'cython'], v_model='auto')
 
@@ -76,6 +81,7 @@ class parametric_widget:
             sample_size = v.TextField(label='Number of samples', v_model=10, type='number')
 
             left_panel = [
+                study_name,
                 space_step,
                 codegen,
                 v.ExpansionPanels(children=[
@@ -118,6 +124,8 @@ class parametric_widget:
                             # Could be some issues on Windows
                             pass
 
+                        path = os.path.join(default_path, study_name.v_model)
+
                         design_space = design.design_space()
                         if design_space:
                             run.v_model = False
@@ -144,7 +152,7 @@ class parametric_widget:
 
                             args = []
                             tmp_case = test_case.copy()
-                            for s in sampling:
+                            for i, s in enumerate(sampling):
                                 design_sample = {}
                                 for ik, k in enumerate(design_space.keys()):
                                     if k in test_case.__dict__:
@@ -171,9 +179,10 @@ class parametric_widget:
                                 if tmp_case.duration%dt != 0:
                                     tmp_case.duration += dt
 
+                                simu_path = os.path.join(path, f'simu_{i}')
                                 simu_cfg = get_config(tmp_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), codegen_dir=tmp_dir.name)
-
-                                args.append((simu_cfg, design_sample, tmp_case.duration, responses.get_list(tmp_case, simu_cfg)))
+                                save_simu_config(simu_path, 'simu_cfg.json', float(space_step.v_model), tmp_case, lb_scheme, {str(k): v for k, v in design_sample.items()})
+                                args.append((simu_cfg, design_sample, tmp_case.duration, responses.get_list(simu_path, tmp_case, simu_cfg)))
 
                             alert.children = ['Run simulations on the sampling...']
 
@@ -184,20 +193,18 @@ class parametric_widget:
                                     pool = pp.ProcessPool()
                                     output = pool.map(run_simulation, args)
 
-                                    # output = []
-                                    # for a in args:
-                                    #     output.append(run_simulation(a))
-
                                     dimensions = [dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())]
 
                                     dimensions.append(dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability'))
 
                                     for i, r in enumerate(responses.widget.v_model):
-                                        dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=r))
+                                        if output[0][i+1] is not None:
+                                            dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=r))
 
+                                    print(dimensions)
                                     fig = go.FigureWidget(
                                             data=go.Parcoords(
-                                            line=dict(color = output),
+                                            # line=dict(color = output),
                                             dimensions = dimensions,
                                         ),
                                     )
@@ -207,7 +214,6 @@ class parametric_widget:
                                         width=800,
                                         height=600,)
 
-                                    print(dimensions)
                                     plotly_plot.children = [v.Row(children=[fig], align='center', justify='center')]
                                     stop_simulation(None)
                             # asyncio.ensure_future(run_parametric_study())

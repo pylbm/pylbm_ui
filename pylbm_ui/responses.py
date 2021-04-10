@@ -1,6 +1,7 @@
 import numpy as np
 import sympy as sp
-
+import matplotlib.pyplot as plt
+import matplotlib
 import pylbm
 
 class From_config:
@@ -120,6 +121,57 @@ class CFL(From_simulation):
             la = sol.scheme.param[la]
 
         return output/la
+
+class Plot(From_simulation):
+    def __init__(self, filename, expr, ref_solution=None):
+        self.filename = filename
+        self.expr = expr
+        self.ref_solution = ref_solution
+
+    def __call__(self, sol):
+        func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
+        to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
+        to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
+
+        args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
+        data = func(**args)
+
+        solid_cells = sol.domain.in_or_out != sol.domain.valin
+
+        vmax = sol.domain.stencil.vmax
+        ind = []
+        for vm in vmax:
+            ind.append(slice(vm, -vm))
+        ind = np.asarray(ind)
+
+        data[solid_cells[tuple(ind)]] = np.nan
+
+        fig, ax = plt.subplots()
+        if sol.dim == 1:
+            x = sol.domain.x
+            ax.plot(x, data,
+                    color='black',
+                    alpha=0.8,
+                    linewidth=2,
+                    marker='.',
+                    markersize=10,
+                    )
+            if self.ref_solution is not None:
+                ax.plot(x, self.ref_solution,
+                    color='black',
+                    alpha=0.8,
+                    linewidth=1,
+                    )
+        elif sol.dim == 2:
+            x, y = sol.domain.x, sol.domain.y
+            cmap = matplotlib.cm.RdBu
+            cmap.set_bad('black', 0.8)
+            extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
+            imshow = ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent)
+            fig.colorbar(imshow, ax=ax)
+
+        fig.savefig(self.filename, dpi=300)
+
 
 class StdError(From_simulation):
     def __init__(self, ref_solution, field):

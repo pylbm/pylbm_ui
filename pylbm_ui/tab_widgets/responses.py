@@ -1,3 +1,4 @@
+import os
 import ipyvuetify as v
 import numpy as np
 import pylbm
@@ -16,12 +17,31 @@ def CFL(test_case):
 
     return pylbm_responses.CFL(eq.rho, vel)
 
-def Error(field, expr, test_case, simu_cfg, relative=False):
-    domain = pylbm.Domain(simu_cfg)
-    time_e = test_case.duration
-    ref = test_case.ref_solution(time_e, domain.x, field=field)
+class Error:
+    def __init__(self, field, expr, relative=False, log10=False):
+        self.field = field
+        self.expr = expr
+        self.relative = relative
+        self.log10 = log10
 
-    return pylbm_responses.Error(ref, expr, log10=False, relative=relative)
+    def __call__(self, path, test_case, simu_cfg):
+            domain = pylbm.Domain(simu_cfg)
+            time_e = test_case.duration
+            ref = test_case.ref_solution(time_e, domain.x, field=self.field)
+
+            return pylbm_responses.Error(ref, self.expr, log10=self.log10, relative=self.relative)
+
+class Plot:
+    def __init__(self, field, expr):
+        self.field = field
+        self.expr = expr
+
+    def __call__(self, path, test_case, simu_cfg):
+            domain = pylbm.Domain(simu_cfg)
+            time_e = test_case.duration
+            ref = test_case.ref_solution(time_e, domain.x, field=self.field)
+
+            return pylbm_responses.Plot(os.path.join(path, f'{self.field}.png'), self.expr, ref)
 
 class Responses_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
@@ -30,9 +50,10 @@ class Responses_widget:
 
         self.responses_list = v.Select(label='Responses', v_model=[], items=[], multiple=True)
 
+
         def update_responses(change):
-            self.responses = {'linear stability': lambda test_case, simu_cfg: pylbm_responses.LinearStability(test_case.state()),
-                              'CFL': lambda test_case, simu_cfg: CFL(test_case),
+            self.responses = {'linear stability': lambda path, test_case, simu_cfg: pylbm_responses.LinearStability(test_case.state()),
+                              'CFL': lambda path, test_case, simu_cfg: CFL(test_case),
             }
 
             test_case = test_case_widget.get_case()
@@ -41,26 +62,39 @@ class Responses_widget:
             if hasattr(test_case, 'ref_solution'):
                 fields = test_case.equation.get_fields()
                 for name, expr in fields.items():
-                    self.responses[f'error on {name}'] = lambda test_case, simu_cfg: Error(name, expr, test_case, simu_cfg)
-                    self.responses[f'relative error on {name}'] = lambda test_case, simu_cfg: Error(name, expr, test_case, simu_cfg, True)
+                    self.responses[f'error on {name}'] = Error(name, expr)
+                    self.responses[f'relative error on {name}'] = Error(name, expr, relative=True)
+                    self.responses[f'plot {name}'] = Plot(name, expr)
 
             def add_relax(v):
-                self.responses[k] = lambda test_case, simu_cfg: pylbm_responses.S(v.symb)
-                self.responses[f'sigma for {k}'] = lambda test_case, simu_cfg: pylbm_responses.Sigma(v.symb)
-                self.responses[f'diff for {k}'] = lambda test_case, simu_cfg: pylbm_responses.Diff(v.symb)
-                self.responses[f'diff with dx=1 for {k}'] = lambda test_case, simu_cfg: pylbm_responses.Diff(v.symb, with_dx=False)
+                self.responses[k] = pylbm_responses.S(v.symb)
+                self.responses[f'sigma for {k}'] = pylbm_responses.Sigma(v.symb)
+                self.responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb)
+                self.responses[f'diff with dx=1 for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
 
             for k, v in lb_case.__dict__.items():
                 if isinstance(v, RelaxationParameterFinal):
-                    print('v', v)
                     add_relax(v)
 
-            self.responses_list.items = list(self.responses.keys())
+            self.responses_list.items = ['all'] + list(self.responses.keys())
+
+        def select_all(change):
+            if 'all' in self.responses_list.v_model:
+                self.responses_list.v_model = list(self.responses.keys())
 
         update_responses(None)
+
+        self.responses_list.observe(select_all, 'v_model')
+
         test_case_widget.select_case.observe(update_responses, 'v_model')
         lb_scheme_widget.select_case.observe(update_responses, 'v_model')
         self.widget = self.responses_list
 
-    def get_list(self, test_case, simu_cfg):
-        return [self.responses[v](test_case, simu_cfg) for v in self.responses_list.v_model]
+    def get_list(self, path, test_case, simu_cfg):
+        output = []
+        for v in self.responses_list.v_model:
+            if isinstance(self.responses[v], (pylbm_responses.From_config, pylbm_responses.From_simulation)):
+                output.append(self.responses[v])
+            else:
+                output.append(self.responses[v](path, test_case, simu_cfg))
+        return output

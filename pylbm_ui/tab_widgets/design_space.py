@@ -138,7 +138,7 @@ class DesignForm(v.Form):
         self.select_relax.rules = []
         self.select_relax.error = False
         self.select_relax.class_ = 'd-none'
-        self.srt_relax = True
+        self.srt_relax.v_model = True
         self.srt_relax.class_ = 'd-none'
 
         self.min.v_model = None

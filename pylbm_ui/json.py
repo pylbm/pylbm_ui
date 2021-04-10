@@ -24,3 +24,17 @@ def save_simu_config(path, filename, dx, test_case, lb_scheme, extra_config=None
         sort_keys=True,
         indent=4,
     )
+
+def save_param_study_for_simu(path, filename, design, responses):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    json.dump(
+        {
+            'design_space': design,
+            'responses': responses,
+        },
+        open(os.path.join(path, filename), 'w'),
+        sort_keys=True,
+        indent=4,
+    )

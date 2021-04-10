@@ -18,7 +18,7 @@ from ..config import default_path
 from ..responses import From_config, From_simulation
 from ..simulation import simulation, get_config
 from ..utils import required_fields
-from ..json import save_simu_config
+from ..json import save_simu_config, save_param_study_for_simu
 from .pylbmwidget import out
 
 
@@ -201,7 +201,13 @@ class parametric_widget:
                                         if output[0][i+1] is not None:
                                             dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=r))
 
-                                    print(dimensions)
+                                    for isamp in range(len(sampling)):
+                                        tmp_design = {f'{k}': sampling[isamp, ik] for ik, k in enumerate(design_space.keys())}
+                                        tmp_responses = {r: output[isamp][ir + 1] for ir, r in enumerate(responses.widget.v_model)}
+                                        tmp_responses['stability'] = output[isamp][0]
+                                        simu_path = os.path.join(path, f'simu_{isamp}')
+                                        save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
+
                                     fig = go.FigureWidget(
                                             data=go.Parcoords(
                                             # line=dict(color = output),
@@ -247,6 +253,7 @@ class parametric_widget:
             def purge(change):
                 design.purge()
                 plotly_plot.children = []
+                responses.widget.v_model = []
                 try:
                     shutil.rmtree(tmp_dir.name)
                 except OSError:

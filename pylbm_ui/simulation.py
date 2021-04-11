@@ -166,4 +166,4 @@ class simulation:
         fig.plot(self.sol.t, self.sol.domain, field, data)
 
     def save_config(self, filename='simu_config.json'):
-        save_simu_cfg(self.path, filename, self.dx, self.test_case, self.lb_scheme)
+        save_simu_config(self.path, filename, self.dx, self.test_case, self.lb_scheme)

@@ -12,7 +12,7 @@ from .save_widget import Save_widget
 from .pylbmwidget import out, debug_widget
 from ..config import default_path
 from ..simulation import simulation, Plot
-
+from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
@@ -29,10 +29,10 @@ class simulation_widget:
             dt = dx/float(lb_param['la'].v_model)
             nt = int(test_case.duration/dt)
             discret = {
-                'nx': v.TextField(label='Number of points', v_model=nx, value=nx, type='number'),
-                'dx': v.TextField(label='Space step', v_model=dx, value=dx, type='number'),
-                'nt': v.TextField(label='Number of steps', v_model=nt, value=nt, type='number'),
-                'dt': v.TextField(label='Time step', v_model=dt, value=dt, type='number'),
+                'nx': StrictlyPositiveIntField(label='Number of points', v_model=nx),
+                'dx': StrictlyPositiveFloatField(label='Space step', v_model=dx),
+                'nt': StrictlyPositiveIntField(label='Number of steps', v_model=nt),
+                'dt': StrictlyPositiveFloatField(label='Time step', v_model=dt),
             }
 
             codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
@@ -167,7 +167,7 @@ class simulation_widget:
                         lb_scheme = lb_scheme_widget.get_case()
 
                         simu.reset_path(os.path.join(default_path, simulation_name.v_model))
-                        simu.reset_sol(test_case, lb_scheme, float(discret['dx'].v_model), codegen.v_model)
+                        simu.reset_sol(test_case, lb_scheme, discret['dx'].value, codegen.v_model)
                         simu.save_config()
 
                         asyncio.ensure_future(run_simu(simu))
@@ -197,7 +197,7 @@ class simulation_widget:
             lb_scheme_widget.select_case.observe(update_result, 'v_model')
 
             def observer(change):
-                with out:
+                if not lb_param['la'].error:
                     key = None
                     for k, value in discret.items():
                         if value == change.owner:
@@ -205,29 +205,29 @@ class simulation_widget:
                             break
 
                     problem_size = test_case_widget.get_case().size()
-                    la = float(lb_param['la'].v_model)
+                    la = lb_param['la'].value
 
-                    if key == 'nx' or key is None:
-                        nx = int(discret['nx'].v_model)
+                    if key is None or (key == 'nx' and not discret[key].error):
+                        nx = discret['nx'].value
                         dx = problem_size/nx
-                        discret['dx'].v_model = dx
-                        discret['nt'].v_model = int(la*nx)
-                        discret['dt'].v_model = dx/la
-                    elif key == 'dx':
-                        dx = float(discret['dx'].v_model)
-                        discret['nx'].v_model = int(problem_size/dx)
-                        discret['nt'].v_model = int(la*discret['nx'].v_model)
-                        discret['dt'].v_model = dx/la
-                    elif key == 'nt':
-                        nt = int(discret['nt'].v_model)
-                        discret['nx'].v_model = int(nt/la)
-                        discret['dx'].v_model = problem_size/discret['nx'].v_model
-                        discret['dt'].v_model = discret['dx'].v_model/la
-                    elif key == 'dt':
-                        dt = float(discret['dt'].v_model)
-                        discret['dx'].v_model = dt*la
-                        discret['nx'].v_model = int(problem_size/discret['dx'].v_model)
-                        discret['nt'].v_model = int(la*discret['nx'].v_model)
+                        discret['dx'].value = dx
+                        discret['nt'].value = la*nx
+                        discret['dt'].value = dx/la
+                    elif key == 'dx' and not discret[key].error:
+                        dx = discret['dx'].value
+                        discret['nx'].value = problem_size/dx
+                        discret['nt'].value = la*discret['nx'].value
+                        discret['dt'].value = dx/la
+                    elif key == 'nt' and not discret[key].error:
+                        nt = discret['nt'].value
+                        discret['nx'].value = nt/la
+                        discret['dx'].value = problem_size/discret['nx'].value
+                        discret['dt'].value = discret['dx'].value/la
+                    elif key == 'dt' and not discret[key].error:
+                        dt = discret['dt'].value
+                        discret['dx'].value = dt*la
+                        discret['nx'].value = problem_size/discret['dx'].value
+                        discret['nt'].value = la*discret['nx'].value
 
             for value in discret.values():
                 value.observe(observer, 'v_model')

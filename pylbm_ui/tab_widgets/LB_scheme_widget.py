@@ -73,9 +73,8 @@ class LB_scheme_widget:
         case = self.cases[self.select_case.v_model]
         for k, v in self.parameters.items():
             attr = getattr(case, k)
-            value = float(v.v_model)
             if hasattr(attr, 'value'):
-                attr.value = float(v.v_model)
+                attr.value = v.value
             else:
-                attr = float(v.v_model)
+                attr = v.value
         return case

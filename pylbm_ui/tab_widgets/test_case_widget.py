@@ -36,7 +36,7 @@ class Test_case_widget:
 
             case = cases[select_case.v_model]
             for k, v in self.parameters.items():
-                setattr(case, k, float(v.v_model))
+                setattr(case, k, v.value)
             if hasattr(case, 'plot_ref_solution'):
                 case.plot_ref_solution(fig)
                 fig.canvas.draw_idle()

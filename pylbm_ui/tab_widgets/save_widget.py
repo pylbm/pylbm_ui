@@ -6,6 +6,7 @@ import re
 import enum
 from traitlets import List, UseEnum, Unicode
 
+from .dialog_form import Form, Item, Dialog, add_rule
 class SaveType(enum.Enum):
     frequency = 'Frequency'
     steps = 'List of steps'
@@ -13,56 +14,58 @@ class SaveType(enum.Enum):
     times = 'List of times'
     time_period = 'Time period'
 
-class SaveForm(v.Form):
-    def __init__(self, fields):
-        self.fields = fields
+class SaveForm(Form):
+    def __init__(self, fields, *args, **kwargs):
         self.select_field = v.Select(label='Fields', v_model=[], items=['all'] + fields, required=True, multiple=True)
         self.select_when = v.Select(label='When', v_model=None, items=[t.value for t in SaveType], required=True)
         self.when_properties = v.TextField(label='when save the fields?', v_model=None, required=True)
+
+        def select_fields_all(change):
+            if 'all' in self.select_field.v_model:
+                self.select_field.v_model = fields
+
         self.select_field.observe(self.select_fields_rules, 'v_model')
-        self.select_field.observe(self.select_fields_all, 'v_model')
+        self.select_field.observe(select_fields_all, 'v_model')
         self.select_when.observe(self.select_when_rules, 'v_model')
         self.select_when.observe(self.when_properties_rules, 'v_model')
         self.when_properties.observe(self.when_properties_rules, 'v_model')
 
+        self.fields = [self.select_field, self.select_when, self.when_properties]
+
         super().__init__(v_model='valid', children=[self.select_field, self.select_when,self.when_properties,])
 
-    def select_fields_all(self, change):
-        if 'all' in self.select_field.v_model:
-            self.select_field.v_model = self.fields
-
+    @add_rule
     def select_fields_rules(self, change):
         if self.select_field.v_model is None:
             self.select_field.rules = ['You must select at least one field']
             self.select_field.error = True
-            self.v_model = False
+            return
         else:
             self.select_field.rules = []
             self.select_field.error = False
-            self.v_model = True
 
+    @add_rule
     def select_when_rules(self, change):
         if self.select_when.v_model is None:
             self.select_when.rules = ['You must select one item indicating when to save the fields']
             self.select_when.error = True
-            self.v_model = False
+            return
         else:
             self.select_when.rules = []
             self.select_when.error = False
-            self.v_model = True
 
+    @add_rule
     def when_properties_rules(self, change):
         if self.select_when.v_model in ['Frequency', 'Step period']:
             try:
                 int(self.when_properties.v_model)
                 self.when_properties.rules = []
                 self.when_properties.error = False
-                self.v_model = True
             except:
                 self.when_properties.rules = ['You must enter an integer']
                 self.when_properties.error = True
-                self.v_model = False
-        if self.select_when.v_model == 'List of steps':
+                return
+        elif self.select_when.v_model == 'List of steps':
             try:
                 int_regexp = "^\d+(-\d+)?(?:,\d+(?:-\d+)?)*$"
                 clean_str = self.when_properties.v_model.replace(' ', '')
@@ -77,192 +80,71 @@ class SaveForm(v.Form):
 
                 self.when_properties.rules = []
                 self.when_properties.error = False
-                self.v_model = True
             except:
                 self.when_properties.rules = ['You must enter a list of integers. For example: 1, 2-4, 6']
                 self.when_properties.error = True
-                self.v_model = False
-        if self.select_when.v_model == 'List of times':
+                return
+        elif self.select_when.v_model == 'List of times':
             try:
                 list(map(float, self.when_properties.v_model.split(',')))
                 self.when_properties.rules = []
                 self.when_properties.error = False
-                self.v_model = True
             except:
                 self.when_properties.rules = ['You must enter a list of floats. For example: 0.1, 0.25, 0.6']
                 self.when_properties.error = True
-                self.v_model = False
-        if self.select_when.v_model == 'Time period':
+                return
+        elif self.select_when.v_model == 'Time period':
             try:
                 float(self.when_properties.v_model)
                 self.when_properties.rules = []
                 self.when_properties.error = False
-                self.v_model = True
             except:
                 self.when_properties.rules = ['You must enter a float.']
                 self.when_properties.error = True
-                self.v_model = False
+                return
 
-    def check_rules(self):
-        self.select_fields_rules(None)
-        self.select_when_rules(None)
-        self.when_properties_rules(None)
+class SaveItem(Item):
+    form_class = SaveForm
+    update_text = 'Update save configuration'
 
-    def reset_form(self):
-        self.select_field.v_model = []
-        self.select_field.rules = []
-        self.select_field.error = False
-
-        self.select_when.v_model = None
-        self.select_when.rules = []
-        self.select_when.error = False
-
-        self.when_properties.v_model = None
-        self.when_properties.rules = []
-        self.when_properties.error = False
-
-        self.v_model = False
-
-    def __str__(self):
-        return ', '.join(self.select_field.v_model) + f' ({self.select_when.v_model}: {self.when_properties.v_model})'
-
-class SaveItem(v.ListItem):
-    fields = List()
+    field_list = List()
     when = UseEnum(SaveType)
     when_properties = Unicode()
 
-    def __init__(self, all_fields, content, **kwargs):
-        self.form = SaveForm(all_fields)
+    def __init__(self, all_fields, **kwargs):
+        super().__init__(all_fields, **kwargs)
+        self.content.children = [f'{self}']
 
-        update_btn = v.Btn(children=['update'], color='success')
-        close_btn = v.Btn(children=['close'], color='error')
+    def form2field(self):
+        self.field_list = self.form.select_field.v_model
+        self.when = SaveType(self.form.select_when.v_model)
+        self.when_properties = self.form.when_properties.v_model
 
-        self.update_dialog = v.Dialog(
-            width='500',
-            v_model=False,
-            children=[
-                v.Card(children=[
-                    v.CardTitle(class_='headline gray lighten-2', primary_title=True, children=[
-                        "Update save configuration"
-                    ]),
-                    v.CardText(children=[self.form]),
-                    v.CardActions(children=[v.Spacer(), update_btn, close_btn])
-            ]),
-        ])
-
-        update_btn.on_event('click', self.update_click)
-        close_btn.on_event('click', self.close_click)
-
-        self.content = v.CardText(children=[content])
-
-        self.btn = v.Btn(children=[v.Icon(children=['mdi-close'])],
-                         fab=True,
-                         color='error',
-                         dark=True,
-                         x_small=True,
-        )
-
-        super().__init__(children=[
-            v.ListItemAction(children=[self.btn]),
-            v.ListItemContent(
-                children=[
-                    v.Card(children=[self.content],
-                           flat=True,
-                           color='transparent',
-                           light=True,
-                    ),
-                self.update_dialog
-                ]),
-            ], **kwargs)
-
-    def close_click(self, widget, event, data):
-        self.update_dialog.v_model = False
-
-    def update_click(self, widget, event, data):
-        self.form.check_rules()
-
-        if self.form.v_model:
-                self.fields = self.form.select_field.v_model
-                self.when = SaveType(self.form.select_when.v_model)
-                self.when_properties = self.form.when_properties.v_model
-                self.content.children = [f'{self.form}']
-                self.update_dialog.v_model = False
-
-    def update_item(self, widget, event, data):
-        self.form.reset_form()
-        self.form.select_field.v_model = self.fields
+    def field2form(self):
+        self.form.select_field.v_model = self.field_list
         self.form.select_when.v_model =  self.when.value
         self.form.when_properties.v_model =  self.when_properties
-        self.update_dialog.v_model = True
 
-class Save_widget:
+    def __str__(self):
+        return ', '.join(self.field_list) + f' ({self.when.value}: {self.when_properties})'
+
+class Save_widget(Dialog):
+    item_class = SaveItem
+    new_text = "New save configuration"
+
     def __init__(self, all_fields):
-        form = SaveForm(all_fields)
+        with out:
+            self.all_fields = all_fields
+            super().__init__(all_fields)
 
-        create_add = v.Btn(children=['add'], color='success')
-        create_close = v.Btn(children=['close'], color='error')
-
-        create_dialog = v.Dialog(
-            width='500',
-            v_model=False,
-            children=[
-                v.Card(children=[
-                    v.CardTitle(class_='headline gray lighten-2', primary_title=True, children=[
-                        "New field save configuration"
-                    ]),
-                    v.CardText(children=[form]),
-                    v.CardActions(children=[v.Spacer(), create_add, create_close])
-            ]),
-        ])
-
-        self.request_list = v.List(children=[])
-        add_button = v.Btn(children=[v.Icon(children=['mdi-plus']), create_dialog],
-                           fab=True,
-                           color='primary',
-                           small=True,
-                           dark=True,
+    def create_item(self):
+        return SaveItem(self.all_fields,
+                        field_list=self.form.select_field.v_model,
+                        when=SaveType(self.form.select_when.v_model),
+                        when_properties=self.form.when_properties.v_model,
+                        class_='ma-1',
+                        style_='background-color: #F8F8F8;'
         )
-
-        def close_click(widget, event, data):
-            create_dialog.v_model = False
-
-        def add_click(widget, event, data):
-            form.check_rules()
-
-            if form.v_model:
-                new_item = SaveItem(all_fields,
-                                    f'{form}',
-                                    fields=form.select_field.v_model,
-                                    when=SaveType(form.select_when.v_model),
-                                    when_properties=form.when_properties.v_model,
-                                    class_='ma-1',
-                                    style_='background-color: #F8F8F8;'
-                                    )
-
-                self.request_list.children.append(new_item)
-                create_dialog.v_model = False
-
-                def remove_item(widget, event, data):
-                    self.request_list.children.remove(new_item)
-                    self.request_list.notify_change({'name': 'children', 'type': 'change'})
-
-                new_item.btn.on_event('click', remove_item)
-                new_item.on_event('click', new_item.update_item)
-                self.request_list.notify_change({'name': 'children', 'type': 'change'})
-
-        create_close.on_event('click', close_click)
-        create_add.on_event('click', add_click)
-
-        def on_add_click(widget, event, data):
-            form.reset_form()
-            create_dialog.v_model = True
-
-        add_button.on_event('click', on_add_click)
-
-        self.widget = v.Card(children=[
-            v.CardText(children=[self.request_list]),
-            v.CardActions(children=[v.Spacer(), add_button])
-        ])
 
     def get_save_time(self, dt, final_time):
         nsteps = int(final_time/dt)

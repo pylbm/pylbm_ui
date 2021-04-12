@@ -11,9 +11,9 @@ from .config import plot_config
 from .json import save_simu_config
 
 class Plot:
-    def __init__(self, figsize=(10, 5)):
+    def __init__(self):
         plt.ioff()
-        self.fig, self.ax = plt.subplots(figsize=figsize)
+        self.fig, self.ax = plt.subplots()
         self.fig.canvas.header_visible = False
         self.plot_type = None
         self.color_bar = None

@@ -23,7 +23,7 @@ class Test_case_widget:
             tabs_content = [v.TabItem(children=[description]), v.TabItem(children=[fig.canvas])]
             tabs = Tabs(v_model=None,
                         children=[v.Tab(children=['Description']),
-                                v.Tab(children=['Reference results'])] + tabs_content, right=True)
+                                  v.Tab(children=['Reference results'])] + tabs_content, right=True)
             self.widget = v.Row(children=[v.Col(children=[select_case, panels], sm=3),
                                         v.Col(children=[tabs])
             ])
@@ -40,6 +40,9 @@ class Test_case_widget:
                 if hasattr(case, 'plot_ref_solution'):
                     case.plot_ref_solution(fig)
                     fig.canvas.draw_idle()
+                    tabs.children[1].disabled = False
+                else:
+                    tabs.children[1].disabled = True
 
             def change_case(change):
                 panels.children[0].unbind(change_param)

@@ -193,9 +193,9 @@ class parametric_widget:
                                     pool = pp.ProcessPool()
                                     output = pool.map(run_simulation, args)
 
-                                    dimensions = [dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())]
+                                    dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
 
-                                    dimensions.append(dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability'))
+                                    dimensions.extend([dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())])
 
                                     for i, r in enumerate(responses.widget.v_model):
                                         if output[0][i+1] is not None:
@@ -208,43 +208,48 @@ class parametric_widget:
                                         simu_path = os.path.join(path, f'simu_{isamp}')
                                         save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
 
-                                    fig = go.FigureWidget(
-                                            data=go.Parcoords(
-                                            # line=dict(color = output),
-                                            dimensions = dimensions,
-                                        ),
+                                    fig = v.Row(children=[
+                                            go.FigureWidget(
+                                                data=go.Parcoords(
+                                                line=dict(color = dimensions[0]['values']),
+                                                dimensions = dimensions,
+                                            )),
+                                            ],
+                                            align='center', justify='center'
                                     )
 
-                                    fig.update_layout(
-                                        autosize=False,
-                                        width=800,
-                                        height=600,)
+                                    def change_plot(change):
+                                        with out:
+                                            if only_stable.v_model:
+                                                mask = dimensions[0]['values'] == 1
+                                            else:
+                                                mask = slice(dimensions[0]['values'].size)
 
-                                    plotly_plot.children = [v.Row(children=[fig], align='center', justify='center')]
+                                            new_data = []
+                                            for i in items.v_model:
+                                                d = dimensions[i]
+                                                new_data.append(dict(values=d['values'][mask], label=d['label']))
+
+                                            fig.children = [
+                                                    go.FigureWidget(
+                                                        go.Parcoords(
+                                                    line=dict(color = dimensions[color.v_model]['values'][mask]),
+                                                    dimensions = new_data,
+                                                ))
+                                            ]
+
+                                    color = v.Select(label='color', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=0)
+                                    items = v.Select(label='Show items', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=[i for i in range(len(dimensions))], multiple=True)
+                                    only_stable = v.Switch(label='Show only stable results', v_model=False)
+
+                                    color.observe(change_plot, 'v_model')
+                                    items.observe(change_plot, 'v_model')
+                                    only_stable.observe(change_plot, 'v_model')
+
+                                    plotly_plot.children = [color, items, only_stable, fig]
                                     stop_simulation(None)
                             # asyncio.ensure_future(run_parametric_study())
                             run_parametric_study()
-
-                            # output[:] = run_parametric_study(args)
-
-                            # dimensions = [dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())]
-                            # dimensions.append(dict(values=output, label='stability'))
-
-                            # fig = go.FigureWidget(
-                            #     data=go.Parcoords(
-                            #         line=dict(color = output),
-                            #         dimensions = dimensions,
-                            #     ),
-                            # )
-
-                            # fig.update_layout(
-                            #     autosize=False,
-                            #     width=800,
-                            #     height=600,)
-
-                            # plotly_plot.children = [fig]
-                        # stop_simulation(None)
-
                     else:
                         stop_simulation(None)
 

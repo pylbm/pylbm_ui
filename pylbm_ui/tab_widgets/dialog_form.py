@@ -26,9 +26,6 @@ class MetaForm(MetaFormBase, traitlets.traitlets.MetaHasTraits):
     pass
 
 class Form(v.Form, metaclass=MetaForm):
-    # def __init__(self, **kwargs):
-    #     super().__init__(v_model='valid', children=[self.fields], **kwargs)
-
     def check_rules(self):
         self.v_model = True
         for r in self.rules:
@@ -39,14 +36,13 @@ class Form(v.Form, metaclass=MetaForm):
                 self.v_model = False
                 break
 
-        print('check rules', self.v_model)
-
     def reset_form(self):
         for f in self.fields:
-            if isinstance(f, v.Select) and f.multiple:
-                f.v_model = []
-            else:
-                f.v_model = None
+            if not isinstance(f, v.TextField):
+                if isinstance(f, v.Select) and f.multiple:
+                    f.v_model = []
+                else:
+                    f.v_model = None
             f.rules = []
             f.error = False
 
@@ -111,6 +107,8 @@ class Item(v.ListItem):
             self.content.children = [f'{self}']
             self.update_dialog.v_model = False
 
+        self.notify_change({'name': 'children', 'type': 'change'})
+
     def update_item(self, widget, event, data):
         self.form.reset_form()
         self.field2form()
@@ -151,6 +149,9 @@ class Dialog:
             def close_click(widget, event, data):
                 create_dialog.v_model = False
 
+            def on_change(change):
+                self.item_list.notify_change({'name': 'children', 'type': 'change'})
+
             def add_click(widget, event, data):
                 self.form.check_rules()
 
@@ -165,6 +166,8 @@ class Dialog:
 
                     new_item.btn.on_event('click', remove_item)
                     new_item.on_event('click', new_item.update_item)
+                    new_item.observe(on_change, 'children')
+
                     self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
             create_close.on_event('click', close_click)
@@ -177,6 +180,7 @@ class Dialog:
 
             add_button.on_event('click', on_add_click)
 
+            self.add_button = add_button
             self.widget = v.Card(children=[
                 v.CardText(children=[self.item_list]),
                 v.CardActions(children=[v.Spacer(), add_button])

@@ -2,8 +2,118 @@ import ipyvuetify as v
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..utils import schema_to_widgets
+from ..utils import schema_to_widgets, FloatField
 from .pylbmwidget import Markdown, ParametersPanel, Tabs, out, Container
+
+from .dialog_form import Form, Item, Dialog, add_rule
+
+class StateForm(Form):
+    def __init__(self, state, **kwargs):
+        self.state = state.copy()
+        self.fields = []
+        for k, v in state.items():
+            self.fields.append(FloatField(label=str(k), v_model=v))
+
+        super().__init__(v_model='valid', children=self.fields)
+
+    def get_form_state(self):
+        for i, k in enumerate(self.state.keys()):
+            self.state[k] = self.fields[i].value
+        return self.state
+
+class StateItem(Item):
+    form_class = StateForm
+    update_text = 'Update linear state configuration'
+
+    def __init__(self, state, remove=True, **kwargs):
+        with out:
+            self.state = state.copy()
+            super().__init__(state, **kwargs)
+            self.content.children = [f'{self}']
+
+            if remove:
+                action = v.ListItemAction(children=[self.btn])
+            else:
+                action = v.ListItemAction(children=[])
+
+            self.stab_status = v.Card(children=['uncheck'], class_='pa-2')
+            self.children=[
+                action,
+                v.ListItemContent(
+                children=[
+                    v.Card(children=[self.content],
+                           flat=True,
+                           color='transparent',
+                           light=True,
+                    ),
+                self.update_dialog
+                ]),
+                v.ListItemAction(children=[self.stab_status])
+            ]
+
+    def update_click(self, widget, event, data):
+        super().update_click(widget, event, data)
+        self.stab_status.children = ['uncheck']
+        self.stab_status.color = None
+
+    def form2field(self):
+        for i, k in enumerate(self.state.keys()):
+            self.state[k] = self.form.fields[i].value
+
+    def field2form(self):
+        for i, k in enumerate(self.state.keys()):
+            self.form.fields[i].value = self.state[k]
+
+    def __str__(self):
+        return ', '.join([f'{str(k)} = {v}' for k, v in self.state.items()])
+
+class StateWidget(Dialog):
+    item_class = StateItem
+    new_text = "New linear state configuration"
+
+    def __init__(self, states):
+        with out:
+            self.states = states
+            self.default_state = self.states[0]
+            print('dafault state', self.default_state)
+            super().__init__(self.default_state)
+
+            self.eval_stab = v.Btn(children=['Check stability'], color='primary')
+
+            for s in states:
+                self.item_list.children.append(self.create_item(s))
+
+            self.item_list.notify_change({'name': 'children', 'type': 'change'})
+
+            self.widget = v.Card(children=[
+                v.CardTitle(children=['List of linear states']),
+                v.CardText(children=[self.item_list]),
+                v.CardActions(children=[v.Spacer(), self.eval_stab, self.add_button])
+            ])
+
+    def create_item(self, state=None):
+        with out:
+            remove = False
+            if state is None:
+                state = self.form.get_form_state()
+                remove = True
+
+            return self.item_class(state, remove,
+                        class_='ma-1',
+                        style_='background-color: #F8F8F8;'
+            )
+
+    def update_states(self, states):
+        self.item_list.children = []
+        for s in states:
+            self.item_list.children.append(self.create_item(s))
+        self.item_list.notify_change({'name': 'children', 'type': 'change'})
+
+    def get_states(self):
+        states = []
+        for state in self.item_list.children:
+            states.append(state.state)
+        return states
 
 def prepare_stab_plot():
     plt.ioff()
@@ -40,15 +150,14 @@ def prepare_stab_plot():
     return fig, markers1, markers2
 
 class stability_widget:
-
     def __init__(self, test_case_widget, LB_scheme_widget):
         case = LB_scheme_widget.get_case()
         panels = LB_scheme_widget.panels
 
         test_case = test_case_widget.get_case()
-        state = v.Select(label='States', items=[{'text':str(s), 'value': i} for i, s in enumerate(test_case.state())], v_model=0)
+        state_list = v.Select(label='States', items=[], v_model=0)
 
-        eval_stab = v.Btn(children=['Check stability'], color='primary')
+        plot_stab = v.Btn(children=['Plot stability region'], color='primary')
         alert = v.Alert(children=['Check the stability for this state...'], dense=True, type='info')
         stab_output, markers1, markers2 = prepare_stab_plot()
 
@@ -57,49 +166,72 @@ class stability_widget:
                                 align_content_center=True,)
         container.hide()
 
-        tabs_content = [v.TabItem(children=[v.Card(children=[v.CardTitle(children=['Compute the linear stability for all the predefined physical states of the selected test case:']),
-                                             v.CardText(children=[state, 'Return UNSTABLE if at least ONE of the states is unstable']),
-                                             v.CardActions(children=[v.Spacer(), eval_stab])
-                                             ],
-                                             class_="ma-6",
-                                             elevation=10),
-                                             container
-        ])]
-        tabs = Tabs(v_model=None, children=[v.Tab(children=['Test case states']),
-                                            v.Tab(children=['User defined state'])] + tabs_content, right=True)
+        state_widget = StateWidget(test_case.state())
 
-        def on_click(widget, event, data):
-            with out:
-                if not container.viz:
-                    container.show()
+        tabs_content = [v.TabItem(children=[state_widget.widget]),
+                        v.TabItem(children=[
+                            v.Card(children=[v.CardTitle(children=['Plot the linear stability for a given state']),
+                                             v.CardText(children=[v.Row(children=[state_list, plot_stab]),
+                                                                  container]),
+                                            ],
+                            class_="ma-6",
+                            elevation=10)]),
+        ]
+        tabs = Tabs(v_model=None,
+                    children=[v.Tab(children=['Check stability']),
+                              v.Tab(children=['Plot stability region'])] + tabs_content, right=True)
 
-                if state.v_model is not None:
-                    markers1.set_offsets([])
-                    markers2.set_offsets([])
-                    stab_output.canvas.draw_idle()
+        def stability_states(widget, event, data):
+            for state in state_widget.item_list.children:
+                test_case = test_case_widget.get_case()
+                case = LB_scheme_widget.get_case()
+                stability = case.get_stability(state.state)
+                if stability.is_stable_l2:
+                    state.stab_status.children = ['stable']
+                    state.stab_status.color = 'success'
+                else:
+                    state.stab_status.children = ['unstable']
+                    state.stab_status.color = 'error'
 
-                    alert.type = 'info'
-                    alert.children = ['Check the stability for this state...']
-                    test_case = test_case_widget.get_case()
-                    case = LB_scheme_widget.get_case()
-                    stability = case.get_stability(test_case.state()[state.v_model], markers1, markers2)
-                    stab_output.canvas.draw_idle()
-                    if stability.is_stable_l2:
-                        alert.type = 'success'
-                        alert.children = ['STABLE for this physical state']
-                    else:
-                        alert.type = 'error'
-                        alert.children = ['UNSTABLE for this physical state']
+        def plot_stability(widget, event, data):
+            if not container.viz:
+                container.show()
 
-        eval_stab.on_event('click', on_click)
+            if state_list.v_model is not None:
+                markers1.set_offsets([])
+                markers2.set_offsets([])
+                stab_output.canvas.draw_idle()
+
+                alert.type = 'info'
+                alert.children = ['Check the stability for this state...']
+                test_case = test_case_widget.get_case()
+                case = LB_scheme_widget.get_case()
+                state = state_widget.get_states()[state_list.v_model]
+                stability = case.get_stability(state, markers1, markers2)
+                stab_output.canvas.draw_idle()
+                if stability.is_stable_l2:
+                    alert.type = 'success'
+                    alert.children = ['STABLE for this physical state']
+                else:
+                    alert.type = 'error'
+                    alert.children = ['UNSTABLE for this physical state']
+
+        plot_stab.on_event('click', plot_stability)
+        state_widget.eval_stab.on_event('click', stability_states)
 
         def change_test_case(change):
             test_case = test_case_widget.get_case()
-            state.items = [{'text':str(s), 'value': i} for i, s in enumerate(test_case.state())]
-            state.v_model = 0
+            state_widget.update_states(test_case.state())
+
+        def update_states(change):
+            state_list.items = [{'text':str(s), 'value': i} for i, s in enumerate(state_widget.get_states())]
+            state_list.v_model = 0
 
         def hide_plot(change):
             container.hide()
+
+        update_states(None)
+        state_widget.item_list.observe(update_states, 'children')
 
         test_case_widget.select_case.observe(change_test_case, 'v_model')
         test_case_widget.select_case.observe(hide_plot, 'v_model')

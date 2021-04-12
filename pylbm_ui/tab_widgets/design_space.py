@@ -177,7 +177,7 @@ class Design_widget(Dialog):
         lb_scheme = self.lb_scheme_widget.get_case()
 
         output = {}
-        for c in self.design_list.children:
+        for c in self.item_list.children:
             if c.relax:
                 attrs = [getattr(lb_scheme, r).symb for r in c.relax]
                 if c.srt:

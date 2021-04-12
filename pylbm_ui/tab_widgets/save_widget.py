@@ -157,7 +157,7 @@ class Save_widget(Dialog):
             else:
                 output[ite] = set(fields)
 
-        for c in self.request_list.children:
+        for c in self.item_list.children:
             if c.when == SaveType.frequency:
                 freq = int(c.when_properties)
                 for i in range(freq):

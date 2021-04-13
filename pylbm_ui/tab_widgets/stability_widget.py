@@ -179,7 +179,7 @@ class stability_widget:
         ]
         tabs = Tabs(v_model=None,
                     children=[v.Tab(children=['Check stability']),
-                              v.Tab(children=['Plot stability region'])] + tabs_content, right=True)
+                              v.Tab(children=['Plot stability region'])] + tabs_content)
 
         def stability_states(widget, event, data):
             for state in state_widget.item_list.children:
@@ -240,3 +240,5 @@ class stability_widget:
         self.widget = v.Row(children=[v.Col(children=[panels], sm=3),
                                       v.Col(children=[tabs])
         ])
+        self.main = [tabs]
+        self.menu = [panels]

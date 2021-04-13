@@ -237,3 +237,6 @@ class simulation_widget:
                 v.Col(children=left_panel, sm=3),
                 v.Col(children=right_panel)
             ])
+
+            self.main = right_panel
+            self.menu = left_panel

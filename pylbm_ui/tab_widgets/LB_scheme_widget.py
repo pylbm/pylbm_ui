@@ -22,7 +22,7 @@ class LB_scheme_widget:
                                             v.TabItem(children=[description]),
                                             v.TabItem(children=[properties]),
                                             v.TabItem(children=[eq_pde]),
-                                            ], right=True)
+                                            ])
 
         self.widget = v.Row(children=[v.Col(children=[select_case, panels], sm=3),
                                       v.Col(children=[tabs])
@@ -66,6 +66,8 @@ class LB_scheme_widget:
 
         panels.children[0].bind(change_param)
         change_case(None)
+        self.main = [tabs]
+        self.menu = [select_case, panels]
         self.select_case = select_case
         self.panels = panels
 

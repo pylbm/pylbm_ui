@@ -23,9 +23,13 @@ class Test_case_widget:
             tabs_content = [v.TabItem(children=[description]), v.TabItem(children=[fig.canvas])]
             tabs = Tabs(v_model=None,
                         children=[v.Tab(children=['Description']),
-                                  v.Tab(children=['Reference results'])] + tabs_content, right=True)
-            self.widget = v.Row(children=[v.Col(children=[select_case, panels], sm=3),
-                                        v.Col(children=[tabs])
+                                  v.Tab(children=['Reference results'])] + tabs_content)
+
+            self.menu = [select_case, panels]
+            self.main = [tabs]
+            self.widget = v.Container(children=[v.Row(children=[v.Col(children=[select_case, panels], lg=400),
+                                                                v.Col(children=[tabs])
+                                                               ])
             ])
 
             def change_param(change):

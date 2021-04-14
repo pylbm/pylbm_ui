@@ -7,6 +7,7 @@ def save_simu_config(path, filename, dx, test_case, lb_scheme, extra_config=None
 
     json.dump(
         {
+            'dim': lb_scheme.dim,
             'dx': dx,
             'test_case': {
                 'module': test_case.__module__,

@@ -74,9 +74,10 @@ def main():
     stability =  stability_widget(tc, lb)
     simulation = simulation_widget(tc, lb)
     parametric = parametric_widget(tc, lb)
+    posttreatment = PostTreatmentWidget()
 
-    tab_widgets = [tc, lb, stability, simulation, parametric]
-    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study']
+    tab_widgets = [tc, lb, stability, simulation, parametric, posttreatment]
+    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study', 'Post treatment']
 
     tab = v.Tabs(
         v_model=0,
@@ -101,6 +102,12 @@ def main():
                                        v.ListItemContent(children=[m])]) for m in widget.menu
         ]
         content.children = widget.main
+
+        with out:
+            print(tab_id)
+            if tab_id == 5:
+                posttreatment.update(None)
+
 
     tab_change(None)
     tab.observe(tab_change, 'v_model')

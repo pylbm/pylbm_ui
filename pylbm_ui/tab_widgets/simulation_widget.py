@@ -9,10 +9,12 @@ import json
 import ipyvuetify as v
 
 from .save_widget import Save_widget
-from .pylbmwidget import out, debug_widget
+from .pylbmwidget import Tooltip, out, debug_widget
+from .dialog_path import DialogPath
 from ..config import default_path
 from ..simulation import simulation, Plot
 from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField
+
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
@@ -82,9 +84,11 @@ class simulation_widget:
             # Right panel
             #
 
-            start = v.Btn(v_model=True, children=['Start'], class_="ma-2", style_="width: 100px", color='success')
-            pause = v.Btn(children=['Pause'], class_="ma-2", style_="width: 100px", disabled=True, v_model=False)
-            progress_bar = v.ProgressLinear(height=20, value=0, color="light-blue", striped=True)
+            start = v.Btn(v_model=True, children=['Start'], class_='ma-2', style_='width: 100px', color='success')
+            startTooltip = Tooltip(start, tooltip='click to start the simulation')
+
+            pause = v.Btn(children=['Pause'], class_='ma-2', style_='width: 100px', disabled=True, v_model=False)
+            progress_bar = v.ProgressLinear(height=20, value=0, color='light-blue', striped=True)
             result = v.Select(items=list(simu.fields.keys()), v_model=list(simu.fields.keys())[0])
             period = v.TextField(label='Period', v_model=16, type='number')
             snapshot = v.Btn(children=['Snapshot'])
@@ -92,20 +96,28 @@ class simulation_widget:
             self.iplot = 0
             plot_output = v.Row(align='center', justify='center')
 
+            dialog = DialogPath()
+
             right_panel = [
-                v.Row(children=[start, pause]),
+                v.Row(children=[
+                    startTooltip,
+                    Tooltip(pause, tooltip='click to pause the simulation'),
+                    dialog,
+                ]),
                 progress_bar,
                 v.Row(children=[
                     v.Col(children=[result], sm=5),
                     v.Col(children=[period], sm=5),
                     v.Col(children=[snapshot], sm=2),
                 ], align='center', justify='center'),
-                plot_output
+                plot_output,
+                out
             ]
 
             def stop_simulation(change):
                 start.v_model = True
                 start.children = ['Start']
+                startTooltip.children = ['click to start the simulation']
                 start.color = 'success'
                 pause.disabled = True
                 pause.v_model = False
@@ -115,62 +127,74 @@ class simulation_widget:
                 result.items = list(simu.fields.keys())
                 result.v_model = list(simu.fields.keys())[0]
 
-            async def run_simu(simu):
+            async def run_simu():
             # def run_simu(simu):
-                with out:
-                    nite = 1
-
-                    simu.plot(self.plot, result.v_model)
-                    plot_output.children[0].draw_idle()
-
-                    ite_to_save = save_fields.get_save_time(simu.sol.dt, simu.duration)
-
+                while dialog.v_model:
                     await asyncio.sleep(0.01)
-                    while simu.sol.t <= simu.duration:
-                        progress_bar.value = float(simu.sol.t)/simu.duration*100
 
-                        if not pause.v_model:
-                            simu.sol.one_time_step()
-
-                            if period.v_model != '' and period.v_model != 0:
-                                if nite >= int(period.v_model):
-                                    nite = 1
-                                    simu.save_data(result.v_model)
-                                    simu.plot(self.plot, result.v_model)
-                                    plot_output.children[0].draw_idle()
-
-                            if simu.sol.nt in ite_to_save:
-                                simu.save_data(ite_to_save[simu.sol.nt])
-
-                            nite += 1
-                            self.iplot += 1
-
-                        await asyncio.sleep(0.01)
-                        if start.v_model:
-                            break
+                if not dialog.replace:
                     stop_simulation(None)
+                    return
+
+                nite = 1
+
+                test_case = test_case_widget.get_case()
+                lb_scheme = lb_scheme_widget.get_case()
+
+                simu.reset_path(os.path.join(default_path, simulation_name.v_model))
+                simu.reset_sol(test_case, lb_scheme, discret['dx'].value, codegen.v_model)
+                simu.save_config()
+
+                self.plot = Plot()
+                self.iplot = 0
+                plot_output.children = [self.plot.fig.canvas]
+
+                simu.plot(self.plot, result.v_model)
+                plot_output.children[0].draw_idle()
+
+                ite_to_save = save_fields.get_save_time(simu.sol.dt, simu.duration)
+
+                await asyncio.sleep(0.01)
+                while simu.sol.t <= simu.duration:
+                    progress_bar.value = float(simu.sol.t)/simu.duration*100
+
+                    if not pause.v_model:
+                        simu.sol.one_time_step()
+
+                        if period.v_model != '' and period.v_model != 0:
+                            if nite >= int(period.v_model):
+                                nite = 1
+                                simu.save_data(result.v_model)
+                                simu.plot(self.plot, result.v_model)
+                                plot_output.children[0].draw_idle()
+                                # await asyncio.sleep(0.2)
+
+                        if simu.sol.nt in ite_to_save:
+                            simu.save_data(ite_to_save[simu.sol.nt])
+
+                        nite += 1
+                        self.iplot += 1
+
+                    await asyncio.sleep(0.001)
+                    if start.v_model:
+                        break
+                stop_simulation(None)
 
             def start_simulation(widget, event, data):
                 with out:
+
                     if start.v_model:
+                        simu_path = os.path.join(default_path, simulation_name.v_model)
+                        dialog.check_path(simu_path)
+
                         start.v_model = False
                         start.children = ['Stop']
                         start.color = 'error'
+
                         pause.disabled = False
                         progress_bar.value = 0
 
-                        self.plot = Plot()
-                        self.iplot = 0
-                        plot_output.children = [self.plot.fig.canvas]
-
-                        test_case = test_case_widget.get_case()
-                        lb_scheme = lb_scheme_widget.get_case()
-
-                        simu.reset_path(os.path.join(default_path, simulation_name.v_model))
-                        simu.reset_sol(test_case, lb_scheme, discret['dx'].value, codegen.v_model)
-                        simu.save_config()
-
-                        asyncio.ensure_future(run_simu(simu))
+                        asyncio.ensure_future(run_simu())
                         # run_simu(simu)
                     else:
                         stop_simulation(None)

@@ -141,3 +141,18 @@ class Markdown(v.Layout):
             ipydisplay.display(ipydisplay.HTML(mkd))
 
         # self.content.template = f'<div>{mkd}</div>'
+
+
+class Tooltip(v.Tooltip):
+    def __init__(self, widget, tooltip, *args, activate=True, **kwargs):
+        self.bottom=True
+        self.v_slots=[{
+            'name': 'activator',
+            'variable': 'tooltip',
+            'children': widget
+        }]
+        widget.v_on = 'tooltip.on'
+
+        self.children = [tooltip]
+
+        super().__init__(*args, **kwargs)

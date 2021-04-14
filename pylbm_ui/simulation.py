@@ -32,7 +32,7 @@ class Plot:
                         linewidth = plot_config['linewidth']
                         linestyle = plot_config['linestyle']
                         marker = plot_config['marker']
-                        markersize = plot_config['markersize'][0]
+                        markersize = plot_config['markersize']
                     else:
                         color = palette['color']
                         alpha = palette['alpha']
@@ -41,7 +41,7 @@ class Plot:
                         marker = palette['marker']
                         markersize = palette['markersize']
 
-                    self.plot_type = self.ax.plot(x, data,
+                    self.plot_type, = self.ax.plot(x, data,
                                                 color=color,
                                                 alpha=alpha,
                                                 linewidth=linewidth,
@@ -49,6 +49,7 @@ class Plot:
                                                 marker=marker,
                                                 markersize=markersize)
                 else:
+                    print(self.plot_type)
                     self.plot_type.set_ydata(data)
                 xmin, xmax = x[0], x[-1]
                 ymin, ymax = np.amin(data), np.amax(data)

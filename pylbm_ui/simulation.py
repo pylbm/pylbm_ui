@@ -49,14 +49,10 @@ class Plot:
                                                 marker=marker,
                                                 markersize=markersize)
                 else:
-                    print(self.plot_type)
                     self.plot_type.set_ydata(data)
-                xmin, xmax = x[0], x[-1]
-                ymin, ymax = np.amin(data), np.amax(data)
-                xeps = 0.1*(xmax - xmin)
-                yeps = 0.1*(ymax - ymin)
-                self.ax.set_xlim(xmin - xeps, xmax + xeps)
-                self.ax.set_ylim(ymin - yeps, ymax + yeps)
+
+                self.ax.relim()
+                self.ax.autoscale_view()
                 self.ax.set_xlabel('x')
                 self.ax.set_ylabel(field)
             elif domain.dim == 2:

@@ -161,30 +161,32 @@ class Save_widget(Dialog):
             if c.when == SaveType.frequency:
                 freq = int(c.when_properties)
                 for i in range(freq):
-                    ite = nsteps * (i+1)/freq
-                    add_ite(ite, c.fields)
+                    ite = int(nsteps * (i+1)/freq)
+                    add_ite(ite, c.field_list)
             elif c.when == SaveType.steps:
                 clean_str = c.when_properties.replace(' ', '')
                 for r in clean_str.split(','):
                     steps = r.split('-')
                     if len(steps) == 2:
                         for ite in range(int(steps[0]), int(steps[1])+1):
-                            add_ite(ite, c.fields)
+                            add_ite(ite, c.field_list)
                     else:
-                        add_ite(int(steps[0]), c.fields)
+                        add_ite(int(steps[0]), c.field_list)
             elif c.when == SaveType.step_period:
                 step = int(c.when_properties)
                 for ite in range(0, nsteps, step):
-                    add_ite(ite, c.fields)
+                    add_ite(ite, c.field_list)
             elif c.when == SaveType.times:
                 clean_str = c.when_properties.replace(' ', '')
                 for r in clean_str.split(','):
                     ite = int(float(r)/dt)
-                    add_ite(ite, c.fields)
+                    add_ite(ite, c.field_list)
             elif c.when == SaveType.time_period:
                 step = int(float(c.when_properties)/dt)
                 print(step, nsteps, dt, final_time)
                 for ite in range(0, nsteps, step):
-                    add_ite(ite, c.fields)
+                    add_ite(ite, c.field_list)
 
+        with out:
+            print('output:', output)
         return output

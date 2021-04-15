@@ -1,4 +1,5 @@
 import ipyvuetify as v
+import copy
 
 from ..utils import schema_to_widgets
 from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
@@ -6,7 +7,8 @@ from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
 class LB_scheme_widget:
     def __init__(self, tc, known_cases):
         self.known_cases = known_cases
-        self.cases = {c.name: c for c in known_cases[tc.get_case()]}
+        self.default_cases = {c.name: c for c in known_cases[tc.get_case()]}
+        self.cases = {c.name: copy.copy(c) for c in known_cases[tc.get_case()]}
         default_case = list(self.cases.keys())[0]
         select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='LBM schemes')
         panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
@@ -15,6 +17,8 @@ class LB_scheme_widget:
         description = Markdown()
         properties = v.Layout()
         eq_pde = v.Layout()
+
+        reset = v.Btn(children=['reset to default'], class_='d-none')
 
         tabs = Tabs(v_model=None, children=[v.Tab(children=['Description']),
                                             v.Tab(children=['Properties']),
@@ -29,7 +33,7 @@ class LB_scheme_widget:
         ])
 
         def change_param(change):
-            pass
+            reset.class_ = ''
 
         def change_test_case(change):
             with out:
@@ -59,6 +63,14 @@ class LB_scheme_widget:
                 #     panels.children[0].show()
 
                 change_param(None)
+                reset.class_ = 'd-none'
+
+        def reset_btn(widget, event, data):
+            with out:
+                self.cases[select_case.v_model] = copy.deepcopy(self.default_cases[select_case.v_model])
+                change_case(None)
+
+        reset.on_event('click', reset_btn)
 
         select_case.observe(change_case, 'v_model')
 
@@ -67,7 +79,7 @@ class LB_scheme_widget:
         panels.children[0].bind(change_param)
         change_case(None)
         self.main = [tabs]
-        self.menu = [select_case, panels]
+        self.menu = [select_case, panels, reset]
         self.select_case = select_case
         self.panels = panels
 

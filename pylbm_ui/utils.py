@@ -4,6 +4,8 @@ from .mixin import *
 
 class FloatField(v.TextField, FloatMixin):
     def __init__(self, **kwargs):
+        if 'v_model' in kwargs:
+            kwargs['v_model'] = float(kwargs['v_model'])
         super().__init__(**kwargs)
         self.observe(self.check, 'v_model')
 
@@ -17,6 +19,8 @@ class FloatField(v.TextField, FloatMixin):
 
 class IntField(v.TextField, IntMixin):
     def __init__(self, **kwargs):
+        if 'v_model' in kwargs:
+            kwargs['v_model'] = int(kwargs['v_model'])
         super().__init__(**kwargs)
         self.observe(self.check, 'v_model')
 

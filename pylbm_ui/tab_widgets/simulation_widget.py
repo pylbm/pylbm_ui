@@ -11,7 +11,7 @@ import ipyvuetify as v
 from .save_widget import Save_widget
 from .pylbmwidget import Tooltip, out, debug_widget
 from .dialog_path import DialogPath
-from ..config import default_path
+from ..config import default_path, nb_split_period
 from ..simulation import simulation, Plot
 from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField
 
@@ -90,7 +90,7 @@ class simulation_widget:
             pause = v.Btn(children=['Pause'], class_='ma-2', style_='width: 100px', disabled=True, v_model=False)
             progress_bar = v.ProgressLinear(height=20, value=0, color='light-blue', striped=True)
             result = v.Select(items=list(simu.fields.keys()), v_model=list(simu.fields.keys())[0])
-            period = v.TextField(label='Period', v_model=16, type='number')
+            period = StrictlyPositiveIntField(label='Period', v_model=nt/nb_split_period)
             snapshot = v.Btn(children=['Snapshot'])
             self.plot = Plot()
             self.iplot = 0
@@ -161,8 +161,8 @@ class simulation_widget:
                     if not pause.v_model:
                         simu.sol.one_time_step()
 
-                        if period.v_model != '' and period.v_model != 0:
-                            if nite >= int(period.v_model):
+                        if not period.error:
+                            if nite >= period.value:
                                 nite = 1
                                 simu.save_data(result.v_model)
                                 simu.plot(self.plot, result.v_model)
@@ -221,37 +221,50 @@ class simulation_widget:
             lb_scheme_widget.select_case.observe(update_result, 'v_model')
 
             def observer(change):
-                if not lb_param['la'].error:
-                    key = None
-                    for k, value in discret.items():
-                        if value == change.owner:
-                            key = k
-                            break
+                with out:
+                    if not lb_param['la'].error:
+                        key = None
+                        for k, value in discret.items():
+                            if value == change.owner:
+                                key = k
+                                break
 
-                    problem_size = test_case_widget.get_case().size()
-                    la = lb_param['la'].value
+                        problem_size = test_case_widget.get_case().size()
+                        duration = test_case_widget.get_case().duration
+                        la = lb_param['la'].value
 
-                    if key is None or (key == 'nx' and not discret[key].error):
-                        nx = discret['nx'].value
-                        dx = problem_size/nx
-                        discret['dx'].value = dx
-                        discret['nt'].value = la*nx
-                        discret['dt'].value = dx/la
-                    elif key == 'dx' and not discret[key].error:
-                        dx = discret['dx'].value
-                        discret['nx'].value = problem_size/dx
-                        discret['nt'].value = la*discret['nx'].value
-                        discret['dt'].value = dx/la
-                    elif key == 'nt' and not discret[key].error:
-                        nt = discret['nt'].value
-                        discret['nx'].value = nt/la
-                        discret['dx'].value = problem_size/discret['nx'].value
-                        discret['dt'].value = discret['dx'].value/la
-                    elif key == 'dt' and not discret[key].error:
-                        dt = discret['dt'].value
-                        discret['dx'].value = dt*la
-                        discret['nx'].value = problem_size/discret['dx'].value
-                        discret['nt'].value = la*discret['nx'].value
+                        for value in discret.values():
+                            value.unobserve(observer, 'v_model')
+
+                        if key is None or (key == 'nx' and not discret[key].error):
+                            nx = discret['nx'].value
+                            dx = problem_size/nx
+                            dt = dx/la
+                            print('dt', dt, duration/dt)
+                            discret['dx'].value = dx
+                            discret['dt'].value = dx/la
+                            discret['nt'].value = duration/dt
+                        elif key == 'dx' and not discret[key].error:
+                            dx = discret['dx'].value
+                            discret['nx'].value = problem_size/dx
+                            discret['nt'].value = la*discret['nx'].value
+                            discret['dt'].value = dx/la
+                        elif key == 'nt' and not discret[key].error:
+                            nt = discret['nt'].value
+                            discret['nx'].value = nt/la
+                            discret['dx'].value = problem_size/discret['nx'].value
+                            discret['dt'].value = discret['dx'].value/la
+                        elif key == 'dt' and not discret[key].error:
+                            dt = discret['dt'].value
+                            discret['dx'].value = dt*la
+                            discret['nx'].value = problem_size/discret['dx'].value
+                            discret['nt'].value = la*discret['nx'].value
+
+                        if key is None:
+                            period.value = discret['nt'].value/nb_split_period
+
+                        for value in discret.values():
+                            value.observe(observer, 'v_model')
 
             for value in discret.values():
                 value.observe(observer, 'v_model')

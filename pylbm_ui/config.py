@@ -14,3 +14,6 @@ plot_config = {
     'cmap': copy.copy(matplotlib.cm.get_cmap("RdBu")),
     'nan_color': 'black',
 }
+
+# for simulation
+nb_split_period = 5

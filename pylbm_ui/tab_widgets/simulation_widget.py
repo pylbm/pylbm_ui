@@ -111,7 +111,7 @@ class simulation_widget:
                     v.Col(children=[snapshot], sm=2),
                 ], align='center', justify='center'),
                 plot_output,
-                out
+                # out
             ]
 
             def stop_simulation(change):

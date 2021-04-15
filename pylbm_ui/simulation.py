@@ -21,7 +21,7 @@ class Plot:
         self.color_bar = None
         # plt.ion()
 
-    def plot(self, t, domain, field, data, palette=None):
+    def plot(self, t, domain, field, data, transpose=True, palette=None):
         with out:
             if domain.dim == 1:
                 x = domain.x
@@ -65,7 +65,11 @@ class Plot:
                     cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
                     x, y = domain.x, domain.y
                     extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
-                    self.plot_type = self.ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent, interpolation='bilinear')
+                    if transpose:
+                        to_plot = data.T
+                    else:
+                        to_plot = data
+                    self.plot_type = self.ax.imshow(to_plot, origin='lower', cmap=cmap, extent=extent, interpolation='bilinear')
                     self.color_bar = self.fig.colorbar(self.plot_type, ax=self.ax)
                 else:
                     self.plot_type.set_array(data.T)

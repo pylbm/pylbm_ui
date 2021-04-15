@@ -244,7 +244,7 @@ class PostTreatmentWidget:
                 data = h5_data[item['field']][:]
                 time = item['time']
                 self.plot.plot_type = None
-                self.plot.plot(time, domain, item['field'], data, palette)
+                self.plot.plot(time, domain, item['field'], data, transpose=False, palette=palette)
             self.plot.fig.canvas.draw_idle()
 
     def cache(self, change):

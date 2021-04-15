@@ -69,6 +69,7 @@ class Test_case_widget:
             change_case(None)
 
             self.select_case = select_case
+            self.panels = panels
 
     def get_case(self, update_param=False):
         return self.cases[self.select_case.v_model]

@@ -9,12 +9,16 @@ from .dialog_form import Form, Item, Dialog, add_rule
 
 class StateForm(Form):
     def __init__(self, state, **kwargs):
+        self.update_state(state)
+
+        super().__init__(v_model='valid', children=self.fields)
+
+    def update_state(self, state):
         self.state = state.copy()
         self.fields = []
         for k, v in state.items():
             self.fields.append(FloatField(label=str(k), v_model=v))
-
-        super().__init__(v_model='valid', children=self.fields)
+        self.children = self.fields
 
     def get_form_state(self):
         for i, k in enumerate(self.state.keys()):
@@ -107,6 +111,7 @@ class StateWidget(Dialog):
         self.item_list.children = []
         for s in states:
             self.item_list.children.append(self.create_item(s))
+        self.form.update_state(states[0])
         self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
     def get_states(self):
@@ -222,6 +227,7 @@ class stability_widget:
         def change_test_case(change):
             test_case = test_case_widget.get_case()
             state_widget.update_states(test_case.state())
+            test_case_widget.panels.children[0].bind(change_test_case)
 
         def update_states(change):
             state_list.items = [{'text':str(s), 'value': i} for i, s in enumerate(state_widget.get_states())]
@@ -231,6 +237,7 @@ class stability_widget:
             container.hide()
 
         update_states(None)
+        change_test_case(None)
         state_widget.item_list.observe(update_states, 'children')
 
         test_case_widget.select_case.observe(change_test_case, 'v_model')

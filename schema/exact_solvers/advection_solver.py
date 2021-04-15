@@ -1,3 +1,8 @@
+# Authors:
+#     Loic Gouarin <loic.gouarin@polytechnique.edu>
+#     Benjamin Graille <benjamin.graille@universite-paris-saclay.fr>
+#
+# License: BSD 3 clause
 """
 Advection
 """

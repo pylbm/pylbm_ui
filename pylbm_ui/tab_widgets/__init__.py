@@ -1,3 +1,10 @@
+# Authors:
+#     Loic Gouarin <loic.gouarin@polytechnique.edu>
+#     Benjamin Graille <benjamin.graille@universite-paris-saclay.fr>
+#     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
+#
+# License: BSD 3 clause
+
 from .test_case_widget import Test_case_widget
 from .LB_scheme_widget import LB_scheme_widget
 from .stability_widget import stability_widget

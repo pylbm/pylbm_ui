@@ -1,3 +1,10 @@
+# Authors:
+#     Loic Gouarin <loic.gouarin@polytechnique.edu>
+#     Benjamin Graille <benjamin.graille@universite-paris-saclay.fr>
+#     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
+#
+# License: BSD 3 clause
+
 import matplotlib.pyplot as plt
 import ipyvuetify as v
 import copy
@@ -6,7 +13,6 @@ from ..utils import schema_to_widgets
 from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
 
 class Test_case_widget:
-
     def __init__(self, cases, default_case):
         with out:
             self.default_cases = cases

@@ -1,3 +1,8 @@
+# Authors:
+#     Loic Gouarin <loic.gouarin@polytechnique.edu>
+#     Benjamin Graille <benjamin.graille@universite-paris-saclay.fr>
+#
+# License: BSD 3 clause
 """
 isothermal Euler
 """
@@ -11,7 +16,7 @@ class EulerIsothermalSolver(GenericSolver):
     """
         d_t(rho)   + d_x(rho u) = 0
         d_t(rho u) + d_x(rho u^2 + c_0^2 rho u) = 0
-    
+
     where c_0 is the speed of sound
 
     Assuming that p = c_0^2 rho, we have

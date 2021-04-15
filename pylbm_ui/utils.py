@@ -7,6 +7,7 @@ class FloatField(v.TextField, FloatMixin):
         if 'v_model' in kwargs:
             kwargs['v_model'] = float(kwargs['v_model'])
         super().__init__(**kwargs)
+        self.error = False
         self.observe(self.check, 'v_model')
 
     @property
@@ -22,6 +23,7 @@ class IntField(v.TextField, IntMixin):
         if 'v_model' in kwargs:
             kwargs['v_model'] = int(kwargs['v_model'])
         super().__init__(**kwargs)
+        self.error = False
         self.observe(self.check, 'v_model')
 
     @property

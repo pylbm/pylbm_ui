@@ -27,8 +27,8 @@ class simulation_widget:
 
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
             nx = 201
-            dx = test_case.size()/201
-            dt = dx/float(lb_param['la'].v_model)
+            dx = test_case.size()/200
+            dt = dx/lb_param['la'].value
             nt = int(test_case.duration/dt)
             discret = {
                 'nx': StrictlyPositiveIntField(label='Number of points', v_model=nx),
@@ -106,12 +106,12 @@ class simulation_widget:
                 ]),
                 progress_bar,
                 v.Row(children=[
-                    v.Col(children=[result], sm=5),
-                    v.Col(children=[period], sm=5),
-                    v.Col(children=[snapshot], sm=2),
-                ], align='center', justify='center'),
+                    v.Col(children=[result], md=5, sm=12),
+                    v.Col(children=[period], md=5, sm=12),
+                    v.Col(children=[snapshot], md=2, sm=12),
+                ], align='center', justify='space-around', ),
                 plot_output,
-                # out
+                out
             ]
 
             def stop_simulation(change):
@@ -222,42 +222,47 @@ class simulation_widget:
 
             def observer(change):
                 with out:
-                    if not lb_param['la'].error:
+                    error = lb_param['la'].error
+                    for v in discret.values():
+                        error |= v.error
+
+                    if not error:
                         key = None
                         for k, value in discret.items():
                             if value == change.owner:
                                 key = k
                                 break
 
+                        for value in discret.values():
+                            value.unobserve(observer, 'v_model')
+
                         problem_size = test_case_widget.get_case().size()
                         duration = test_case_widget.get_case().duration
                         la = lb_param['la'].value
 
-                        for value in discret.values():
-                            value.unobserve(observer, 'v_model')
-
-                        if key is None or (key == 'nx' and not discret[key].error):
+                        if key is None or key == 'nx':
                             nx = discret['nx'].value
-                            dx = problem_size/nx
+                            dx = problem_size/(nx - 1)
                             dt = dx/la
-                            print('dt', dt, duration/dt)
                             discret['dx'].value = dx
                             discret['dt'].value = dx/la
                             discret['nt'].value = duration/dt
-                        elif key == 'dx' and not discret[key].error:
+                        elif key == 'dx':
                             dx = discret['dx'].value
-                            discret['nx'].value = problem_size/dx
+                            discret['nx'].value = (problem_size/dx) + 1
+                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
                             discret['nt'].value = la*discret['nx'].value
-                            discret['dt'].value = dx/la
-                        elif key == 'nt' and not discret[key].error:
+                            discret['dt'].value = discret['dx'].value/la
+                        elif key == 'nt':
                             nt = discret['nt'].value
                             discret['nx'].value = nt/la
-                            discret['dx'].value = problem_size/discret['nx'].value
+                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
                             discret['dt'].value = discret['dx'].value/la
-                        elif key == 'dt' and not discret[key].error:
+                        elif key == 'dt':
                             dt = discret['dt'].value
                             discret['dx'].value = dt*la
-                            discret['nx'].value = problem_size/discret['dx'].value
+                            discret['nx'].value = problem_size/discret['dx'].value + 1
+                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
                             discret['nt'].value = la*discret['nx'].value
 
                         if key is None:

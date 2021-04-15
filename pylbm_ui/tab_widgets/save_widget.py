@@ -183,10 +183,7 @@ class Save_widget(Dialog):
                     add_ite(ite, c.field_list)
             elif c.when == SaveType.time_period:
                 step = int(float(c.when_properties)/dt)
-                print(step, nsteps, dt, final_time)
                 for ite in range(0, nsteps, step):
                     add_ite(ite, c.field_list)
 
-        with out:
-            print('output:', output)
         return output

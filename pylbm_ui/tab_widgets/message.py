@@ -14,4 +14,4 @@ class Message(v.Container):
         ])
 
     def update(self, new_message):
-        self.message.children = [f'{message}...']
+        self.message.children = [f'{new_message}...']

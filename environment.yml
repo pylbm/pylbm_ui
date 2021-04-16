@@ -2,7 +2,7 @@ name: pylbm_ui
 channels:
   - conda-forge
 dependencies:
-  - pylbm
+  - pylbm>=0.6
   - ipyvuetify
   - ipympl
   - markdown

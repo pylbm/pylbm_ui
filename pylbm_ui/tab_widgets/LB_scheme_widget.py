@@ -10,6 +10,7 @@ import copy
 
 from ..utils import schema_to_widgets
 from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
+from .message import Message
 
 class LB_scheme_widget:
     def __init__(self, tc, known_cases):
@@ -27,7 +28,7 @@ class LB_scheme_widget:
 
         reset = v.Btn(children=['reset to default'], class_='d-none')
 
-        tabs = Tabs(v_model=None, children=[v.Tab(children=['Description']),
+        tabs = Tabs(v_model=0, children=[v.Tab(children=['Description']),
                                             v.Tab(children=['Properties']),
                                             v.Tab(children=['Equivalent equations']),
                                             v.TabItem(children=[description]),
@@ -42,9 +43,20 @@ class LB_scheme_widget:
         def change_param(change):
             reset.class_ = ''
 
+        def change_tab(change):
+            with out:
+                case = self.cases[select_case.v_model]
+                if tabs.v_model == 1 and not properties.children:
+                    properties.children = [Message('Compute the properties of the scheme')]
+                    properties.children = [case.get_information().vue()]
+                if tabs.v_model == 2 and not eq_pde.children:
+                    eq_pde.children = [Message('Compute the equivalent equations of the scheme')]
+                    eq_pde.children = [case.get_eqpde().vue()]
+
         def change_test_case(change):
             with out:
                 current_case = self.select_case.v_model
+                self.default_cases = {c.name: c for c in known_cases[tc.get_case()]}
                 self.cases = {c.name: c for c in known_cases[tc.get_case()]}
                 if current_case not in self.cases.keys():
                     current_case = list(self.cases.keys())[0]
@@ -59,12 +71,14 @@ class LB_scheme_widget:
                 case = self.cases[select_case.v_model]
                 self.parameters = schema_to_widgets(self.parameters, case)
                 description.update_content(case.description)
-                # properties.children = [case.get_information().vue()]
-                # eq_pde.children = [case.get_eqpde().vue()]
+                properties.children = []
+                eq_pde.children = []
                 panels.children[0].update(self.parameters.values())
                 panels.children[0].bind(change_param)
                 tabs.v_model = v_model
 
+                if tabs.v_model > 0:
+                    change_tab(None)
                 # if not tabs.viz:
                 #     tabs.show()
                 #     panels.children[0].show()
@@ -79,6 +93,7 @@ class LB_scheme_widget:
 
         reset.on_event('click', reset_btn)
 
+        tabs.observe(change_tab, 'v_model')
         select_case.observe(change_case, 'v_model')
 
         tc.select_case.observe(change_test_case, 'v_model')

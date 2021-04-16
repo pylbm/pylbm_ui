@@ -80,7 +80,7 @@ class ToroCase(HashBaseModel):
         }
 
     def size(self):
-        return self.xmax - self.xmin
+        return [self.xmax - self.xmin]
 
     def state(self):
         return [{self.equation.rho: self.rho_left,

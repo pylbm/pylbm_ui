@@ -85,7 +85,7 @@ class tc_2D_FFS(HashBaseModel):
         }
 
     def size(self):
-        return self.xmax - self.xmin
+        return [self.xmax - self.xmin, self.ymax - self.ymin]
 
     def get_boundary(self):
         return {

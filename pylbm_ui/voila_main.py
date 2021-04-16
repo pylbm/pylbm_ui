@@ -110,10 +110,8 @@ def main():
         ]
         content.children = widget.main
 
-        with out:
-            print(tab_id)
-            if tab_id == 5:
-                posttreatment.update(None)
+        if tab_id == 5:
+            posttreatment.update(None)
 
 
     tab_change(None)

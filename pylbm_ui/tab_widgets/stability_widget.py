@@ -86,7 +86,6 @@ class StateWidget(Dialog):
         with out:
             self.states = states
             self.default_state = self.states[0]
-            print('dafault state', self.default_state)
             super().__init__(self.default_state)
 
             self.eval_stab = v.Btn(children=['Check stability'], color='primary')

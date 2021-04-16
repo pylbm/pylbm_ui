@@ -8,7 +8,7 @@
 import ipyvuetify as v
 
 from .mixin import *
-
+from .tab_widgets.pylbmwidget import out
 class FloatField(v.TextField, FloatMixin):
     def __init__(self, **kwargs):
         if 'v_model' in kwargs:
@@ -52,6 +52,11 @@ class StrictlyPositiveFloatField(FloatField, StrictlyPositiveMixin):
         self.observe(self.check, 'v_model')
 
 class RelaxField(FloatField, PositiveMixin, BoundMixin):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.observe(self.check, 'v_model')
+
+class NbPointsField(IntField, GreaterThanOneMixin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.observe(self.check, 'v_model')

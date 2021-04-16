@@ -27,7 +27,7 @@ from ..simulation import simulation, get_config
 from ..utils import required_fields
 from ..json import save_simu_config, save_param_study_for_simu
 from .pylbmwidget import out
-
+from .message import Message
 
 def run_simulation(args):
     simu_cfg, sample, duration, responses = args
@@ -142,18 +142,11 @@ class parametric_widget:
                             test_case = copy.deepcopy(test_case_widget.get_case())
                             lb_scheme = copy.deepcopy(lb_scheme_widget.get_case())
 
-                            alert = v.Alert(children=['Initialize...'], class_='primary--text')
-                            plotly_plot.children = [
-                                v.Row(children=[
-                                    v.ProgressCircular(indeterminate=True, color='primary', size=70, width=4)
-                                    ], align='center', justify='center'),
-                                v.Row(children=[
-                                    alert
-                                    ], align='center', justify='center')
-                            ]
+                            message = Message('Initialize')
+                            plotly_plot.children = [message]
                             sampling = np.asarray(skopt_method[sampling_method.v_model]().generate(list(design_space.values()), int(sample_size.v_model)))
 
-                            alert.children = ['Prepare the simulation...']
+                            message.update('Prepare the simulation')
                             simu = simulation()
                             simu.reset_sol(test_case, lb_scheme, float(space_step.v_model), codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=tmp_dir.name, show_code=False)
 
@@ -191,7 +184,7 @@ class parametric_widget:
                                 save_simu_config(simu_path, 'simu_cfg.json', float(space_step.v_model), tmp_case, lb_scheme, {str(k): v for k, v in design_sample.items()})
                                 args.append((simu_cfg, design_sample, tmp_case.duration, responses.get_list(simu_path, tmp_case, simu_cfg)))
 
-                            alert.children = ['Run simulations on the sampling...']
+                            message.update('Run simulations on the sampling...')
 
                             # async def run_parametric_study():
                             def run_parametric_study():

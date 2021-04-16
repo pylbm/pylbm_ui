@@ -18,10 +18,10 @@ import ipyvuetify as v
 from .save_widget import Save_widget
 from .pylbmwidget import Tooltip, out, debug_widget
 from .dialog_path import DialogPath
-from ..config import default_path, nb_split_period
+from ..config import default_path, nb_split_period, default_dx
 from ..simulation import simulation, Plot
-from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField
-
+from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField, NbPointsField
+from .message import Message
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
@@ -33,14 +33,14 @@ class simulation_widget:
             simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
 
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
-            nx = 201
-            dx = test_case.size()/200
+            dx = default_dx
+            nx = int(test_case.size()[0]/dx) + 1
             dt = dx/lb_param['la'].value
             nt = int(test_case.duration/dt)
             discret = {
-                'nx': StrictlyPositiveIntField(label='Number of points', v_model=nx),
+                'nx': NbPointsField(label='Number of points', v_model=nx),
                 'dx': StrictlyPositiveFloatField(label='Space step', v_model=dx),
-                'nt': StrictlyPositiveIntField(label='Number of steps', v_model=nt),
+                'nt': StrictlyPositiveIntField(label='Number of steps', v_model=nt, disable=True),
                 'dt': StrictlyPositiveFloatField(label='Time step', v_model=dt),
             }
 
@@ -118,7 +118,7 @@ class simulation_widget:
                     v.Col(children=[snapshot], md=2, sm=12),
                 ], align='center', justify='space-around', ),
                 plot_output,
-                out
+                # out
             ]
 
             def stop_simulation(change):
@@ -144,6 +144,8 @@ class simulation_widget:
                     return
 
                 nite = 1
+
+                plot_output.children = [Message('Prepare the simulation')]
 
                 test_case = test_case_widget.get_case()
                 lb_scheme = lb_scheme_widget.get_case()
@@ -189,7 +191,6 @@ class simulation_widget:
 
             def start_simulation(widget, event, data):
                 with out:
-
                     if start.v_model:
                         simu_path = os.path.join(default_path, simulation_name.v_model)
                         dialog.check_path(simu_path)
@@ -243,18 +244,18 @@ class simulation_widget:
                         for value in discret.values():
                             value.unobserve(observer, 'v_model')
 
-                        problem_size = test_case_widget.get_case().size()
+                        problem_size = test_case_widget.get_case().size()[0]
                         duration = test_case_widget.get_case().duration
                         la = lb_param['la'].value
 
-                        if key is None or key == 'nx':
+                        if key == 'nx':
                             nx = discret['nx'].value
                             dx = problem_size/(nx - 1)
                             dt = dx/la
                             discret['dx'].value = dx
                             discret['dt'].value = dx/la
                             discret['nt'].value = duration/dt
-                        elif key == 'dx':
+                        elif key is None or key == 'dx':
                             dx = discret['dx'].value
                             discret['nx'].value = (problem_size/dx) + 1
                             discret['dx'].value = problem_size/(discret['nx'].value - 1)

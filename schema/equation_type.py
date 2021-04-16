@@ -37,8 +37,8 @@ class Euler1D(EquationType):
 
 class Euler2D(EquationType):
     rho = Symbol('rho')
-    qx = Symbol('qx')
-    qy = Symbol('qy')
+    qx = Symbol('q_x')
+    qy = Symbol('q_y')
     E = Symbol('E')
     gamma = Symbol('gamma')
     NonReflexiveOutlet='NonReflexiveOutlet'

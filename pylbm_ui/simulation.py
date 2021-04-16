@@ -12,6 +12,7 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 import matplotlib
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylbm
 
 from .config import plot_config
@@ -73,7 +74,9 @@ class Plot:
                     else:
                         to_plot = data
                     self.plot_type = self.ax.imshow(to_plot, origin='lower', cmap=cmap, extent=extent, interpolation='bilinear')
-                    self.color_bar = self.fig.colorbar(self.plot_type, ax=self.ax)
+                    divider = make_axes_locatable(self.ax)
+                    cax = divider.append_axes("bottom", size="5%", pad=0.25)
+                    self.color_bar = self.fig.colorbar(self.plot_type, cax=cax, orientation="horizontal")
                 else:
                     self.plot_type.set_array(data.T)
                 self.plot_type.set_clim(vmin=np.nanmin(data), vmax=np.nanmax(data))

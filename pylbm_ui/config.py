@@ -23,4 +23,5 @@ plot_config = {
 }
 
 # for simulation
-nb_split_period = 5
+nb_split_period = 10
+default_dx = 0.005

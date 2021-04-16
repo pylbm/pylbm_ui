@@ -227,8 +227,9 @@ class PostTreatmentWidget:
                 ],
                 class_='ma-2',
             ),
-            self.plot.fig.canvas,
-            out]
+            v.Row(children=[self.plot.fig.canvas], justify='center'),
+            # out
+            ]
 
     def plot_result(self, change):
         with out:

@@ -56,6 +56,17 @@ class StrictlyPositiveMixin(BaseMixin):
             self.error = False
         super().check(change)
 
+class GreaterThanOneMixin(BaseMixin):
+    def check(self, change):
+        if float(self.v_model) <= 1:
+            self.rules = ['Must be greater than 1']
+            self.error = True
+            return
+        else:
+            self.rules = []
+            self.error = False
+        return super().check(change)
+
 class BoundMixin(BaseMixin):
     def check(self, change):
         if float(self.v_model) < 0 or float(self.v_model) > 2:

@@ -87,11 +87,13 @@ def schema_to_widgets(parameter_widget, data):
         if data_type is None:
             data_type = properties[field]['type']
 
-        if field not in parameter_widget:
-            widgets[field] = TYPE_TO_WIDGET[data_type](label=name, v_model=default_value)
-        else:
-            widgets[field] = parameter_widget[field]
-            widgets[field].v_model = default_value
+        widgets[field] = TYPE_TO_WIDGET[data_type](label=name, v_model=default_value)
+
+        # if field not in parameter_widget:
+        #     widgets[field] = TYPE_TO_WIDGET[data_type](label=name, v_model=default_value)
+        # else:
+        #     widgets[field] = parameter_widget[field]
+        #     widgets[field].v_model = default_value
 
     return widgets
 

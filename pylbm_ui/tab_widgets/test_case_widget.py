@@ -10,7 +10,7 @@ import ipyvuetify as v
 import copy
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
+from .pylbmwidget import Markdown, ParametersPanel, out
 
 class Test_case_widget:
     def __init__(self, cases, default_case):
@@ -19,75 +19,81 @@ class Test_case_widget:
             self.cases = copy.deepcopy(cases)
             self.parameters = {}
 
-            select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='Test cases')
+            self.select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='Test cases')
 
-            panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
+            self.panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
 
-            description = Markdown()
+            self.description = Markdown()
             plt.ioff()
-            fig = plt.figure(figsize=(12,6))
-            fig.canvas.header_visible = False
+            self.fig = plt.figure(figsize=(12,6))
+            self.fig.canvas.header_visible = False
 
-            tabs_content = [v.TabItem(children=[description]), v.TabItem(children=[fig.canvas])]
-            tabs = Tabs(v_model=None,
+            tabs_content = [v.TabItem(children=[self.description]), v.TabItem(children=[self.fig.canvas])]
+            self.tabs = v.Tabs(v_model=None,
                         children=[v.Tab(children=['Description']),
                                   v.Tab(children=['Reference results'])] + tabs_content)
 
-            reset = v.Btn(children=['reset to default'], class_='d-none')
+            self.reset = v.Btn(children=['reset to default'], class_='d-none')
 
-            self.menu = [select_case, panels, reset]
-            self.main = [tabs]
-            self.widget = v.Container(children=[v.Row(children=[v.Col(children=[select_case, panels], lg=400),
-                                                                v.Col(children=[tabs])
+            self.menu = [self.select_case, self.panels, self.reset]
+            self.main = [self.tabs]
+            self.widget = v.Container(children=[v.Row(children=[v.Col(children=[self.select_case, self.panels], lg=400),
+                                                                v.Col(children=[self.tabs])
                                                                ])
             ])
 
-            def change_param(change):
-                reset.class_ = ''
-                v_model = panels.v_model
-                for axe in fig.axes:
-                    fig.delaxes(axe)
-                panels.v_model = v_model
+            self.reset.on_event('click', self.reset_btn)
+            self.select_case.observe(self.change_case, 'v_model')
+            self.panels.children[0].bind(self.change_param)
+            self.change_case(None)
 
-                case = self.cases[select_case.v_model]
-                for k, v in self.parameters.items():
-                    setattr(case, k, v.value)
-                if hasattr(case, 'plot_ref_solution'):
-                    case.plot_ref_solution(fig)
-                    fig.canvas.draw_idle()
-                    tabs.children[1].disabled = False
-                else:
-                    tabs.children[1].disabled = True
+    def reset_btn(self, widget, event, data):
+        with out:
+            case = self.select_case.v_model
+            self.cases[case] = copy.deepcopy(self.default_cases[case])
+            self.change_case(None)
 
-            def change_case(change):
-                panels.children[0].unbind(change_param)
-                v_model = tabs.v_model
-                description.update_content(self.cases[select_case.v_model].description)
-                self.parameters = schema_to_widgets(self.parameters, self.cases[select_case.v_model])
-                panels.children[0].update(self.parameters.values())
-                panels.children[0].bind(change_param)
-                tabs.v_model = v_model
+    def change_param(self, change):
+        with out:
 
-                if not tabs.viz:
-                    tabs.show()
-                    panels.children[0].show()
+            v_model = self.panels.v_model
+            for axe in self.fig.axes:
+                self.fig.delaxes(axe)
+            self.panels.v_model = v_model
 
-                change_param(None)
-                panels.children[0].bind(change_param)
-                reset.class_ = 'd-none'
+            case = self.cases[self.select_case.v_model]
+            default_case = self.default_cases[self.select_case.v_model]
+            is_same = True
+            for k, v in self.parameters.items():
+                setattr(case, k, v.value)
+                attr = getattr(default_case, k)
+                if v.value != attr:
+                    is_same = False
 
-            def reset_btn(widget, event, data):
-                with out:
-                    self.cases[select_case.v_model] = copy.deepcopy(self.default_cases[select_case.v_model])
-                    change_case(None)
+            if not is_same:
+                self.reset.class_ = ''
+            else:
+                self.reset.class_ = 'd-none'
 
-            reset.on_event('click', reset_btn)
-            select_case.observe(change_case, 'v_model')
-            panels.children[0].bind(change_param)
-            change_case(None)
+            if hasattr(case, 'plot_ref_solution'):
+                case.plot_ref_solution(self.fig)
+                self.fig.canvas.draw_idle()
+                self.tabs.children[1].disabled = False
+            else:
+                self.tabs.children[1].disabled = True
 
-            self.select_case = select_case
-            self.panels = panels
+    def change_case(self, change):
+        with
+            self.panels.children[0].unbind(self.change_param)
+            v_model = self.tabs.v_model
+            self.description.update_content(self.cases[self.select_case.v_model].description)
+            self.parameters = schema_to_widgets(self.parameters, self.cases[self.select_case.v_model])
+            self.panels.children[0].update(self.parameters.values())
+            self.panels.children[0].bind(self.change_param)
+            self.tabs.v_model = v_model
+
+            self.change_param(None)
 
     def get_case(self, update_param=False):
         return self.cases[self.select_case.v_model]
+

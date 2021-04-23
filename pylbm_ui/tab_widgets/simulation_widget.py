@@ -22,10 +22,12 @@ from ..config import default_path, nb_split_period, default_dx
 from ..simulation import simulation, Plot
 from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField, NbPointsField
 from .message import Message
+
 class simulation_widget:
     def __init__(self, test_case_widget, lb_scheme_widget):
         with out:
             test_case = test_case_widget.get_case()
+            tc_param = test_case_widget.parameters
             lb_case = lb_scheme_widget.get_case()
             lb_param = lb_scheme_widget.parameters
 
@@ -35,10 +37,13 @@ class simulation_widget:
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
             dx = default_dx
             nx = int(test_case.size()[0]/dx) + 1
+            ny = 1
             dt = dx/lb_param['la'].value
             nt = int(test_case.duration/dt)
+            la_vue = v.CardText(children=[lb_param['la']])
             discret = {
-                'nx': NbPointsField(label='Number of points', v_model=nx),
+                'nx': NbPointsField(label='Number of points in x', v_model=nx, disabled=True),
+                'ny': NbPointsField(label='Number of points in y', v_model=ny, disabled=True, class_='d-none'),
                 'dx': StrictlyPositiveFloatField(label='Space step', v_model=dx),
                 'nt': StrictlyPositiveIntField(label='Number of steps', v_model=nt, disable=True),
                 'dt': StrictlyPositiveFloatField(label='Time step', v_model=dt),
@@ -56,23 +61,22 @@ class simulation_widget:
                                 v.CardTitle(children=['In space']),
                                 v.CardText(children=[
                                     discret['nx'],
+                                    discret['ny'],
                                     discret['dx'],
                                 ]),
-                            ], class_="ma-2"),
+                            ], class_="ma-1"),
                             v.Card(children=[
                                 v.CardTitle(children=['In time']),
                                 v.CardText(children=[
                                     discret['nt'],
                                     discret['dt'],
                                 ]),
-                            ], class_="ma-2"),
+                            ], class_="ma-1"),
                             v.Card(children=[
                                 v.CardTitle(children=['Scheme velocity']),
-                                v.CardText(children=[
-                                    lb_param['la']
-                                ]),
-                            ], class_="ma-2"),
-                        ]),
+                                la_vue,
+                            ], class_="ma-1"),
+                        ], class_="px-1"),
                     ]),
                     v.ExpansionPanel(children=[
                         v.ExpansionPanelHeader(children=['Code generator']),
@@ -84,7 +88,7 @@ class simulation_widget:
                             save_fields.widget
                         ]),
                     ]),
-                ], multiple=True)
+                ], multiple=True, class_='pa-0')
             ]
 
             #
@@ -101,7 +105,7 @@ class simulation_widget:
             snapshot = v.Btn(children=['Snapshot'])
             self.plot = Plot()
             self.iplot = 0
-            plot_output = v.Row(align='center', justify='center')
+            plot_output = v.Row(justify='center')
 
             dialog = DialogPath()
 
@@ -118,7 +122,6 @@ class simulation_widget:
                     v.Col(children=[snapshot], md=2, sm=12),
                 ], align='center', justify='space-around', ),
                 plot_output,
-                # out
             ]
 
             def stop_simulation(change):
@@ -230,58 +233,92 @@ class simulation_widget:
 
             def observer(change):
                 with out:
+                    tc_param = test_case_widget.parameters
+                    lb_param = lb_scheme_widget.parameters
                     error = lb_param['la'].error
                     for v in discret.values():
                         error |= v.error
 
                     if not error:
                         key = None
-                        for k, value in discret.items():
-                            if value == change.owner:
-                                key = k
-                                break
+
+                        if hasattr(change, 'owner'):
+                            for k, value in discret.items():
+                                if value == change.owner:
+                                    key = k
+                                    break
 
                         for value in discret.values():
                             value.unobserve(observer, 'v_model')
+                        lb_param['la'].unobserve(observer, 'v_model')
 
-                        problem_size = test_case_widget.get_case().size()[0]
-                        duration = test_case_widget.get_case().duration
+                        test_case = test_case_widget.get_case()
+                        problem_size = [tc_param['xmax'].value - tc_param['xmin'].value]
+                        if 'ymin' in tc_param:
+                            problem_size.append(tc_param['ymax'].value - tc_param['ymin'].value)
+
+                        duration = test_case.duration
                         la = lb_param['la'].value
 
-                        if key == 'nx':
-                            nx = discret['nx'].value
-                            dx = problem_size/(nx - 1)
-                            dt = dx/la
-                            discret['dx'].value = dx
-                            discret['dt'].value = dx/la
-                            discret['nt'].value = duration/dt
-                        elif key is None or key == 'dx':
+                        if key is None or key == 'dx':
                             dx = discret['dx'].value
-                            discret['nx'].value = (problem_size/dx) + 1
-                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
-                            discret['nt'].value = la*discret['nx'].value
+                            size = problem_size
+                            nmin = round(min(size)/dx + 1)
+                            dx = min(size)/(nmin - 1)
+                            n = [round(s/dx) + 1 for s in size]
+                            L = [(i-1)*dx for i in n]
+
+                            discret['dx'].value = dx
+                            discret['nx'].value = n[0]
+                            if len(n) > 1:
+                                discret['ny'].value = n[1]
+
+                            test_case.set_size(L)
                             discret['dt'].value = discret['dx'].value/la
+                            discret['nt'].value = duration/discret['dt'].value
                         elif key == 'nt':
-                            nt = discret['nt'].value
-                            discret['nx'].value = nt/la
-                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
-                            discret['dt'].value = discret['dx'].value/la
+                            discret['dt'].value = duration/discret['nt'].value
+                            lb_param['la'].value = discret['dx'].value/discret['dt'].value
                         elif key == 'dt':
                             dt = discret['dt'].value
-                            discret['dx'].value = dt*la
-                            discret['nx'].value = problem_size/discret['dx'].value + 1
-                            discret['dx'].value = problem_size/(discret['nx'].value - 1)
-                            discret['nt'].value = la*discret['nx'].value
+                            lb_param['la'].value = discret['dx'].value/discret['dt'].value
+                            discret['nt'].value = duration/discret['dt'].value
 
-                        if key is None:
-                            period.value = discret['nt'].value/nb_split_period
+                        period.value = discret['nt'].value/nb_split_period
 
                         for value in discret.values():
                             value.observe(observer, 'v_model')
+                        lb_param['la'].observe(observer, 'v_model')
+
 
             for value in discret.values():
                 value.observe(observer, 'v_model')
             lb_param['la'].observe(observer, 'v_model')
+            tc_param['xmin'].observe(observer, 'v_model')
+            tc_param['xmax'].observe(observer, 'v_model')
+            if test_case_widget.get_case().dim > 1:
+                tc_param['ymin'].observe(observer, 'v_model')
+                tc_param['ymax'].observe(observer, 'v_model')
+
+            def change_dim(change):
+                with out:
+                    dim = test_case_widget.get_case().dim
+                    if dim == 1:
+                        discret['ny'].class_ = 'd-none'
+                    else:
+                        discret['ny'].class_ = ''
+
+                    tc_param = test_case_widget.parameters
+                    lb_param = lb_scheme_widget.parameters
+                    la_vue.children = [lb_param['la']]
+                    lb_param['la'].observe(observer, 'v_model')
+                    tc_param['xmin'].observe(observer, 'v_model')
+                    tc_param['xmax'].observe(observer, 'v_model')
+                    if test_case_widget.get_case().dim > 1:
+                        tc_param['ymin'].observe(observer, 'v_model')
+                        tc_param['ymax'].observe(observer, 'v_model')
+                    observer(None)
+            test_case_widget.select_case.observe(change_dim, 'v_model')
 
             self.widget = v.Row(children=[
                 v.Col(children=left_panel, sm=3),

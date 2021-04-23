@@ -83,7 +83,7 @@ class Test_case_widget:
                 self.tabs.children[1].disabled = True
 
     def change_case(self, change):
-        with
+        with out:
             self.panels.children[0].unbind(self.change_param)
             v_model = self.tabs.v_model
             self.description.update_content(self.cases[self.select_case.v_model].description)

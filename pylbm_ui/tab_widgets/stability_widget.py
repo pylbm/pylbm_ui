@@ -24,7 +24,8 @@ class StateForm(Form):
         self.state = state.copy()
         self.fields = []
         for k, v in state.items():
-            self.fields.append(FloatField(label=str(k), v_model=v))
+            if k != 'name':
+                self.fields.append(FloatField(label=str(k), v_model=v))
         self.children = self.fields
 
     def get_form_state(self):
@@ -76,7 +77,12 @@ class StateItem(Item):
             self.form.fields[i].value = self.state[k]
 
     def __str__(self):
-        return ', '.join([f'{str(k)} = {v}' for k, v in self.state.items()])
+        if 'name' in self.state:
+            s = f"{self.state['name']}: "
+        else:
+            s = ''
+        s += ', '.join([f'{str(k)} = {v}' for k, v in self.state.items()])
+        return s
 
 class StateWidget(Dialog):
     item_class = StateItem

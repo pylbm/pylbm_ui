@@ -207,7 +207,31 @@ class PostTreatmentWidget:
 
         headers_select.observe(update_headers, 'v_model')
 
-        self.menu = [self.select_dim, headers_select]
+        download_zip = v.Btn(children=['Download results'])
+
+        def create_zip(widget, event, data):
+            from zipfile import ZipFile
+            import webbrowser
+            import tempfile
+
+            zipdir = tempfile.TemporaryDirectory().name
+            if not os.path.exists(zipdir):
+                os.makedirs(zipdir)
+            zipfilename = os.path.join(zipdir, 'results.zip')
+            with ZipFile(zipfilename, 'w') as zipObj:
+                for folderName, subfolders, filenames in os.walk(default_path):
+                    for filename in filenames:
+                        #create complete filepath of file in directory
+                        filePath = os.path.join(folderName, filename)
+
+                        # Add file to zip
+                        zipObj.write(filePath, filePath.replace(default_path, ''))
+
+            webbrowser.open(f'file://{zipfilename}')
+
+        download_zip.on_event('click', create_zip)
+
+        self.menu = [self.select_dim, headers_select, download_zip]
         self.main = [
             v.Card(children=[
                 v.CardTitle(children=[

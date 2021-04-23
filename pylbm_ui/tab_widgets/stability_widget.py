@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..utils import schema_to_widgets, FloatField
-from .pylbmwidget import Markdown, ParametersPanel, Tabs, out, Container
+from .pylbmwidget import Markdown, ParametersPanel, out, Container
 
 from .dialog_form import Form, Item, Dialog, add_rule
 
@@ -188,7 +188,7 @@ class stability_widget:
                             class_="ma-6",
                             elevation=10)]),
         ]
-        tabs = Tabs(v_model=None,
+        tabs = v.Tabs(v_model=None,
                     children=[v.Tab(children=['Check stability']),
                               v.Tab(children=['Plot stability region'])] + tabs_content)
 

@@ -82,6 +82,9 @@ class ToroCase(HashBaseModel):
     def size(self):
         return [self.xmax - self.xmin]
 
+    def set_size(self, size):
+        self.xmax = self.xmin + size[0]
+
     def state(self):
         return [{self.equation.rho: self.rho_left,
                  self.equation.q: self.rho_left*self.u_left,
@@ -136,44 +139,6 @@ class ToroCase(HashBaseModel):
                 i_col = 0
                 i_row += 1
 
-    # def plot(self, sol=None):
-    #     xmid = .5*(self.xmin + self.xmax)
-    #     exact_solution = exact_solver({
-    #         'jump abscissa': xmid,
-    #         'left state': [self.rho_left, self.u_left, self.p_left],
-    #         'right state': [self.rho_right, self.u_right, self.p_right],
-    #         'gamma': self.gamma,
-    #     })
-    #     x_e = np.linspace(self.xmin, self.xmax, 1000)
-    #     sol_e = exact_solution.evaluate(x_e, self.duration)
-
-    #     viewer = pylbm.viewer.matplotlib_viewer
-    #     fig = viewer.Fig(2, 4, figsize=(12, 8))
-    #     list_color = ['navy', 'orange', 'green', 'purple']
-    #     list_symb = ['^', '<', 'v', '>']
-
-    #     rho_e = sol_e[0]
-    #     u_e = sol_e[1]
-    #     p_e = sol_e[2]
-    #     q_e = rho_e * u_e
-    #     rhoe_e = .5*rho_e*u_e**2 + p_e/(self.gamma-1.)
-    #     e_e = p_e/rho_e/(self.gamma-1)
-    #     mach_e = np.sqrt(q_e**2/(self.gamma*rho_e*p_e))
-
-    #     fig[0, 0].CurveLine(x_e, rho_e, color='black', width=1)
-    #     fig[0, 0].title = 'mass'
-    #     fig[0, 1].CurveLine(x_e, u_e, color='black', width=1)
-    #     fig[0, 1].title = 'velocity'
-    #     fig[0, 2].CurveLine(x_e, p_e, color='black', width=1)
-    #     fig[0, 2].title = 'pressure'
-    #     fig[1, 0].CurveLine(x_e, rhoe_e, color='black', width=1)
-    #     fig[1, 0].title = 'energy'
-    #     fig[1, 1].CurveLine(x_e, q_e, color='black', width=1)
-    #     fig[1, 1].title = 'momentum'
-    #     fig[1, 2].CurveLine(x_e, e_e, color='black', width=1)
-    #     fig[1, 2].title = 'internal energy'
-    #     fig[1, 3].CurveLine(x_e, mach_e, color='black', width=1)
-    #     fig[1, 3].title = 'Mach number'
 
 ##################################
 ### predefined cases

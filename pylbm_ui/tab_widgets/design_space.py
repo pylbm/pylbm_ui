@@ -9,7 +9,6 @@ import ipyvuetify as v
 
 from .pylbmwidget import out
 
-import enum
 import sympy as sp
 from traitlets import Unicode, Float, List, Bool
 

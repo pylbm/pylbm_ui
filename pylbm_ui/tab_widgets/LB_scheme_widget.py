@@ -9,7 +9,7 @@ import ipyvuetify as v
 import copy
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, Tabs, out
+from .pylbmwidget import Markdown, ParametersPanel, out
 from .message import Message
 
 class LB_scheme_widget:
@@ -28,13 +28,13 @@ class LB_scheme_widget:
 
         reset = v.Btn(children=['reset to default'], class_='d-none')
 
-        tabs = Tabs(v_model=0, children=[v.Tab(children=['Description']),
-                                            v.Tab(children=['Properties']),
-                                            v.Tab(children=['Equivalent equations']),
-                                            v.TabItem(children=[description]),
-                                            v.TabItem(children=[properties]),
-                                            v.TabItem(children=[eq_pde]),
-                                            ])
+        tabs = v.Tabs(v_model=0, children=[v.Tab(children=['Description']),
+                                           v.Tab(children=['Properties']),
+                                           v.Tab(children=['Equivalent equations']),
+                                           v.TabItem(children=[description]),
+                                           v.TabItem(children=[properties]),
+                                           v.TabItem(children=[eq_pde]),
+                                           ])
 
         self.widget = v.Row(children=[v.Col(children=[select_case, panels], sm=3),
                                       v.Col(children=[tabs])

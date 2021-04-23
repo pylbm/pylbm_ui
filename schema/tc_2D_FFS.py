@@ -87,6 +87,10 @@ class tc_2D_FFS(HashBaseModel):
     def size(self):
         return [self.xmax - self.xmin, self.ymax - self.ymin]
 
+    def set_size(self, size):
+        self.xmax = self.xmin + size[0]
+        self.ymax = self.ymin + size[1]
+
     def get_boundary(self):
         return {
             0: self.equation.NonReflexiveOutlet,

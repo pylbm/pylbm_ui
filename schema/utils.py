@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from pydantic import BaseModel
-from pydantic.utils import  Representation
+from pydantic.utils import Representation
 import numbers
 import sympy as sp
 

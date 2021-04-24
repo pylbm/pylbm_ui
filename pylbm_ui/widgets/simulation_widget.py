@@ -35,6 +35,7 @@ class simulation_widget:
             simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
 
             simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
+            input_file = v.FileInput(label='Choose a simu_config.json', accept=".json")
             dx = default_dx
             nx = int(test_case.size()[0]/dx) + 1
             ny = 1
@@ -53,6 +54,7 @@ class simulation_widget:
             save_fields = Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys()))
             left_panel = [
                 simulation_name,
+                input_file,
                 v.ExpansionPanels(children=[
                     v.ExpansionPanel(children=[
                         v.ExpansionPanelHeader(children=['Discretization']),

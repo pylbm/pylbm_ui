@@ -18,7 +18,7 @@ import pylbm
 from .config import plot_config
 from .json import save_simu_config
 
-from .tab_widgets.pylbmwidget import out
+from .widgets.pylbmwidget import out
 
 class Plot:
     def __init__(self):

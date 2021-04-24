@@ -8,7 +8,7 @@
 import ipyvuetify as v
 
 from .mixin import *
-from .tab_widgets.pylbmwidget import out
+
 class FloatField(v.TextField, FloatMixin):
     def __init__(self, **kwargs):
         if 'v_model' in kwargs:

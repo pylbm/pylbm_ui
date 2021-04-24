@@ -9,7 +9,7 @@ import os
 import sys
 
 import ipyvuetify as v
-from .tab_widgets import *
+from .widgets import *
 
 from schema.toro import Toro1_1D, Toro2_1D, Toro3_1D, Toro4_1D, Toro5_1D
 from schema.tc_2D_Wedge import Wedge_Ma2p5, Wedge_Ma8
@@ -75,7 +75,7 @@ known_cases = {
 
 def main():
 
-    tc = Test_case_widget(cases, default_case)
+    tc = TestCaseWidget(cases, default_case)
     lb = LB_scheme_widget(tc, known_cases)
 
     stability =  stability_widget(tc, lb)
@@ -83,8 +83,13 @@ def main():
     parametric = parametric_widget(tc, lb)
     posttreatment = PostTreatmentWidget()
 
-    tab_widgets = [tc, lb, stability, simulation, parametric, posttreatment]
-    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study', 'Post treatment']
+    class DebugWidget:
+        def __init__(self):
+            self.menu = []
+            self.main = [out]
+
+    tab_widgets = [tc, lb, stability, simulation, parametric, posttreatment, DebugWidget()]
+    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study', 'Post treatment', 'Debug']
 
     tab = v.Tabs(
         v_model=0,

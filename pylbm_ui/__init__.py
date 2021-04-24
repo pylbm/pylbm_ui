@@ -4,5 +4,3 @@
 #     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
 #
 # License: BSD 3 clause
-
-from .main import main

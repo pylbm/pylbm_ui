@@ -4,6 +4,7 @@ channels:
 dependencies:
   - pylbm>=0.6
   - ipyvuetify
+  - matplotlib
   - ipympl
   - markdown
   - python-markdown-math

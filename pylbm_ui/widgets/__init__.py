@@ -7,9 +7,8 @@
 
 from .test_case import TestCaseWidget
 from .lb_scheme import LBSchemeWidget
-from .stability_widget import stability_widget
+from .stability import StabilityWidget
 from .simulation_widget import simulation_widget
 from .parametric_widget import parametric_widget
 from .post_treatment import PostTreatmentWidget
 from .pylbmwidget import out
-from .signals import signal

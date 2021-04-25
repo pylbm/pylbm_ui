@@ -76,7 +76,7 @@ known_cases = {
 def main():
 
     tc = TestCaseWidget(cases, default_case)
-    lb = LB_scheme_widget(tc, known_cases)
+    lb = LBSchemeWidget(tc, known_cases)
 
     stability =  stability_widget(tc, lb)
     simulation = simulation_widget(tc, lb)

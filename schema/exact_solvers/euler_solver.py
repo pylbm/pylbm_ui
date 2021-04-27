@@ -150,6 +150,8 @@ class EulerSolver(GenericSolver):
         Compute the 1-wave that links the left state
         this wave is parametrized by the pressure
         """
+        if p_star < 0:
+            return np.array([np.nan, np.nan])
         rho_left, u_left, p_left = self.u_left
         facteur = np.sqrt(1-self.mu2**2)/self.mu2
         exposant1 = 1/(2*self.gamma)
@@ -180,6 +182,8 @@ class EulerSolver(GenericSolver):
         Compute the 3-wave that links the right state
         this wave is parametrized by the first component p
         """
+        if p_star < 0:
+            return np.array([np.nan, np.nan])
         rho_right, u_right, p_right = self.u_right
         facteur = np.sqrt(1-self.mu2**2)/self.mu2
         exposant1 = 1/(2*self.gamma)

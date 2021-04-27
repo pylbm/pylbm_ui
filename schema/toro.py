@@ -181,15 +181,18 @@ Toro1_1D = ToroCase(
 """
 **Toro 1** is the standard Sod shock tube test case.
 
-Left and right states extracted from *Table 4.1 p.129* of the seminal Toro book:
+The left and right states of the Riemann problem are extracted 
+from *Table 4.1 p.129* of the seminal Toro book:
 
-> E.F. Toro. Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction. 2nd Edition, Springer, 1999.
+> E.F. Toro. Riemann Solvers and Numerical Methods for Fluid Dynamics: 
+A Practical Introduction. 2nd Edition, Springer, 1999.
 
-The test case parameters can be modified using the "Test case parameters" panel below
+The test case parameters can be modified using 
+the "Test case parameters" panel below
 
-The reference final results are computed using exact Riemann solver (???)
-
-\(D_1Q_2\)
+The reference final results are computed using an exact Riemann solver 
+that compute the two intermediate states. 
+The `fsolve` function of the module `scipy.optimize` is used.
 """
     )
 

@@ -11,6 +11,7 @@ import traitlets
 from .equation_type import EquationType, Euler1D
 from .utils import LBM_scheme, RelaxationParameter
 
+
 class D1Q222(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_u: RelaxationParameter('s_u')
@@ -111,14 +112,49 @@ class D1Q222(LBM_scheme):
     @property
     def description(self):
         return """
-The $D_1Q_{222}$ scheme is the smallest vectorial scheme for inviscid flows.
+The D1Q222 scheme is the smallest vectorial scheme 
+for inviscid flows in dimension one.
 
-It involves the following set of parameters:
+---
 
-Relaxation rates (values must be in $]0,2[$):\n
+**Vectorial scheme**
 
+The D1Q222 is a vectorial scheme with one particle distribution function
+for each conserved moment (the mass, the momentum, and the total energy).
+Each particle distribution function is discretized with two velocities:
+$\\lambda$ and $-\\lambda$ where $\\lambda$ is the lattice velocity.
 
-- $s_{\\rho}$: the relaxation rate for the density equation\n
-- $s_u$: the relaxation rate for the velocity equation\n
-- $s_p$: the relaxation rate for the pressure equation\n
+The main interest of this scheme is its simplicity.
+This scheme is very rough and robust. However, the structure of the numerical diffusion cannot be modified to fit the physical diffusion operator of Navier-Stokes.
+
+---
+
+**Parameters**
+
+Four parameters are left free:
+
+* the **lattice velocity** denoted by $\\lambda$;
+* the **three relaxation parameters** $s_{\\rho}$, $s_u$, and $s_p$.
+
+1. *The lattice velocity $\\lambda$*
+
+> The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
+>
+> This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
+>
+> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\\lambda$ should be as small as possible while preserving the stability;
+
+2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+
+> The three relaxation parameters are involved in the relaxation towards equilibrium for the three non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+>
+> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
+>
+> - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
+> - Decreasing the values improves the stability.
+
+---
+
+*See the tabs `Linear Stability` and `Parametric Study` for more informations*.
        """

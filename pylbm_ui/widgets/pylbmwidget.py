@@ -117,7 +117,8 @@ class Markdown(v.Layout):
 
         self.out = widgets.Output()
 
-        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math'])
+        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math_svg'])
+        
         with self.out:
             ipydisplay.display(ipydisplay.HTML(mkd))
 
@@ -136,7 +137,7 @@ class Markdown(v.Layout):
         )
 
     def update_content(self, mkd_str):
-        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math'])
+        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math_svg'])
         with self.out:
             self.out.clear_output()
             ipydisplay.display(ipydisplay.HTML(mkd))

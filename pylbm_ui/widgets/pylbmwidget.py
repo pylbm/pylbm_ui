@@ -11,6 +11,8 @@ from traitlets import Unicode
 import ipywidgets as widgets
 import IPython.display as ipydisplay
 
+from .mdx_math_svg import MathSvgExtension
+
 out = widgets.Output()
 
 def debug_widget(f):
@@ -118,7 +120,7 @@ class Markdown(v.Layout):
         self.out = widgets.Output()
 
         mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math_svg'])
-        
+
         with self.out:
             ipydisplay.display(ipydisplay.HTML(mkd))
 
@@ -137,7 +139,7 @@ class Markdown(v.Layout):
         )
 
     def update_content(self, mkd_str):
-        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math_svg'])
+        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', MathSvgExtension()])
         with self.out:
             self.out.clear_output()
             ipydisplay.display(ipydisplay.HTML(mkd))

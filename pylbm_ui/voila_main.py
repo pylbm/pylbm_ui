@@ -29,7 +29,7 @@ cases = {'Toro 1': Toro1_1D,
 default_case = 'Toro 1'
 
 from schema.D1q222 import D1Q222
-from schema.D1q333 import D1Q333
+from schema.D1q333 import D1Q333, D1Q333_NS
 from schema.D1q3L2_0 import D1Q3L2
 from schema.D2q4444 import D2Q4444
 
@@ -37,6 +37,7 @@ known_cases = {
     Toro1_1D: [
         D1Q222(la=5, s_rho=1.9,s_u=1.8, s_p=2.),
         D1Q333(la=10, s_rho=1.9, s_u=1.9, s_p=1.9, s_rhox=1.75, s_ux=1.75, s_px=1.75),
+        D1Q333_NS(la=10, s_rho=1.5, s_u=1.5, s_p=1.5, s_rhox=1.5, s_ux=1.5, s_px=1.5),
         D1Q3L2(la=5, s_rho=1.5, s_u=1.5, s_p=1.5, alpha=0.125),
     ],
     Toro2_1D: [

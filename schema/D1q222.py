@@ -112,7 +112,7 @@ class D1Q222(LBM_scheme):
     @property
     def description(self):
         return """
-The D1Q222 scheme is the smallest vectorial scheme 
+The D1Q222 scheme is the smallest vectorial scheme
 for inviscid flows in dimension one.
 
 ---

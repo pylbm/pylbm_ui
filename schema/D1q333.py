@@ -10,7 +10,8 @@ import pylbm
 from .equation_type import Euler1D
 from .utils import LBM_scheme, RelaxationParameter
 
-class D1Q333(LBM_scheme):
+
+class D1Q333_general(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_u: RelaxationParameter('s_u')
     s_p: RelaxationParameter('s_p')
@@ -20,16 +21,17 @@ class D1Q333(LBM_scheme):
 
     equation = Euler1D()
     dim = 1
-    name = 'D1Q333'
-    tex_name = r'$D_1Q_{{333}}$'
+    name = 'D1Q333_gen'
+    tex_name = r'$D_1Q_{{333}}$_gen'
+
+    addvisc = 0.
 
     def get_dictionary(self):
         rho = self.equation.rho
         q = self.equation.q
         E = self.equation.E
         gamma = self.equation.gamma
-
-        u = q/rho
+        u = q/rho              # velocity
 
         sigma_rho = sp.symbols('sigma_rho', constants=True)
         sigma_u = sp.symbols('sigma_u', constants=True)
@@ -53,9 +55,17 @@ class D1Q333(LBM_scheme):
         symb_s_ux = 1/(.5+sigma_ux)        # symbolic relaxation parameter
         symb_s_px = 1/(.5+sigma_px)        # symbolic relaxation parameter
 
-        X = sp.symbols('X')
+        # equilibrium values
+        w0eq, w1eq, w2eq = self._get_equilibrium(
+            rho, q, E, gamma
+        )
+        # add numerical diffusion
+        addvisc = self.addvisc
+        w0eq = (1-addvisc)*w0eq + addvisc/2*la**2*rho
+        w1eq = (1-addvisc)*w1eq + addvisc/2*la**2*q
+        w2eq = (1-addvisc)*w2eq + addvisc/2*la**2*E
 
-        d_rho, d_u, d_p = .5, .5, .5
+        X = sp.symbols('X')
 
         return {
             'dim': 1,
@@ -69,7 +79,7 @@ class D1Q333(LBM_scheme):
                     'equilibrium': [
                         rho,
                         q,
-                        d_rho * la_**2/2*rho + (1-d_rho) * E
+                        w0eq
                     ]
                 },
                 {
@@ -80,7 +90,7 @@ class D1Q333(LBM_scheme):
                     'equilibrium': [
                         q,
                         (gamma-1)*E+(3-gamma)/2*rho*u**2,
-                        d_u * la_**2/2*q + (1-d_u) * (3*E-rho*u**2)*u
+                        w1eq
                     ]
                 },
                 {
@@ -91,7 +101,7 @@ class D1Q333(LBM_scheme):
                     'equilibrium': [
                         E,
                         gamma*E*u-(gamma-1)/2*rho*u**3,
-                        d_p * la_**2/2*E + (1-d_p)*(6*E**2/rho-rho*u**4)
+                        w2eq
                     ]
                 },
             ],
@@ -142,84 +152,79 @@ class D1Q333(LBM_scheme):
     @property
     def description(self):
         return """
-The $D_1Q_{333}$ scheme involves the following set of parameters:
+The D1Q333 scheme is a vectorial scheme
+that can be used for inviscid flows in dimension one.
 
-Relaxation rates (values must be in $]0,2[$):
+---
 
-- $s_{\\rho}$: the relaxation rate for the density equation
-- $s_{u}$: the relaxation rate for the velocity equation
-- $s_{p}$: the relaxation rate for the pressure equation
-- $s_{\\rho x}$: the relaxation rate for second order moment? the density equation
-- $s_{u x}$: the relaxation rate for the velocity equation
-- $s_{p x}$: the relaxation rate for the pressure equation
-"""
+**Vectorial scheme**
 
-    def get_default_parameters(self, test_case_name='none', printFlg=False):
-        if test_case_name == "Toro_1":
-            dx, la = 1/256, 10
-            srho, su, sp = 1.9, 1.9, 1.9
-            srhox, sux, spx = 1.75, 1.75, 1.75
-        elif test_case_name == "Toro_2":
-            dx, la = 1/256, 10
-            srho, su, sp = 1.95, 1.95, 1.95
-            srhox, sux, spx = 1.75, 1.5, 1.75
-        elif test_case_name == "Toro_3":
-            dx, la = 1/512, 250
-            srho, su, sp = 1.9, 1.9, 1.9
-            srhox, sux, spx = 1.5, 1.5, 1.5
-        elif test_case_name == "Toro_4":
-            dx, la = 1/2048, 100
-            srho, su, sp = 1.8, 1.8, 1.8
-            srhox, sux, spx = 1.5, 1.5, 1.5
-        elif test_case_name == "Toro_5":
-            dx, la = 1/512, 100
-            srho, su, sp = 1.9, 1.8, 1.8
-            srhox, sux, spx = 1.8, 1.8, 1.8
-        else:
-            dx, la = 1/256, 1
-            srho, su, sp = 1, 1, 1
-            srhox, sux, spx = 1., 1., 1.
+The D1Q333 is a vectorial scheme with one particle distribution function
+for each conserved moment (the mass, the momentum, and the total energy).
+Each particle distribution function is discretized with three velocities:
+$0$, $\\lambda$, and $-\\lambda$ where $\\lambda$ is the lattice velocity.
 
-        if printFlg:
-            #print("Test case: {}".format(test_case_name))
-            print("""Proposition of parameters for selected test case: {}
-(!valid for default test case parameters only!)
-    dx =        {}
-    la =        {}
-    s_rho =     {}
-    s_u =       {}
-    s_p =       {}
-    s_rhox =    {}
-    s_ux =      {}
-    s_px =      {}
-       """.format(test_case_name, dx, la, srho, su, sp, srhox, sux, spx))
+This scheme has more degrees of freedom than the D1Q222: the second-order operator corresponding to the numerical diffusion can be modified by choosing the equilibrium value of the second-order moments. However, the stability zone according to the parameters of the scheme is not easy to determine.
 
-        defParam = {
-            'dx': dx,
-            'la': la,
-            's_rho': srho,
-            's_u': su,
-            's_p': sp,
-            's_rhox': srhox,
-            's_ux': sux,
-            's_px': spx
-            }
+---
 
-        return defParam
+**Parameters**
 
-    def get_S(self):
-        return {'s_rho': self.s_rho,
-                's_u': self.s_u,
-                's_p': self.s_p,
-                's_rhox': self.s_rhox,
-                's_ux': self.s_ux,
-                's_px': self.s_px}
-    def get_Disc(self):
-        return {'dx': self.dx,
-                'la': self.la}
-    def get_EquParams(self):
-        return {}
+The equilibrium value of all the non-conserved moments are fixed in this version of the D1Q333. 
+Sevend parameters are left free:
+
+* the **lattice velocity** denoted by $\\lambda$;
+* the **three relaxation parameters** of first-order $s_{\\rho}$, $s_u$, and $s_p$;
+* the **three relaxation parameters** of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{px}$.
+
+1. *The lattice velocity $\\lambda$*
+
+> The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
+>
+> This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
+>
+> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\\lambda$ should be as small as possible while preserving the stability;
+
+2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+
+> The three relaxation parameters are involved in the relaxation towards equilibrium for the three non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+>
+> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
+>
+> - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
+> - Decreasing the values improves the stability.
+
+---
+
+*See the tabs `Linear Stability` and `Parametric Study` for more informations*.        
+        """
 
 
+class D1Q333(D1Q333_general):
+    addvisc = 0.5
+    name = 'D1Q333'
+    tex_name = r'$D_1Q_{{333}}$'
+
+    def _get_equilibrium(self, rho, q, E, gamma):
+        u = q/rho              # velocity
+        w0eq = E
+        w1eq = (3*E-rho*u**2)*u
+        w2eq = 6*E**2/rho-rho*u**4
+        return w0eq, w1eq, w2eq
 
 
+class D1Q333_NS(D1Q333_general):
+    addvisc = 0.1
+    name = 'D1Q333_NS'
+    tex_name = r'$D_1Q_{{333}}^{NS}$'
+
+    def _get_equilibrium(self, rho, q, E, gamma):
+        u = q/rho              # velocity
+        Ec = rho*u**2/2        # kinetic energy
+        p = (gamma-1)*(E-Ec)   # pressure
+        w0eq = Ec + p/2
+        w1eq = (Ec + 3/2*p) * u
+        coeff = (5*gamma-1)/(gamma-1)
+        w2eq = (Ec + coeff/2*p) * u**2/2
+        return w0eq, w1eq, w2eq

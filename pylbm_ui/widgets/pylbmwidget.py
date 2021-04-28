@@ -119,7 +119,7 @@ class Markdown(v.Layout):
 
         self.out = widgets.Output()
 
-        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', 'mdx_math_svg'])
+        mkd = markdown(mkd_str, extensions=['fenced_code','sane_lists', MathSvgExtension()])
 
         with self.out:
             ipydisplay.display(ipydisplay.HTML(mkd))

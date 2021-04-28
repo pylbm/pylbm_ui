@@ -166,6 +166,8 @@ $0$, $\\lambda$, and $-\\lambda$ where $\\lambda$ is the lattice velocity.
 
 This scheme has more degrees of freedom than the D1Q222: the second-order operator corresponding to the numerical diffusion can be modified by choosing the equilibrium value of the second-order moments. However, the stability zone according to the parameters of the scheme is not easy to determine.
 
+Two versions of this scheme are proposed: the D1Q333_0 and the D1Q333_1 that differ in their equilibrium values for the second-order moments.
+
 ---
 
 **Parameters**
@@ -186,14 +188,20 @@ Sevend parameters are left free:
 > - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
 > - The parameter $\\lambda$ should be as small as possible while preserving the stability;
 
-2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+2. *The relaxation parameters of first-order $s_{\\rho}$, $s_u$, and $s_p$*
 
-> The three relaxation parameters are involved in the relaxation towards equilibrium for the three non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three first-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
 >
 > These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
 >
 > - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
 > - Decreasing the values improves the stability.
+
+3. *The relaxation parameters of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{xp}$*
+
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+>
+> These parameters do not play a role in the second-order numerical diffusion but in the stability. A good choice is often to take these three parameters equal to 1 except when the pressure can be closed to 0.
 
 ---
 
@@ -203,8 +211,8 @@ Sevend parameters are left free:
 
 class D1Q333(D1Q333_general):
     addvisc = 0.5
-    name = 'D1Q333'
-    tex_name = r'$D_1Q_{{333}}$'
+    name = 'D1Q333_0'
+    tex_name = r'$D_1Q_{{333}}0$'
 
     def _get_equilibrium(self, rho, q, E, gamma):
         u = q/rho              # velocity
@@ -216,8 +224,8 @@ class D1Q333(D1Q333_general):
 
 class D1Q333_NS(D1Q333_general):
     addvisc = 0.1
-    name = 'D1Q333_NS'
-    tex_name = r'$D_1Q_{{333}}^{NS}$'
+    name = 'D1Q333_1'
+    tex_name = r'$D_1Q_{{333}}1$'
 
     def _get_equilibrium(self, rho, q, E, gamma):
         u = q/rho              # velocity

@@ -197,7 +197,7 @@ Sevend parameters are left free:
 > - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
 > - Decreasing the values improves the stability.
 
-3. *The relaxation parameters of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{xp}$*
+3. *The relaxation parameters of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{px}$*
 
 > These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
 >

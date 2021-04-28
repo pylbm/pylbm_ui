@@ -259,6 +259,26 @@ def prepare_stab_plot():
 @debug
 class StabilityWidget:
     def __init__(self, test_case_widget, lb_scheme_widget):
+        """
+        Widget definition for linear stability of a lattice Boltzmann scheme.
+
+        Parameters
+        ==========
+
+        - test_case_widget:
+            widget of the test case (see test_case.py).
+
+        - lb_scheme_widget:
+            widget of the lattice Boltzmann scheme (see lb_scheme.py).
+
+        This widget is composed by a menu where you can modify the parameters of the
+        lattice Boltzmann scheme.
+
+        This widget is also composed by a main widget where the linear stability for the
+        states provided by the test case can be tested to check their stability. A user can
+        add its own states. A second tab allows to plot the stability region of a given state.
+
+        """
         self.test_case_widget = test_case_widget
         self.lb_scheme_widget = lb_scheme_widget
 

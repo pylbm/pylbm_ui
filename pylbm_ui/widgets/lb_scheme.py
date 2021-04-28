@@ -9,9 +9,11 @@ import ipyvuetify as v
 import copy
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, out
+from .debug import debug
+from .pylbmwidget import Markdown, ParametersPanel
 from .message import Message
 
+@debug
 class LBSchemeWidget:
     def __init__(self, test_case, known_cases):
         """
@@ -166,6 +168,7 @@ class LBSchemeWidget:
         case = self.select_case.v_model
         self.cases[case] = copy.deepcopy(self.default_cases[case])
         self.change_case(None)
+        self.select_case.notify_change({'name': 'v_model', 'type': 'change'})
 
     def get_case(self):
         """

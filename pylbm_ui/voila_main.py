@@ -79,7 +79,7 @@ def main():
     lb = LBSchemeWidget(tc, known_cases)
 
     stability =  StabilityWidget(tc, lb)
-    simulation = simulation_widget(tc, lb)
+    simulation = SimulationWidget(tc, lb)
     parametric = parametric_widget(tc, lb)
     posttreatment = PostTreatmentWidget()
 

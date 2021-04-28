@@ -27,7 +27,7 @@ class TestCaseWidget:
         - default_case: str
             one of the keys found into the dictionary cases.
 
-        This widget is composed by a menu where you can Choose the test case and
+        This widget is composed by a menu where you can choose the test case and
         modify its default parameters. If you change any of the parameters, you will
         see a reset button to revover the default parameters of this case.
 

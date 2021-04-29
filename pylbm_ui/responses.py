@@ -12,13 +12,17 @@ import matplotlib
 import copy
 import pylbm
 
-class From_config:
+class FromConfig:
     pass
 
-class From_simulation:
+
+class DuringSimulation:
     pass
 
-class Sigma(From_config):
+class AfterSimulation:
+    pass
+
+class Sigma(FromConfig):
     def __init__(self, s, log10=True):
         self.log10 = log10
         self.s = s
@@ -31,7 +35,7 @@ class Sigma(From_config):
         output = 1./params[self.s] - 0.5
         return np.log10(output) if self.log10 else output
 
-class S(From_config):
+class S(FromConfig):
     def __init__(self, s, log10=True):
         self.log10 = log10
         self.s = s
@@ -44,7 +48,7 @@ class S(From_config):
         output = params[self.s]
         return np.log10(output) if self.log10 else output
 
-class Diff(From_config):
+class Diff(FromConfig):
     def __init__(self, s, with_dx=True, log10=True):
         self.log10 = log10
         self.with_dx = with_dx
@@ -64,7 +68,7 @@ class Diff(From_config):
         output = (1./params[self.s] - 0.5)*dx*la
         return np.log10(output) if self.log10 else output
 
-class LinearStability(From_config):
+class LinearStability(FromConfig):
     def __init__(self, states):
         self.states = states
 
@@ -84,8 +88,8 @@ class LinearStability(From_config):
                 return False
         return True
 
-class Error(From_simulation):
-    def __init__(self, ref_solution, expr, log10=True, relative=False):
+class Error(AfterSimulation):
+    def __init__(self, ref_solution, expr, log10=False, relative=False):
         self.ref_solution = ref_solution
         self.expr = expr
         self.log10 = log10
@@ -113,7 +117,53 @@ class Error(From_simulation):
             norm /= np.linalg.norm(self.ref_solution)
         return np.log10(norm) if self.log10 else norm
 
-class CFL(From_simulation):
+class ErrorStd(DuringSimulation):
+    def __init__(self, field, ref_func, expr, call_at=10, log10=True):
+        self.field = field
+        self.ref_func = ref_func
+        self.expr = expr
+        self.log10 = log10
+        self.error = []
+        self.nite = 0
+        self.call_at = call_at
+
+    def __call__(self, sol):
+        self.nite += 1
+        if self.nite == self.call_at:
+            self.nite = 0
+            domain = sol.domain
+            time_e = sol.t
+            ref_solution = self.ref_func(time_e, domain.x, field=self.field)
+
+            func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
+            to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
+            to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
+
+            args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
+            data = func(**args)
+            # remove element with NaN values
+            solid_cells = sol.domain.in_or_out != sol.domain.valin
+
+            vmax = sol.domain.stencil.vmax
+            ind = []
+            for vm in vmax:
+                ind.append(slice(vm, -vm))
+            ind = np.asarray(ind)
+
+            data[solid_cells[tuple(ind)]] = 0
+            norm = np.linalg.norm(ref_solution - data)
+            self.error.append(norm)
+
+    def value(self):
+        std = np.std(np.asarray(self.error))
+        return np.log10(std) if self.log10 else std
+
+class ErrorAvg(ErrorStd):
+    def value(self):
+        avg = np.average(np.asarray(self.error))
+        return np.log10(avg) if self.log10 else avg
+
+class CFL(AfterSimulation):
     def __init__(self, rho, q):
         self.rho = rho
         self.q = q
@@ -135,7 +185,7 @@ class CFL(From_simulation):
 
         return output/la
 
-class Plot(From_simulation):
+class Plot(AfterSimulation):
     def __init__(self, filename, expr, ref_solution=None):
         self.filename = filename
         self.expr = expr
@@ -186,7 +236,7 @@ class Plot(From_simulation):
         fig.savefig(self.filename, dpi=300)
 
 
-class StdError(From_simulation):
+class StdError(AfterSimulation):
     def __init__(self, ref_solution, field):
         self.ref_solution = ref_solution
         self.field = field

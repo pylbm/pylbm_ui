@@ -11,6 +11,17 @@ from ..config import default_dx
 from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField, NbPointsField
 from .debug import debug
 
+def dx_validity(dx, size):
+    """
+    Modify dx and the problem size to match.
+    """
+    nmin = round(min(size)/dx + 1)
+    dx = min(size)/(nmin - 1)
+    n = [round(s/dx) + 1 for s in size]
+    L = [(i-1)*dx for i in n]
+    return dx, L, n
+
+
 @debug
 class DiscretizationWidget(v.ExpansionPanel):
     def __init__(self, test_case_widget, lb_scheme_widget):
@@ -107,12 +118,7 @@ class DiscretizationWidget(v.ExpansionPanel):
             la = lb_param['la'].value
 
             if key is None or key == 'dx':
-                dx = self.discret['dx'].value
-                size = problem_size
-                nmin = round(min(size)/dx + 1)
-                dx = min(size)/(nmin - 1)
-                n = [round(s/dx) + 1 for s in size]
-                L = [(i-1)*dx for i in n]
+                dx, L, n = dx_validity(self.discret['dx'].value, problem_size)
 
                 self.discret['dx'].value = dx
                 self.discret['nx'].value = n[0]

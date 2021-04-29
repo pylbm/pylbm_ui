@@ -37,7 +37,8 @@ class DialogPath(v.Dialog):
         if os.path.exists(path):
             if os.listdir(path):
                 self.path = path
-                self.text.children = [f'{path} is not empty. Do you want to replace the files?']
+                self.text.children = [v.Row(children=[f'{path} is not empty.']),
+                                      v.Row(children=['Do you want to replace the files?'])]
                 self.v_model = True
 
     def yes_click(self, widget, event, data):

@@ -52,7 +52,7 @@ class Plot:
 
             return pylbm_responses.Plot(os.path.join(path, f'{self.field}.png'), self.expr, ref)
 
-class Responses_widget:
+class ResponsesWidget:
     def __init__(self, test_case_widget, lb_scheme_widget):
 
         self.responses = {}
@@ -73,6 +73,8 @@ class Responses_widget:
                 self.responses[f'plot {name}'] = Plot(name, expr)
                 if hasattr(test_case, 'ref_solution'):
                     self.responses[f'error on {name}'] = Error(name, expr)
+                    self.responses[f'error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
+                    self.responses[f'error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
                     self.responses[f'relative error on {name}'] = Error(name, expr, relative=True)
 
             def add_relax(v):
@@ -102,7 +104,9 @@ class Responses_widget:
     def get_list(self, path, test_case, simu_cfg):
         output = []
         for v in self.responses_list.v_model:
-            if isinstance(self.responses[v], (pylbm_responses.From_config, pylbm_responses.From_simulation)):
+            if isinstance(self.responses[v], (pylbm_responses.FromConfig,
+                                              pylbm_responses.DuringSimulation,
+                                              pylbm_responses.AfterSimulation,)):
                 output.append(self.responses[v])
             else:
                 output.append(self.responses[v](path, test_case, simu_cfg))

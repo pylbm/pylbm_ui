@@ -9,6 +9,6 @@ from .test_case import TestCaseWidget
 from .lb_scheme import LBSchemeWidget
 from .stability import StabilityWidget
 from .simulation import SimulationWidget
-from .parametric_widget import parametric_widget
+from .parametric_study import ParametricStudyWidget
 from .post_treatment import PostTreatmentWidget
 from .pylbmwidget import out

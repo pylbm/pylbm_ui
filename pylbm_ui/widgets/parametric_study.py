@@ -172,24 +172,24 @@ class ParametricStudyWidget:
             path = os.path.join(default_path, self.study_name.v_model)
             self.dialog.check_path(path)
 
-            # asyncio.ensure_future(self.run_study(path))
-            self.run_study(path)
+            asyncio.ensure_future(self.run_study(path))
+            # self.run_study(path)
         else:
             self.stop_simulation(None)
 
-    # async def run_study(self, path):
-    def run_study(self, path):
+    async def run_study(self, path):
+    # def run_study(self, path):
         """
         Create the sampling using the design space defined in the menu and start the
         parametric study on each sample.
         Then the results is represented by plotly.
         """
-        # while self.dialog.v_model:
-        #     await asyncio.sleep(0.01)
+        while self.dialog.v_model:
+            await asyncio.sleep(0.01)
 
-        # if not self.dialog.replace:
-        #     self.stop_simulation(None)
-        #     return
+        if not self.dialog.replace:
+            self.stop_simulation(None)
+            return
 
         try:
             shutil.rmtree(self.tmp_dir.name)

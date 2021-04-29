@@ -8,13 +8,13 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import EquationType, Euler1D
-from .utils import LBM_scheme, RelaxationParameter
+from .utils import LBM_scheme, RelaxationParameter, RealParameter
 
 class D1Q3L2(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_u: RelaxationParameter('s_u')
     s_p: RelaxationParameter('s_p')
-    alpha: float
+    alpha: RealParameter('alpha')
     equation = Euler1D()
     dim = 1
     name = 'D1Q3L2'
@@ -35,15 +35,12 @@ class D1Q3L2(LBM_scheme):
         sigma_2 = sp.symbols('sigma_2', constants=True)
         sigma_3 = sp.symbols('sigma_3', constants=True)
 
-        s1_ = sp.symbols('s_rho', constants=True)
-        s2_ = sp.symbols('s_u', constants=True)
-        s3_ = sp.symbols('s_p', constants=True)
-
         symb_s_1 = 1/(.5+sigma_1)          # symbolic relaxation parameter
         symb_s_2 = 1/(.5+sigma_2)          # symbolic relaxation parameter
         symb_s_3 = 1/(.5+sigma_3)          # symbolic relaxation parameter
 
-        ALPHA = sp.symbols('alpha', constants=True)
+        ALPHA_NORM, alpha = self.alpha.symb, self.alpha.value
+        ALPHA = ALPHA_NORM * la_**2
 
         la2 = la_**2
         u = q/rho
@@ -101,7 +98,7 @@ class D1Q3L2(LBM_scheme):
             ],
             'parameters': {
                 la_: la,
-                ALPHA: self.alpha,
+                ALPHA_NORM: alpha,
                 s_rho_: s_rho,
                 s_u_: s_u,
                 s_p_: s_p,
@@ -135,15 +132,56 @@ class D1Q3L2(LBM_scheme):
     @property
     def description(self):
         return """
-The scheme involves the following set of parameters:
+The D1Q3L2 scheme is a LBM scheme
+with two levels of internal energy
+that can be used for inviscid flows in dimension one.
 
-Relaxation rates (values must be in $]0,2[$):
+---
 
-- $s_\rho$: the relaxation rate for the density equation
-- $s_u$: the relaxation rate for the velocity equation
-- $s_p$: the relaxation rate for the pressure equation
+**Scheme with internal energy levels**
 
-Other:
+The D1Q3L2 is a scheme with two particle distribution functions, one for each internal energy level. The two internal energy levels are scaled by $\\lambda**2$ ($\\lambda$ is the lattice velocity) and the difference between their values is parametrized by $\\alpha$.
 
-- alpha: ???
-    """
+Each particle distribution function is discretized with three velocities:
+$0$, $\\lambda$, and $-\\lambda$ where $\\lambda$ is the lattice velocity.
+
+This scheme has exactly the same number of degrees of freedom than the D1Q222 but the second-order operator corresponding to the numerical diffusion is different: its contribution in the mass conservation equation vanishes.
+
+---
+
+**Parameters**
+
+The equilibrium value of all the non-conserved moments are fixed.
+Five parameters are left free:
+
+* the **lattice velocity** denoted by $\\lambda$;
+* the **three relaxation parameters** $s_{\\rho}$, $s_u$, and $s_p$;
+* the **difference between the levels of internal energy** $\\alpha$.
+
+1. *The lattice velocity $\\lambda$*
+
+> The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
+>
+> This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
+>
+> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\\lambda$ should be as small as possible while preserving the stability;
+
+2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+
+> These three parameters should take real values between 0 and 2. Two of these three relaxation parameters ($s_u$ and $s_p$) are involved in the relaxation towards equilibrium for the associated non-conserved moments.
+
+3. *The difference of internal energy levels $\\alpha$*
+
+> The parameter $\\alpha$ is involved in the second-order operator (the numerical diffusion), more precisely in the conservation equation of the energy. 
+
+---
+
+**Warning**
+
+Choose the several parameters to ensure the stability of this scheme is not an easy task!
+
+---
+
+*See the tabs `Linear Stability` and `Parametric Study` for more informations*.
+        """

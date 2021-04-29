@@ -64,44 +64,65 @@ class D2Q4444(LBM_scheme):
                     'velocities': list(range(1, 5)),
                     'conserved_moments': rho,
                     'polynomials': [1, X, Y, X**2-Y**2],
-                    'relaxation_parameters': [0, 1/(.5+sigma_rho), 1/(.5+sigma_rho), 1/(.5+sigma_rho2)],
-                    'equilibrium': [rho,
-                                    qx,
-                                    qy,
-                                    rho*(ux**2-uy**2)]
+                    'relaxation_parameters': [
+                        0,
+                        1/(.5+sigma_rho), 1/(.5+sigma_rho),
+                        1/(.5+sigma_rho2)
+                    ],
+                    'equilibrium': [
+                        rho,
+                        qx,
+                        qy,
+                        rho*(ux**2-uy**2)
+                    ]
                 },
                 {
                     'velocities': list(range(1, 5)),
                     'conserved_moments': qx,
                     'polynomials': [1, X, Y, X**2-Y**2],
-                    'relaxation_parameters': [0, 1/(.5+sigma_u), 1/(.5+sigma_u), 1/(.5+sigma_u2)],
-                    'equilibrium': [qx,
-                                    (gamma-1)*E+rho/2*((3-gamma)*ux**2+(1-gamma)*uy**2),
-                                    qx*uy,
-                                    0.]
-                                    #qx*(ux**2-uy**2)]
+                    'relaxation_parameters': [
+                        0,
+                        1/(.5+sigma_u), 1/(.5+sigma_u),
+                        1/(.5+sigma_u2)
+                    ],
+                    'equilibrium': [
+                        qx,
+                        (gamma-1)*E+rho/2*((3-gamma)*ux**2+(1-gamma)*uy**2),
+                        qx*uy,
+                        0.
+                    ]
                 },
                 {
                     'velocities': list(range(1, 5)),
                     'conserved_moments': qy,
                     'polynomials': [1, X, Y, X**2-Y**2],
-                    'relaxation_parameters': [0, 1/(.5+sigma_u), 1/(.5+sigma_u), 1/(.5+sigma_u2)],
-                    'equilibrium': [qy,
-                                    qx*uy,
-                                    (gamma-1)*E+rho/2*((3-gamma)*uy**2+(1-gamma)*ux**2),
-                                    0.]
-                                    #qy*(ux**2-uy**2)]
+                    'relaxation_parameters': [
+                        0,
+                        1/(.5+sigma_u), 1/(.5+sigma_u),
+                        1/(.5+sigma_u2)
+                    ],
+                    'equilibrium': [
+                        qy,
+                        qx*uy,
+                        (gamma-1)*E+rho/2*((3-gamma)*uy**2+(1-gamma)*ux**2),
+                        0.
+                    ]
                 },
                 {
                     'velocities': list(range(1, 5)),
                     'conserved_moments': E,
                     'polynomials': [1, X, Y, X**2-Y**2],
-                    'relaxation_parameters': [0, 1/(.5+sigma_p), 1/(.5+sigma_p), 1/(.5+sigma_p2)],
-                    'equilibrium': [E,
-                                    EpP*ux,
-                                    EpP*uy,
-                                    0.]
-                                    #E*(ux**2-uy**2)]
+                    'relaxation_parameters': [
+                        0,
+                        1/(.5+sigma_p), 1/(.5+sigma_p),
+                        1/(.5+sigma_p2)
+                    ],
+                    'equilibrium': [
+                        E,
+                        EpP*ux,
+                        EpP*uy,
+                        0.
+                    ]
                 },
             ],
             'parameters': {
@@ -170,17 +191,58 @@ class D2Q4444(LBM_scheme):
     @property
     def description(self):
         return """
-The $D_2Q_{4444}$ scheme is the smallest vectorial scheme for inviscid flows.
+The D2Q4444 scheme is the smallest vectorial scheme 
+that can be used for inviscid flows in dimension two.
 
-It involves the following set of parameters:
-in theory the scheme involves 12 relaxation parameters. Isotropy consideration allows to reduce this number to 6
+---
 
-Relaxation rates (values must be in $]0,2[$):
+**Vectorial scheme**
 
-- $s_{\\rho}$: the relaxation rate for the density equation
-- $s_{u}$: the relaxation rate for the velocity equation !!!!!!!-> changer pour equation de moment (dans les faits)
-- $s_{p}$: the relaxation rate for the pressure equation !!!!!!!-> changer pour equation d'Energie (dans les faits)
-- $s_{\\rho^2}$: the relaxation rate for the density equation
-- $s_{u^2}$: the relaxation rate for the velocity equation
-- $s_{p^2}$: the relaxation rate for the pressure equation
+The D2Q4444 is a vectorial scheme with one particle distribution function
+for each conserved moment (the mass, the momentum in x and y directions, and the total energy).
+Each particle distribution function is discretized with four velocities:
+$(\\lambda, 0)$, $(0, \\lambda)$, $(-\\lambda, 0)$, and $(0,-\\lambda)$ where $\\lambda$ is the lattice velocity.
+
+The main interest of this scheme is its simplicity.
+This scheme is very rough and robust. However, the structure of the numerical diffusion cannot be modified to fit the physical diffusion operator of Navier-Stokes.
+
+---
+
+**Parameters**
+
+To ensure isotropy, seven parameters are left free:
+
+* the **lattice velocity** denoted by $\\lambda$;
+* the **three relaxation parameters** of first-order $s_{\\rho}$, $s_u$, and $s_p$;
+* the **three relaxation parameters** of second-order $s_{\\rho2}$, $s_{u2}$, and $s_{p2}$.
+
+1. *The lattice velocity $\\lambda$*
+
+> The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
+>
+> This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
+>
+> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\\lambda$ should be as small as possible while preserving the stability.
+
+2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three first-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+>
+> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
+>
+> - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
+> - Decreasing the values improves the stability.
+
+3. *The relaxation parameters of second-order $s_{\\rho 2}$, $s_{u2}$, and $s_{p2}$*
+
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+>
+> These parameters do not play a role in the second-order numerical diffusion but in the stability.
+>
+> * A good choice is often to take these three parameters equal to the first-order associated relaxation parameters: $s_{\\rho2} = s_{\\rho}$, $s_{u2}=s_u$, and $s_{p2}=s_p$.
+
+---
+
+*See the tabs `Linear Stability` and `Parametric Study` for more informations*.
        """

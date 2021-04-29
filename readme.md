@@ -7,7 +7,9 @@ pylbm UI is a new way to explore lattice Boltzmann schemes easily and to better 
 
 In a near future, we will add a lot of test cases and lattice Boltzmann schemes.
 
-This user interface is based on [voilà](https://github.com/voila-dashboards/voila) and [ipyvuetify](https://github.com/mariobuikhuizen/ipyvuetify). [pylbm](https://github.com/pylbm/pylbm) is used to build and analyse the schemes and run the simulations.
+This user interface is based on [voilà](https://github.com/voila-dashboards/voila) and [ipyvuetify](https://github.com/mariobuikhuizen/ipyvuetify).
+
+[pylbm](https://github.com/pylbm/pylbm) is used to build and analyse the schemes and run the simulations.
 
 This video shows you different features of pylbm UI
 

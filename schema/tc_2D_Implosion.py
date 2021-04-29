@@ -140,8 +140,4 @@ Implosion2D_Symmetric = tc_2D_implosion2D(
 """Implosion 2D is a 2D test case proposed in....
 
 """
-    )
-
-
-
-
+)

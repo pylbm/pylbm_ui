@@ -15,7 +15,7 @@ This video shows you different features of pylbm UI
 
 https://user-images.githubusercontent.com/7510549/116612703-27725880-a938-11eb-8760-721a062d66ff.mp4
 
-The simplest way to use is probably to click on the binder link that you can find above but it can be a little bit slow.
+The simplest way to use it is probably to click on the binder link that you can find above but it can be a little bit slow.
 
 If you want to install locally, please follow the following steps
 

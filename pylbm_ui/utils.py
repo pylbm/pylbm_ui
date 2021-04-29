@@ -66,6 +66,7 @@ TYPE_TO_WIDGET = {
     'number': FloatField,
     'scheme velocity': StrictlyPositiveFloatField,
     'relaxation parameter': RelaxField,
+    'parameter': FloatField,
 }
 
 def schema_to_widgets(parameter_widget, data):

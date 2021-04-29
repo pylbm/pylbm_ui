@@ -15,6 +15,7 @@ from pydantic.utils import Representation
 import numbers
 import sympy as sp
 
+
 def freeze(d):
     if isinstance(d, dict):
         return frozenset((key, freeze(value)) for key, value in d.items())
@@ -22,11 +23,13 @@ def freeze(d):
         return tuple(freeze(value) for value in d)
     return d
 
+
 class HashBaseModel(BaseModel):
     def __hash__(self):
         set = frozenset((type(self),))
         set.union(freeze(self.__dict__))
         return hash(set)
+
 
 class Scheme:
     def get_information(self):
@@ -66,6 +69,7 @@ class Scheme:
 
         return stab
 
+
 class SchemeVelocity(Representation):
     def __init__(self, value):
         self.symb = sp.symbols('lambda', constants=True)
@@ -93,6 +97,7 @@ class SchemeVelocity(Representation):
     def __repr_args__(self):
         return [(None, self.value), ['symbol', self.symb]]
 
+
 class RelaxationParameter:
     def __new__(cls, symb):
         class Create:
@@ -117,21 +122,57 @@ class RelaxationParameter:
 
         return Create
 
-class RelaxationParameterFinal:
 
+class RelaxationParameterFinal:
     def __init__(self, value, symb):
         self.symb = symb
         self.value = value
 
     def __repr__(self):
         return f"RelaxationParameter('{self.symb}')({self.value})"
+
+
+class RealParameter:
+    def __new__(cls, symb):
+        class Create:
+            def __new__(self, v):
+                return RealParameterFinal(v, sp.Symbol(symb))
+
+            @classmethod
+            def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
+                field_schema.update(type='number', format='parameter')
+
+            @classmethod
+            def __get_validators__(cls):
+                yield cls.validate
+
+            @classmethod
+            def validate(cls, v):
+                if not isinstance(v, numbers.Number):
+                    raise TypeError('Number is required')
+                return cls(v)
+
+        return Create
+
+
+class RealParameterFinal:
+    def __init__(self, value, symb):
+        self.symb = symb
+        self.value = value
+
+    def __repr__(self):
+        return f"Parameter('{self.symb}')({self.value})"
+
+
 class LBM_scheme(HashBaseModel, Scheme):
     la: SchemeVelocity
+
 
 from pydantic.json import ENCODERS_BY_TYPE
 
 ENCODERS_BY_TYPE.update({
     SchemeVelocity: lambda o: o.value,
-    RelaxationParameterFinal: lambda o: o.value
+    RelaxationParameterFinal: lambda o: o.value,
+    RealParameterFinal: lambda o: o.value,
     })
 

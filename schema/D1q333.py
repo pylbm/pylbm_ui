@@ -173,7 +173,7 @@ Two versions of this scheme are proposed: the D1Q333_0 and the D1Q333_1 that dif
 **Parameters**
 
 The equilibrium value of all the non-conserved moments are fixed in this version of the D1Q333. 
-Sevend parameters are left free:
+Seven parameters are left free:
 
 * the **lattice velocity** denoted by $\\lambda$;
 * the **three relaxation parameters** of first-order $s_{\\rho}$, $s_u$, and $s_p$;
@@ -186,7 +186,7 @@ Sevend parameters are left free:
 > This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
 >
 > - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
-> - The parameter $\\lambda$ should be as small as possible while preserving the stability;
+> - The parameter $\\lambda$ should be as small as possible while preserving the stability.
 
 2. *The relaxation parameters of first-order $s_{\\rho}$, $s_u$, and $s_p$*
 

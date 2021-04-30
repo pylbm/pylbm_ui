@@ -106,39 +106,72 @@ def main():
         children=[v.Tab(children=[k]) for k in tab_titles],
     )
 
-    menu = v.List(children=[],
+    menu = v.List(
+        children=[],
         nav=True,
         v_model='drawer',
     )
     content = v.Content(children=[])
 
+    resume = v.Html(
+        tag='div', class_='d-flax flex-column',
+        children=[],
+        nav=True,
+        v_model='drawer',
+    )
+
     def tab_change(change):
         tab_id = tab.v_model
         widget = tab_widgets[tab_id]
-        menu.children = [v.ListItem(children=[
-                                       v.ListItemContent(children=[m])]) for m in widget.menu
+        menu.children = [
+            v.ListItem(
+                children=[
+                    v.ListItemContent(children=[m])
+                ]
+            ) for m in widget.menu
         ]
         content.children = widget.main
-
+        
+        if tab_id >= 2:
+            resume.children = [
+                v.Btn(
+                    class_='ma-2',
+                    children=[f"Test case:{tc.select_case.v_model}"]
+                ),
+                v.Btn(
+                    class_='ma-2',
+                    children=[f"Scheme: {lb.select_case.v_model}"]
+                )
+            ]
+        else:
+            resume.children = []
         if tab_id == 5:
             posttreatment.update(None)
-
 
     tab_change(None)
     tab.observe(tab_change, 'v_model')
 
     navicon = v.AppBarNavIcon()
 
-    drawer = v.NavigationDrawer(children=[
-        v.Row(children=[
-            v.Img(src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg', max_width=250, class_='ma-5')],
-                  align='center',
-                  justify='center'),
-            menu],
-            v_model=True,
-            width=350,
-            clipped=True,
-            app=True
+    drawer = v.NavigationDrawer(
+        children=[
+            v.Row(
+                children=[
+                    v.Img(
+                        src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg',
+                        max_width=250, class_='ma-5'
+                    )
+                ],
+                align='center',
+                justify='center'
+            ),
+            resume,
+            menu
+        ],
+        v_model=True,
+        width=350,
+        clipped=True,
+        app=True
     )
 
     def show_drawer(widget, event, data):
@@ -146,15 +179,18 @@ def main():
 
     navicon.on_event("click.stop", show_drawer)
 
-    return v.App(children=[
-                v.AppBar(children=[
+    return v.App(
+        children=[
+            v.AppBar(
+                children=[
                     navicon,
                     tab,
                 ],
                 clipped_left=True,
                 app=True,
                 dark=True,
-                ),
-        drawer,
-        content,
-    ])
+            ),
+            drawer,
+            content,
+        ]
+    )

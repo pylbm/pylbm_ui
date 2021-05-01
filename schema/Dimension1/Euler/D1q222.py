@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 import sympy as sp
 import pylbm
 import traitlets
-from .equation_type import EquationType, Euler1D
-from .utils import LBM_scheme, RelaxationParameter
+from .equation_type import Euler1D
+from ...utils import LBM_scheme, RelaxationParameter
 
 
 class D1Q222(LBM_scheme):

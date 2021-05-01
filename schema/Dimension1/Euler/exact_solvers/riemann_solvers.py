@@ -24,37 +24,6 @@ from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
 
 
-def riemann_pb(x, xmid, u_left, u_right):
-    """
-    initial condition with a Riemann problem
-
-    Parameters
-    ----------
-
-    x : ndarray
-        spatial mesh
-
-    xmid : double
-        position of the discontinuity
-
-    u_left : double
-        left value of the field
-
-    u_right : double
-        right value of the field
-
-    Returns
-    -------
-
-    vect_u
-        ndarray
-    """
-    vect_u = np.empty(x.shape)
-    vect_u[x < xmid] = u_left
-    vect_u[x >= xmid] = u_right
-    return vect_u
-
-
 def newton(f, x, eps, nitermax=1000):
     """
     Newton method to solve f(x)=0

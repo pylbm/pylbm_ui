@@ -8,10 +8,10 @@ from pydantic import BaseModel, Field
 import sympy as sp
 import pylbm
 import traitlets
-from .equation_type import EquationType, Euler2D
-from .utils import LBM_scheme, RelaxationParameter
+from .equation_type import Euler2D
+from ...utils import LBM_scheme, RelaxationParameter
 
-from .boundary2D import *
+from ..boundary2D import *
 
 
 class D2Q4444(LBM_scheme):

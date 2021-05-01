@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import Euler1D
-from .utils import LBM_scheme, RelaxationParameter
+from ...utils import LBM_scheme, RelaxationParameter
 
 
 class D1Q333_general(LBM_scheme):

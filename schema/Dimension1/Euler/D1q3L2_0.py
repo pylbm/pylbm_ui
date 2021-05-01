@@ -7,8 +7,8 @@
 from pydantic import BaseModel
 import sympy as sp
 import pylbm
-from .equation_type import EquationType, Euler1D
-from .utils import LBM_scheme, RelaxationParameter, RealParameter
+from .equation_type import Euler1D
+from ...utils import LBM_scheme, RelaxationParameter, RealParameter
 
 class D1Q3L2(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
@@ -140,7 +140,7 @@ that can be used for inviscid flows in dimension one.
 
 **Scheme with internal energy levels**
 
-The D1Q3L2 is a scheme with two particle distribution functions, one for each internal energy level. The two internal energy levels are scaled by $\\lambda**2$ ($\\lambda$ is the lattice velocity) and the difference between their values is parametrized by $\\alpha$.
+The D1Q3L2 is a scheme with two particle distribution functions, one for each internal energy level. The two internal energy levels are scaled by $\\lambda^2$ ($\\lambda$ is the lattice velocity) and the difference between their values is parametrized by $\\alpha$.
 
 Each particle distribution function is discretized with three velocities:
 $0$, $\\lambda$, and $-\\lambda$ where $\\lambda$ is the lattice velocity.

@@ -20,7 +20,7 @@ The hyperbolic systems can be
  - Euler
 """
 
-from .riemann_solvers import riemann_pb
+# from .riemann_solvers import riemann_pb
 from .advection_solver import AdvectionSolver
 from .burgers_solver import BurgersSolver
 from .shallow_water_solver import ShallowWaterSolver

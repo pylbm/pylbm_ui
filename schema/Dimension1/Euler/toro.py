@@ -10,11 +10,11 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-
-from .equation_type import EquationType, Euler1D
+from .equation_type import Euler1D
 from .exact_solvers import EulerSolver as exact_solver
-from .exact_solvers import riemann_pb
-from .utils import HashBaseModel
+from ..utils import riemann_pb
+from ...utils import HashBaseModel
+
 
 class ToroCase(HashBaseModel):
     rho_left: float
@@ -29,7 +29,7 @@ class ToroCase(HashBaseModel):
     xmax: float
     x_disc: float
 
-    dim=1
+    dim = 1
     equation = Euler1D()
     name = 'Toro'
     description = 'none'
@@ -48,23 +48,43 @@ class ToroCase(HashBaseModel):
         zeta_left = 0.
         zeta_right = 0.
 
-        def riemann_pb(x, u_left, u_right):
-            vect_u = np.empty(x.shape)
-            vect_u[x < self.x_disc] = u_left
-            vect_u[x >= self.x_disc] = u_right
-            return vect_u
+        # def riemann_pb(x, u_left, u_right):
+        #     vect_u = np.empty(x.shape)
+        #     vect_u[x < self.x_disc] = u_left
+        #     vect_u[x >= self.x_disc] = u_right
+        #     return vect_u
 
         init = {
+            # self.equation.rho: (
+            #         riemann_pb, (self.rho_left, self.rho_right)
+            #     ),
+            # self.equation.q: (riemann_pb, (q_left, q_right)),
             self.equation.rho: (
-                    riemann_pb, ( self.rho_left, self.rho_right)
-                ),
-            self.equation.q: (riemann_pb, ( q_left, q_right)),
+                riemann_pb,
+                (self.x_disc, self.rho_left, self.rho_right)
+            ),
+            self.equation.q: (
+                riemann_pb,
+                (self.x_disc, q_left, q_right)
+            )
         }
 
         if hasattr(self.equation, 'E'):
-            init.update({self.equation.E: (riemann_pb, ( e_left, e_right)),})
+            init.update(
+                {
+                    self.equation.E: (
+                        riemann_pb, (self.x_disc, e_left, e_right)
+                    ),
+                }
+            )
         if hasattr(self.equation, 'zeta'):
-            init.update({self.equation.zeta: (riemann_pb, ( zeta_left, zeta_right)),})
+            init.update(
+                {
+                    self.equation.zeta: (
+                        riemann_pb, (self.x_disc, zeta_left, zeta_right)
+                    ),
+                }
+            )
 
         return {
             'box': {'x': [self.xmin, self.xmax],
@@ -250,5 +270,3 @@ Toro5_1D = ToroCase(
 """ A ??? test case
 """
     )
-
-

@@ -12,11 +12,11 @@ import sympy as sp
 
 from .equation_type import Transport1D
 #from .exact_solvers
-from ..utils import bump
+from ..utils import bump as bump_init
 from ...utils import HashBaseModel
 
 
-class bump(HashBaseModel):
+class Bump(HashBaseModel):
     u_bottom: float
     u_top: float
     c: float
@@ -35,7 +35,7 @@ class bump(HashBaseModel):
     def get_dictionary(self):
         init = {
             self.equation.u: (
-                bump,
+                bump_init,
                 (self.reg, self.x_top, self.width_bump)
             )
         }
@@ -78,7 +78,7 @@ class bump(HashBaseModel):
 ### predefined cases
 ##################################
 
-Bump_discont = bump(
+Bump_discont = Bump(
     u_bottom=0, u_top=1,
     c=1, reg=1,
     xmin=0, xmax=1,

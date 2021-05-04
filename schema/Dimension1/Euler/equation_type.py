@@ -16,18 +16,22 @@ class Euler1D(EquationType):
     q = Symbol('q')
     E = Symbol('E')
     gamma = Symbol('gamma')
-    NonReflexiveOutlet='NonReflexiveOutlet'
-    Neumann='Neumann'
-    Dirichlet_u='Dirichlet_u'
+    NonReflexiveOutlet = 'NonReflexiveOutlet'
+    Neumann = 'Neumann'
+    Dirichlet_u = 'Dirichlet_u'
 
     def get_fields(self):
-        fields = {'mass': self.rho,
-                  'momentum': self.q,
-                  'energy': self.E,
-                  'velocity': self.q/self.rho,
-                  'pressure': (self.gamma-1)*(self.E - self.q**2/self.rho/2),
-                  'internal energy': self.E/self.rho - self.q**2/self.rho**2/2,
+        gamma_ = self.gamma
+        fields = {
+            'mass': self.rho,
+            'momentum': self.q,
+            'energy': self.E,
+            'velocity': self.q/self.rho,
+            'pressure': (gamma_-1)*(self.E - self.q**2/self.rho/2),
+            'internal energy': self.E/self.rho - self.q**2/self.rho**2/2,
         }
-        fields['mach number'] = sp.sqrt(self.q**2/(self.gamma*self.rho*fields['pressure']))
+        fields['mach number'] = sp.sqrt(
+            self.q**2/(gamma_*self.rho*fields['pressure'])
+        )
 
         return fields

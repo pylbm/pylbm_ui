@@ -20,6 +20,7 @@ from .json import save_simu_config
 
 from .widgets.pylbmwidget import out
 
+
 class Plot:
     def __init__(self):
         plt.ioff()
@@ -49,13 +50,15 @@ class Plot:
                         marker = palette['marker']
                         markersize = palette['markersize']
 
-                    self.plot_type, = self.ax.plot(x, data,
-                                                color=color,
-                                                alpha=alpha,
-                                                linewidth=linewidth,
-                                                linestyle=linestyle,
-                                                marker=marker,
-                                                markersize=markersize)
+                    self.plot_type, = self.ax.plot(
+                        x, data,
+                        color=color,
+                        alpha=alpha,
+                        linewidth=linewidth,
+                        linestyle=linestyle,
+                        marker=marker,
+                        markersize=markersize
+                    )
                 else:
                     self.plot_type.set_ydata(data)
 
@@ -76,15 +79,23 @@ class Plot:
                     self.plot_type = self.ax.imshow(to_plot, origin='lower', cmap=cmap, extent=extent, interpolation='bilinear')
                     divider = make_axes_locatable(self.ax)
                     cax = divider.append_axes("bottom", size="5%", pad=0.25)
-                    self.color_bar = self.fig.colorbar(self.plot_type, cax=cax, orientation="horizontal")
+                    self.color_bar = self.fig.colorbar(
+                        self.plot_type, cax=cax, orientation="horizontal"
+                    )
                 else:
                     self.plot_type.set_array(data.T)
-                self.plot_type.set_clim(vmin=np.nanmin(data), vmax=np.nanmax(data))
+                self.plot_type.set_clim(
+                    vmin=np.nanmin(data), vmax=np.nanmax(data)
+                )
                 self.color_bar.set_label(label=field)
 
-            self.ax.title.set_text(f"time: {t} s")#, fontsize=18)
+            self.ax.title.set_text(f"time: {t} s")  #, fontsize=18)
 
-def get_config(test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude=None, show_code=False):
+
+def get_config(
+    test_case, lb_scheme, dx,
+    codegen=None, codegen_dir=None, exclude=None, show_code=False
+):
     simu_cfg = test_case.get_dictionary()
     param = simu_cfg['parameters']
     simu_cfg.update(lb_scheme.get_dictionary())
@@ -119,6 +130,8 @@ def get_config(test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude
                     simu_cfg['parameters'].pop(k)
 
     return simu_cfg
+
+
 class simulation:
     def __init__(self):
         self.sol = None
@@ -138,14 +151,29 @@ class simulation:
         self.fields = fields
         self.func = {}
         for k, v in fields.items():
-            self.func[k] = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
+            self.func[k] = sp.lambdify(
+                list(v.atoms(sp.Symbol)), v, "numpy", dummify=False
+            )
 
-    def reset_sol(self, test_case, lb_scheme, dx, codegen=None, codegen_dir=None, exclude=None, initialize=True, show_code=False):
+    def reset_sol(
+        self,
+        test_case, lb_scheme,
+        dx,
+        codegen=None, codegen_dir=None,
+        exclude=None, initialize=True,
+        show_code=False
+    ):
         self.test_case = test_case
         self.lb_scheme = lb_scheme
         self.dx = dx
-        self.simu_cfg = get_config(test_case, lb_scheme, dx, codegen, codegen_dir, exclude, show_code)
-        self.sol = pylbm.Simulation(self.simu_cfg, initialize=initialize)
+        self.simu_cfg = get_config(
+            test_case, lb_scheme,
+            dx,
+            codegen, codegen_dir, exclude, show_code
+        )
+        self.sol = pylbm.Simulation(
+            self.simu_cfg, initialize=initialize
+        )
 
     @property
     def duration(self):

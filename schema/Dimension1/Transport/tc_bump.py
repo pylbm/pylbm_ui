@@ -63,11 +63,13 @@ class Bump(HashBaseModel):
         return [
             {
                 'name': 'Ground state',
-                self.equation.u: 0,
+                self.equation.u: self.u_bottom,
+                self.equation.c: self.c,
             },
             {
                 'name': 'Bump state',
-                self.equation.u: 1,
+                self.equation.u: self.u_top,
+                self.equation.c: self.c,
             },
         ]
 

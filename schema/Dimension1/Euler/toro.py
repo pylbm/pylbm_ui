@@ -114,30 +114,35 @@ class ToroCase(HashBaseModel):
         })
         star_1 = exact_solution.u_star[0]
         star_2 = exact_solution.u_star[1]
-        return [{
-                    'name': 'Left state',
-                    self.equation.rho: self.rho_left,
-                    self.equation.q: self.rho_left*self.u_left,
-                    self.equation.E: .5*self.rho_left*self.u_left**2 + self.p_left/(self.gamma-1.)
-                },
-                {
-                    'name': 'Right state',
-                    self.equation.rho: self.rho_right,
-                    self.equation.q: self.rho_right*self.u_right,
-                    self.equation.E: .5*self.rho_right*self.u_right**2 + self.p_right/(self.gamma-1.)
-                },
-                {
-                    'name': 'Star 1 state',
-                    self.equation.rho: star_1[0],
-                    self.equation.q: star_1[0]*star_1[1],
-                    self.equation.E: 0.5*star_1[0]*star_1[1]**2. + star_1[2]/(self.gamma-1.)
-                },
-                {
-                    'name': 'Star 2 state',
-                    self.equation.rho: star_2[0],
-                    self.equation.q: star_2[0]*star_2[1],
-                    self.equation.E: 0.5*star_2[0]*star_2[1]**2. + star_2[2]/(self.gamma-1.)
-                },
+        return [
+            {
+                'name': 'Left state',
+                self.equation.rho: self.rho_left,
+                self.equation.q: self.rho_left*self.u_left,
+                self.equation.E: .5*self.rho_left*self.u_left**2 + self.p_left/(self.gamma-1.),
+                self.equation.gamma: self.gamma
+            },
+            {
+                'name': 'Right state',
+                self.equation.rho: self.rho_right,
+                self.equation.q: self.rho_right*self.u_right,
+                self.equation.E: .5*self.rho_right*self.u_right**2 + self.p_right/(self.gamma-1.),
+                self.equation.gamma: self.gamma
+            },
+            {
+                'name': 'Star 1 state',
+                self.equation.rho: star_1[0],
+                self.equation.q: star_1[0]*star_1[1],
+                self.equation.E: 0.5*star_1[0]*star_1[1]**2. + star_1[2]/(self.gamma-1.),
+                self.equation.gamma: self.gamma
+            },
+            {
+                'name': 'Star 2 state',
+                self.equation.rho: star_2[0],
+                self.equation.q: star_2[0]*star_2[1],
+                self.equation.E: 0.5*star_2[0]*star_2[1]**2. + star_2[2]/(self.gamma-1.),
+                self.equation.gamma: self.gamma
+            },
         ]
 
     def ref_solution(self, t, x, field=None):

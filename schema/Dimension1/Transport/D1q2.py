@@ -14,14 +14,18 @@ from ...utils import LBM_scheme, RelaxationParameter
 
 class D1Q2(LBM_scheme):
     s_u: RelaxationParameter('s_u')
+    
 
     equation = Transport1D()
     dim = 1
     name = 'D1Q2'
     tex_name = r'$D_1Q_{{2}}$'
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+
+    def get_required_param(self):
+        return [self.equation.c]
 
     def get_dictionary(self):
         u = self.equation.u
@@ -49,7 +53,6 @@ class D1Q2(LBM_scheme):
                 la_: la,
                 s_u_: s_u,
                 sigma_u: 1/s_u_-.5,
-                c: 1
             },
             'generator': 'numpy'
         }

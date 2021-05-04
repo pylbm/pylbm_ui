@@ -61,6 +61,7 @@ class NbPointsField(IntField, GreaterThanOneMixin):
         super().__init__(**kwargs)
         self.observe(self.check, 'v_model')
 
+
 TYPE_TO_WIDGET = {
     'integer': IntField,
     'number': FloatField,
@@ -69,34 +70,36 @@ TYPE_TO_WIDGET = {
     'parameter': FloatField,
 }
 
-def schema_to_widgets(parameter_widget, data):
-    schema = data.schema()
+
+def schema_to_widgets(parameter_widget, data_0):
+    
+    def fill_dict(widgets, required, properties, data):
+        for field in required:
+            default = getattr(data, field)
+            if hasattr(default, 'value'):
+                default_value = default.value
+                name = str(default.symb)
+            else:
+                default_value = default
+                name = field
+
+            data_type = properties[field].get('format', None)
+            if data_type is None:
+                data_type = properties[field]['type']
+
+            widgets[field] = TYPE_TO_WIDGET[data_type](
+                label=name, v_model=default_value
+            )
+    
+    schema = data_0.schema()
     required = schema['required']
     properties = schema['properties']
 
     widgets = {}
-    for field in required:
-        default = getattr(data, field)
-        if hasattr(default, 'value'):
-            default_value = default.value
-            name = str(default.symb)
-        else:
-            default_value = default
-            name = field
-
-        data_type = properties[field].get('format', None)
-        if data_type is None:
-            data_type = properties[field]['type']
-
-        widgets[field] = TYPE_TO_WIDGET[data_type](label=name, v_model=default_value)
-
-        # if field not in parameter_widget:
-        #     widgets[field] = TYPE_TO_WIDGET[data_type](label=name, v_model=default_value)
-        # else:
-        #     widgets[field] = parameter_widget[field]
-        #     widgets[field].v_model = default_value
+    fill_dict(widgets, required, properties, data_0)
 
     return widgets
+
 
 def required_fields(data):
     schema = data.schema()

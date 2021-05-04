@@ -22,8 +22,8 @@ class D1Q222(LBM_scheme):
     name = 'D1Q222'
     tex_name = r'$D_1Q_{{222}}$'
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def get_required_param(self):
+        return [self.equation.gamma]
 
     def get_dictionary(self):
         rho = self.equation.rho
@@ -79,7 +79,6 @@ class D1Q222(LBM_scheme):
                 sigma_rho: 1/s_rho_-.5,
                 sigma_u: 1/s_u_-.5,
                 sigma_p: 1/s_p_-.5,
-                gamma: 1.4
             },
             'generator': 'numpy'
         }

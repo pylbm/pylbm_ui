@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from pydantic.utils import Representation
 import numbers
 import sympy as sp
+from copy import deepcopy
 
 
 def freeze(d):
@@ -36,13 +37,21 @@ class Scheme:
         scheme = pylbm.Scheme(self.get_dictionary())
         return scheme
 
+    def get_required_param(self):
+        return []
+
     def get_eqpde(self):
         scheme = pylbm.Scheme(self.get_dictionary())
         eqpde = pylbm.EquivalentEquation(scheme)
         return eqpde
 
     def get_stability(self, state, markers1=None, markers2=None):
-        scheme = pylbm.Scheme(self.get_dictionary())
+        dico = deepcopy(self.get_dictionary())
+        param = self.get_required_param()
+        for p in param:
+            dico['parameters'][p] = state[p]
+        scheme = pylbm.Scheme(dico)
+        # scheme = pylbm.Scheme(self.get_dictionary())
         stab = pylbm.Stability(scheme)
 
         consm0 = [0.] * len(stab.consm)

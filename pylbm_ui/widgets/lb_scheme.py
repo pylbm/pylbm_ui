@@ -44,16 +44,26 @@ class LBSchemeWidget:
 
         self.test_case = test_case
         self.known_cases = known_cases
-        self.default_cases = {c.name: c for c in known_cases[test_case.get_case()]}
-        self.cases = {c.name: copy.copy(c) for c in known_cases[test_case.get_case()]}
+        self.default_cases = {
+            c.name: c for c in known_cases[test_case.get_case()]
+        }
+        self.cases = {
+            c.name: copy.copy(c) for c in known_cases[test_case.get_case()]
+        }
         self.parameters = {}
 
         ##
         ## The menu
         ##
         default_case = list(self.cases.keys())[0]
-        self.select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='LBM schemes')
-        self.panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
+        self.select_case = v.Select(
+            items=list(self.cases.keys()),
+            v_model=default_case,
+            label='LBM schemes'
+        )
+        self.panels = v.ExpansionPanels(
+            v_model=None, children=[ParametersPanel('Show parameters')]
+        )
         self.reset = v.Btn(children=['reset to default'], class_='d-none')
         self.menu = [self.select_case, self.panels, self.reset]
 
@@ -115,15 +125,20 @@ class LBSchemeWidget:
         """
         case = self.cases[self.select_case.v_model]
         if self.tabs.v_model == 1 and not self.properties.children:
-            self.properties.children = [Message('Compute the properties of the scheme')]
+            self.properties.children = [
+                Message('Compute the properties of the scheme')
+            ]
             self.properties.children = [case.get_information().vue()]
         if self.tabs.v_model == 2 and not self.eq_pde.children:
-            self.eq_pde.children = [Message('Compute the equivalent equations of the scheme')]
+            self.eq_pde.children = [
+                Message('Compute the equivalent equations of the scheme')
+            ]
             self.eq_pde.children = [case.get_eqpde().vue()]
 
     def change_test_case(self, change):
         """
-        If the test case is changed, update the default_cases and cases dictionary,
+        If the test case is changed, 
+        update the default_cases and cases dictionary,
         update the selection widget and update the list of parameters.
         """
         current_case = self.select_case.v_model
@@ -145,6 +160,7 @@ class LBSchemeWidget:
     def change_case(self, change):
         v_model = self.tabs.v_model
         case = self.cases[self.select_case.v_model]
+        # test_case = self.test_case.get_case()
         self.parameters = schema_to_widgets(self.parameters, case)
         self.description.update_content(case.description)
         self.properties.children = []

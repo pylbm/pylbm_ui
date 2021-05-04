@@ -10,22 +10,27 @@ import pylbm
 from .equation_type import Euler1D
 from ...utils import LBM_scheme, RelaxationParameter, RealParameter
 
+
 class D1Q3L2(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_u: RelaxationParameter('s_u')
     s_p: RelaxationParameter('s_p')
     alpha: RealParameter('alpha')
+    # alpha: float
     equation = Euler1D()
     dim = 1
     name = 'D1Q3L2'
     tex_name = r'$D_1Q_3L_2$'
+
+    def get_required_param(self):
+        return [self.equation.gamma]
 
     def get_dictionary(self):
         rho = self.equation.rho
         q = self.equation.q
         E = self.equation.E
         gamma = self.equation.gamma
-
+        
         la_, la = self.la.symb, self.la.value
         s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
         s_u_, s_u = self.s_u.symb, self.s_u.value
@@ -40,6 +45,8 @@ class D1Q3L2(LBM_scheme):
         symb_s_3 = 1/(.5+sigma_3)          # symbolic relaxation parameter
 
         ALPHA_NORM, alpha = self.alpha.symb, self.alpha.value
+        # ALPHA_NORM = sp.Symbol('alpha')
+        # alpha = self.alpha
         ALPHA = ALPHA_NORM * la_**2
 
         la2 = la_**2
@@ -105,7 +112,6 @@ class D1Q3L2(LBM_scheme):
                 sigma_1: 1/s_rho_-.5,
                 sigma_2: 1/s_u_-.5,
                 sigma_3: 1/s_p_-.5,
-                gamma: 1.4,
             },
             'generator': 'numpy'
         }

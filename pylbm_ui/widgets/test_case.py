@@ -134,7 +134,10 @@ class TestCaseWidget:
             itab = self.tabs.v_model
             ipanel = self.panels.v_model
             self.description.update_content(self.cases[self.select_case.v_model].description)
-            self.parameters = schema_to_widgets(self.parameters, self.cases[self.select_case.v_model])
+            self.parameters = schema_to_widgets(
+                self.parameters,
+                self.cases[self.select_case.v_model]
+            )
             self.panels.children[0].update(self.parameters.values())
             self.panels.children[0].bind(self.change_param)
             self.tabs.v_model = itab

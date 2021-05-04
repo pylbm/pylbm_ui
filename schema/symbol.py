@@ -8,6 +8,7 @@ import sympy as sp
 from pydantic.json import ENCODERS_BY_TYPE
 from typing import Dict, Any
 
+
 class Symbol(sp.Symbol):
     @classmethod
     def __get_validators__(cls):
@@ -25,6 +26,7 @@ class Symbol(sp.Symbol):
 
     def __repr__(self):
         return super().__repr__()
+
 
 ENCODERS_BY_TYPE[Symbol] = str
 ENCODERS_BY_TYPE[sp.Symbol] = str

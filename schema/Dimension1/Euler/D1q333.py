@@ -26,6 +26,9 @@ class D1Q333_general(LBM_scheme):
 
     addvisc = 0.
 
+    def get_required_param(self):
+        return [self.equation.gamma]
+
     def get_dictionary(self):
         rho = self.equation.rho
         q = self.equation.q
@@ -119,7 +122,6 @@ class D1Q333_general(LBM_scheme):
                 sigma_rhox: 1/s_rhox_-.5,
                 sigma_ux: 1/s_ux_-.5,
                 sigma_px: 1/s_px_-.5,
-                gamma: 1.4,
             },
             'generator': 'numpy'
         }

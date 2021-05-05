@@ -85,7 +85,19 @@ Bump_discont = Bump(
     c=1, reg=1,
     xmin=0, xmax=1,
     x_top=0.25, width_bump=0.125,
-    duration=2,
-    name='Bump_disc',
+    duration=1.5,
+    name='Bump discontinuous',
+    description="""
+Une description du cas test
+    """
+)
+
+Bump_C0 = Bump(
+    u_bottom=0, u_top=1,
+    c=1, reg=0,
+    xmin=0, xmax=1,
+    x_top=0.25, width_bump=0.125,
+    duration=1.5,
+    name='Bump C0',
     description=""
 )

@@ -1,10 +1,11 @@
-from .toro import Toro1_1D, Toro2_1D, Toro3_1D, Toro4_1D, Toro5_1D
+from .toro import Sod_1D, Toro1_1D, Toro2_1D, Toro3_1D, Toro4_1D, Toro5_1D
 
 from .D1q222 import D1Q222
 from .D1q333 import D1Q333, D1Q333_NS
 from .D1q3L2_0 import D1Q3L2
 
 cases = {
+    'Sod': Sod_1D,
     'Toro 1': Toro1_1D,
     'Toro 2': Toro2_1D,
     'Toro 3': Toro3_1D,
@@ -13,6 +14,24 @@ cases = {
 }
 
 known_cases = {
+    Sod_1D: [
+        D1Q222(la=5, s_rho=1.9, s_u=1.8, s_p=2.),
+        D1Q333(
+            la=10,
+            s_rho=1.9, s_u=1.9, s_p=1.9,
+            s_rhox=1.75, s_ux=1.75, s_px=1.75
+        ),
+        D1Q333_NS(
+            la=10,
+            s_rho=1.5, s_u=1.5, s_p=1.5,
+            s_rhox=1., s_ux=1., s_px=1.
+        ),
+        D1Q3L2(
+            la=5,
+            s_rho=1.5, s_u=1.5, s_p=1.5,
+            alpha=0.01
+        ),
+    ],
     Toro1_1D: [
         D1Q222(la=5, s_rho=1.9, s_u=1.8, s_p=2.),
         D1Q333(

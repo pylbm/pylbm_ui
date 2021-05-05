@@ -15,6 +15,6 @@ for _, module_name, ispkg in iter_modules([package_dir]):
         cases.update(md.cases)
         known_cases.update(md.known_cases)
 
-default_case = 'Toro 1'
+default_case = 'Sod'
 
 

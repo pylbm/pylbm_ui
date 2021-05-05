@@ -126,7 +126,12 @@ class Markdown(v.Layout):
 
         mkd = markdown(
             mkd_str,
-            extensions=['fenced_code','sane_lists', MathSvgExtension()]
+            extensions=[
+                # 'tables',
+                'fenced_code',
+                'sane_lists',
+                MathSvgExtension()
+            ]
         )
 
         with self.out:
@@ -149,8 +154,14 @@ class Markdown(v.Layout):
     def update_content(self, mkd_str):
         mkd = markdown(
             mkd_str,
-            extensions=['fenced_code','sane_lists', MathSvgExtension()]
+            extensions=[
+                # 'tables',
+                'fenced_code',
+                'sane_lists',
+                MathSvgExtension()
+            ]
         )
+        print(mkd)
         with self.out:
             self.out.clear_output()
             ipydisplay.display(ipydisplay.HTML(mkd))

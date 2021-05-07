@@ -16,6 +16,46 @@ import numbers
 import sympy as sp
 from copy import deepcopy
 
+from pathlib import Path
+from pkgutil import iter_modules
+from importlib import import_module
+
+
+def define_cases(filename, modulename):
+    """
+    return the cases and known_cases of the local submodules
+    
+    Parameters
+    ----------
+    filename: string
+    modulename: string
+
+    Returns
+    -------
+
+    cases: dictionary
+        the cases of the submodules
+
+    known_cases: dictionary
+        the known_cases of the submodules
+
+    """
+    cases = {}
+    gbl = globals()
+    package_dir = Path(filename).resolve().parent
+    
+    for _, module_name, ispkg in iter_modules([package_dir]):
+        if ispkg:
+            module = f"{modulename}.{module_name}"
+            gbl['md'] = import_module(module, package=None)
+            # cases.update(md.cases)
+            # known_cases.update(md.known_cases)
+            cases[module_name] = md.cases
+            # known_cases[module_name] = md.known_cases
+    
+    return cases
+
+
 
 def freeze(d):
     if isinstance(d, dict):

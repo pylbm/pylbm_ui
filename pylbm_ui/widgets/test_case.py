@@ -10,10 +10,13 @@ import ipyvuetify as v
 import copy
 
 from ..utils import schema_to_widgets
+from .debug import debug
 from .pylbmwidget import Markdown, ParametersPanel, out
 
+
+@debug
 class TestCaseWidget:
-    def __init__(self, cases, default_case):
+    def __init__(self, model, cases, default_case):
         """
         Widget definition for test cases.
 
@@ -35,6 +38,7 @@ class TestCaseWidget:
         is given and a plot of the reference solution if it exists.
 
         """
+        self.model = model
         self.default_cases = cases
         # make a copy to not modify the input instances
         self.cases = copy.deepcopy(cases)
@@ -45,8 +49,23 @@ class TestCaseWidget:
         ##
 
         # widget to select the test case
-        self.select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='Test cases')
-        self.panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
+        # liste_cases = list(self.cases.keys())
+        liste_cases = list(
+            self.model.get_model()['test cases'].keys()
+        )
+        liste_cases.remove('default')
+        default_case = self.model.get_model()['test cases'].get(
+            'default', default_case
+        )
+        self.select_case = v.Select(
+            items=liste_cases,
+            v_model=default_case,
+            label='Test cases'
+        )
+        self.panels = v.ExpansionPanels(
+            v_model=None,
+            children=[ParametersPanel('Show parameters')]
+        )
         self.reset = v.Btn(children=['reset to default'], class_='d-none')
         self.menu = [self.select_case, self.panels, self.reset]
 
@@ -56,18 +75,23 @@ class TestCaseWidget:
         self.description = Markdown()
 
         plt.ioff()
-        self.fig = plt.figure(figsize=(12,6))
+        self.fig = plt.figure(figsize=(12, 6))
         self.fig.canvas.header_visible = False
 
-        tabs_content = [v.TabItem(children=[self.description]), v.TabItem(children=[self.fig.canvas])]
         self.tabs = v.Tabs(
             v_model=None,
-            children=[v.Tab(children=['Description']),
-                        v.Tab(children=['Reference results'])]
-                        + tabs_content
+            children=[
+                v.Tab(children=['Description']),
+                v.Tab(children=['Reference results']),
+                v.TabItem(children=[self.description]),
+                v.TabItem(children=[self.fig.canvas]),
+            ]
         )
 
         self.main = [self.tabs]
+
+        # Observe the change of model
+        self.model.select_model.observe(self.change_model, 'v-model')
 
         # Add the widget events
         self.reset.on_event('click', self.reset_btn)
@@ -151,3 +175,17 @@ class TestCaseWidget:
         """
         return self.cases[self.select_case.v_model]
 
+    def change_model(self, change):
+        """
+        if the model is changed, update the test_cases
+        """
+        print("toto")
+        liste_cases = list(
+            self.model.get_model()['test cases'].keys()
+        )
+        liste_cases.remove('default')
+        print(liste_cases)
+        self.select_case.items = liste_cases
+        self.select_case.v_model = liste_cases[0]
+        # update the case
+        self.change_case(None)

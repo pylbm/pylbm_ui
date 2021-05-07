@@ -11,12 +11,39 @@ import sys
 import ipyvuetify as v
 from .widgets import *
 
-from schema import cases, default_case, known_cases
+from schema import cases  # , default_case, known_cases
+
+
+################################################################
+# TO BE REMOVED
+################################################################
+def modify_format_case(case):
+    c = {}
+    kc = {}
+    for _, v in case.items():  # loop over Dimension
+        for _, vv in v.items():  # loop over model
+            lc = {}
+            lkc = {}
+            dtc = vv.get('test cases', None)
+            for name, vname in dtc.items():
+                if name != 'default':
+                    # print(name)
+                    lc[name] = vname['test case']
+                    lkc[vname['test case']] = vname['schemes']
+            c.update(lc)
+            kc.update(lkc)
+    return c, kc
+import copy
+cases_new = copy.deepcopy(cases)
+cases, known_cases = modify_format_case(cases)
+default_case = 'Sod'
+################################################################
 
 
 def main():
 
-    tc = TestCaseWidget(cases, default_case)
+    mc = ModelWidget(cases_new)
+    tc = TestCaseWidget(mc, cases, default_case)
     lb = LBSchemeWidget(tc, known_cases)
 
     stability =  StabilityWidget(tc, lb)
@@ -29,8 +56,20 @@ def main():
             self.menu = []
             self.main = [out]
 
-    tab_widgets = [tc, lb, stability, simulation, parametric, posttreatment, DebugWidget()]
-    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study', 'Post treatment', 'Debug']
+    tab_widgets = [
+        mc,
+        tc, lb,
+        stability, simulation,
+        parametric, posttreatment,
+        DebugWidget()
+    ]
+    tab_titles = [
+        'Model',
+        'Test case', 'Scheme',
+        'Linear stability', 'LBM Simulation',
+        'Parametric study', 'Post treatment',
+        'Debug'
+    ]
 
     tab = v.Tabs(
         v_model=0,
@@ -67,21 +106,35 @@ def main():
             ) for m in widget.menu
         ]
         content.children = widget.main
-        
-        if tab_id >= 2 and tab_id < 5:
-            resume.children = [
-                v.Btn(
-                    class_='ma-2 gray',
-                    children=[f"Test case:{tc.select_case.v_model}"]
-                ),
-                v.Btn(
-                    class_='ma-2 gray',
-                    children=[f"Scheme: {lb.select_case.v_model}"]
+
+        res_child = []
+        if tab_id < 6:
+            if tab_id >= 1:
+                res_child.append(
+                    v.Btn(
+                        class_='ma-2 gray',
+                        children=[
+                            f"{mc.select_dim.v_model}: " + 
+                            f"{mc.select_model.v_model}"
+                        ]
+                    )
                 )
-            ]
-        else:
-            resume.children = []
-        if tab_id == 5:
+            if tab_id >= 2:
+                res_child.append(
+                    v.Btn(
+                        class_='ma-2 gray',
+                        children=[f"Test case:{tc.select_case.v_model}"]
+                    )
+                )
+            if tab_id >= 3:
+                res_child.append(
+                    v.Btn(
+                        class_='ma-2 gray',
+                        children=[f"Scheme: {lb.select_case.v_model}"]
+                    )
+                )
+        resume.children = res_child
+        if tab_id == 6:
             posttreatment.update(None)
 
     tab_change(None)
@@ -94,7 +147,8 @@ def main():
             v.Row(
                 children=[
                     v.Img(
-                        src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg',
+                        # src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg',
+                        src='img/pylbm_with_text.svg',
                         max_width=250, class_='ma-5'
                     )
                 ],

@@ -5,6 +5,7 @@
 #
 # License: BSD 3 clause
 
+from .model import ModelWidget
 from .test_case import TestCaseWidget
 from .lb_scheme import LBSchemeWidget
 from .stability import StabilityWidget

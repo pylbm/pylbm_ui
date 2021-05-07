@@ -12,6 +12,7 @@ from ...equation_type import EquationType
 
 
 class Transport1D(EquationType):
+    name='Advection with constant velocity'
     u = Symbol('u')
     c = Symbol('c')
     NonReflexiveOutlet='NonReflexiveOutlet'
@@ -23,3 +24,10 @@ class Transport1D(EquationType):
             'mass': self.u,
         }
         return fields
+
+    def get_description(self):
+        return """
+The transport equation in dimension 1 is
+the simplest model of hyperbolic equation.
+
+        """

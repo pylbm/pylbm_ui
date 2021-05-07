@@ -13,6 +13,7 @@ from .debug import debug
 from .pylbmwidget import Markdown, ParametersPanel
 from .message import Message
 
+
 @debug
 class LBSchemeWidget:
     def __init__(self, test_case, known_cases):

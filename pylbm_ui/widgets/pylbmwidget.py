@@ -161,7 +161,6 @@ class Markdown(v.Layout):
                 MathSvgExtension()
             ]
         )
-        print(mkd)
         with self.out:
             self.out.clear_output()
             ipydisplay.display(ipydisplay.HTML(mkd))

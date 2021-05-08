@@ -43,7 +43,7 @@ default_case = 'Sod'
 def main():
 
     mc = ModelWidget(cases_new)
-    tc = TestCaseWidget(mc, cases, default_case)
+    tc = TestCaseWidget(mc)
     lb = LBSchemeWidget(tc, known_cases)
 
     stability =  StabilityWidget(tc, lb)

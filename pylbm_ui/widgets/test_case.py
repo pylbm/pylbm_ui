@@ -16,7 +16,7 @@ from .pylbmwidget import Markdown, ParametersPanel, out
 
 @debug
 class TestCaseWidget:
-    def __init__(self, model, cases, default_case):
+    def __init__(self, model):
         """
         Widget definition for test cases.
 
@@ -39,9 +39,9 @@ class TestCaseWidget:
 
         """
         self.model = model
-        self.default_cases = cases
+        self.default_cases = model.cases
         # make a copy to not modify the input instances
-        self.cases = copy.deepcopy(cases)
+        self.cases = copy.deepcopy(model.cases)
         self.parameters = {}
 
         ##
@@ -53,9 +53,8 @@ class TestCaseWidget:
         liste_cases = list(
             self.model.get_model()['test cases'].keys()
         )
-        liste_cases.remove('default')
-        default_case = self.model.get_model()['test cases'].get(
-            'default', default_case
+        default_case = self.model.get_model().get(
+            'default case', liste_cases[0]
         )
         self.select_case = v.Select(
             items=liste_cases,
@@ -91,7 +90,8 @@ class TestCaseWidget:
         self.main = [self.tabs]
 
         # Observe the change of model
-        self.model.select_model.observe(self.change_model, 'v-model')
+        self.model.select_dim.observe(self.change_model, 'v_model')
+        self.model.select_model.observe(self.change_model, 'v_model')
 
         # Add the widget events
         self.reset.on_event('click', self.reset_btn)
@@ -105,8 +105,7 @@ class TestCaseWidget:
         replaced by the origin test case to recover the default
         parameters.
         """
-        case = self.select_case.v_model
-        self.cases[case] = copy.deepcopy(self.default_cases[case])
+        self.set_case(self.get_default_case())
         self.change_case(None)
 
     def change_param(self, change):
@@ -115,9 +114,8 @@ class TestCaseWidget:
         and show the reset button if yes.
         Plot the reference solution if it exists.
         """
-        icase = self.select_case.v_model
-        case = self.cases[icase]
-        default_case = self.default_cases[icase]
+        case = self.get_case()
+        default_case = self.get_default_case()
 
         # check if the parameters of the current case are the
         # same of the default one.
@@ -153,39 +151,61 @@ class TestCaseWidget:
         When the test case is changed, we have to update the description
         of the test case, make a new parameter lists in the menu.
         """
-        with out:
-            self.panels.children[0].unbind(self.change_param)
-            itab = self.tabs.v_model
-            ipanel = self.panels.v_model
-            self.description.update_content(self.cases[self.select_case.v_model].description)
-            self.parameters = schema_to_widgets(
-                self.parameters,
-                self.cases[self.select_case.v_model]
-            )
-            self.panels.children[0].update(self.parameters.values())
-            self.panels.children[0].bind(self.change_param)
-            self.tabs.v_model = itab
-            self.panels.v_model = ipanel
+        case = self.get_case()
+        self.panels.children[0].unbind(self.change_param)
+        itab = self.tabs.v_model
+        ipanel = self.panels.v_model
+        self.description.update_content(
+            case.description
+        )
+        self.parameters = schema_to_widgets(
+            self.parameters,
+            case
+        )
+        self.panels.children[0].update(self.parameters.values())
+        self.panels.children[0].bind(self.change_param)
+        self.tabs.v_model = itab
+        self.panels.v_model = ipanel
 
-            self.change_param(None)
+        self.change_param(None)
 
     def get_case(self):
         """
         Return the current case.
         """
-        return self.cases[self.select_case.v_model]
+        model = self.cases[
+            self.model.get_dim()
+        ][self.model.select_model.v_model]
+        return model['test cases'][self.select_case.v_model]['test case']
+
+    def get_default_case(self):
+        """
+        Return the current case.
+        """
+        model = self.model.get_model()
+        return model['test cases'][self.select_case.v_model]['test case']
+
+    def set_case(self, icase):
+        """set the current case to icase"""
+        case = self.cases[
+            self.model.get_dim()
+        ][self.model.select_model.v_model]['test cases'][
+            self.select_case.v_model
+        ]
+        case['test case'] = icase
 
     def change_model(self, change):
         """
         if the model is changed, update the test_cases
         """
-        print("toto")
         liste_cases = list(
             self.model.get_model()['test cases'].keys()
         )
-        liste_cases.remove('default')
         print(liste_cases)
+        default_case = self.model.get_model().get(
+            'default case', liste_cases[0]
+        )
         self.select_case.items = liste_cases
-        self.select_case.v_model = liste_cases[0]
+        self.select_case.v_model = default_case
         # update the case
         self.change_case(None)

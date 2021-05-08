@@ -56,8 +56,8 @@ from .D2q4444 import D2Q4444
 
 cases = {
     'model': Euler2D,
+    'default case': 'Wedge Ma=2.5',
     'test cases': {
-        'default': 'Wedge Ma=2.5',
         'Wedge Ma=2.5': {
             'test case': Wedge_Ma2p5,
             'schemes': [

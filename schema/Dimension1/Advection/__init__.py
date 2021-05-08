@@ -30,8 +30,8 @@ from .D1q2 import D1Q2
 
 cases = {
     'model': Transport1D,
+    'default case': 'Bump_C0',
     'test cases': {
-        'default': 'Bump_C0',
         'Bump_disc': {
             'test case': Bump_discont,
             'schemes': [

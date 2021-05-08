@@ -138,8 +138,8 @@ from .D1q3L2_0 import D1Q3L2
 
 cases = {
     'model': Euler1D,
+    'default case': 'Sod',
     'test cases': {
-        'default': 'Sod',
         'Sod': {
             'test case': Sod_1D,
             'schemes': [

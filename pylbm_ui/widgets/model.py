@@ -10,9 +10,11 @@ import ipyvuetify as v
 import copy
 
 from ..utils import schema_to_widgets
-from .pylbmwidget import Markdown, ParametersPanel, out
+from .debug import debug
+from .pylbmwidget import Markdown, ParametersPanel
 
 
+@debug
 class ModelWidget:
     def __init__(self, cases):
         """
@@ -32,10 +34,9 @@ class ModelWidget:
         where a description of the model is given.
 
         """
-        # make a copy to not modify the input instances
-        self.cases = copy.deepcopy(cases)
-        self.default_dimension = next(iter(self.cases))
-        self.default_model = next(iter(self.cases[self.default_dimension]))
+        self.cases = cases
+        default_dimension = next(iter(self.cases))
+        default_model = next(iter(self.cases[default_dimension]))
 
         ##
         ## The menu
@@ -44,13 +45,13 @@ class ModelWidget:
         # widget to select the model
         self.select_dim = v.Select(
             items=list(self.cases.keys()),
-            v_model=self.default_dimension,
+            v_model=default_dimension,
             label='Spatial dimension',
             # append_icon='mdi-numeric'
         )
         self.select_model = v.Select(
-            items=list(self.cases[self.default_dimension].keys()),
-            v_model=self.default_model,
+            items=list(self.cases[default_dimension].keys()),
+            v_model=default_model,
             label='Model'
         )
         self.menu = [self.select_dim, self.select_model]
@@ -85,14 +86,16 @@ class ModelWidget:
         When the dimension is changed, we have to update the description
         of the model.
         """
-        with out:
-            self.select_model.items = list(
-                self.cases[self.select_dim.v_model].keys()
-            )
+        self.select_model.items = list(
+            self.cases[self.select_dim.v_model].keys()
+        )
+        self.select_model.v_model = self.select_model.items[0]
+
+    def get_dim(self):
+        """Return the current dimension"""
+        return self.select_dim.v_model
 
     def get_model(self):
-        """
-        Return the current model.
-        """
-        return self.cases[self.select_dim.v_model][self.select_model.v_model]
+        """Return the current model."""
+        return self.cases[self.get_dim()][self.select_model.v_model]
 

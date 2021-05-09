@@ -36,7 +36,11 @@ class Bump(HashBaseModel):
         init = {
             self.equation.u: (
                 bump_init,
-                (self.reg, self.x_top, self.width_bump)
+                (
+                    self.reg,
+                    self.x_top, self.width_bump,
+                    self.u_bottom, self.u_top
+                )
             )
         }
         return {

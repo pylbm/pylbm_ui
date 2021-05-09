@@ -14,7 +14,6 @@ from ...utils import LBM_scheme, RelaxationParameter
 
 class D1Q2(LBM_scheme):
     s_u: RelaxationParameter('s_u')
-    
 
     equation = Transport1D()
     dim = 1

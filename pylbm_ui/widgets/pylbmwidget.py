@@ -11,8 +11,6 @@ from traitlets import Unicode
 import ipywidgets as widgets
 import IPython.display as ipydisplay
 
-from .mdx_math_svg import MathSvgExtension
-
 out = widgets.Output()
 
 
@@ -124,14 +122,22 @@ class Markdown(v.Layout):
 
         self.out = widgets.Output()
 
+        extension_configs = {
+            'mdx_math_svg': {
+                'inline_class': 'math',
+                'display_class': 'math'
+            }
+        }
+
         mkd = markdown(
             mkd_str,
             extensions=[
                 # 'tables',
                 'fenced_code',
                 'sane_lists',
-                MathSvgExtension()
-            ]
+                'mdx_math_svg'
+            ],
+            extension_configs=extension_configs
         )
 
         with self.out:
@@ -152,14 +158,23 @@ class Markdown(v.Layout):
         )
 
     def update_content(self, mkd_str):
+
+        extension_configs = {
+            'mdx_math_svg': {
+                'inline_class': 'math',
+                'display_class': 'math'
+            }
+        }
+
         mkd = markdown(
             mkd_str,
             extensions=[
                 # 'tables',
                 'fenced_code',
                 'sane_lists',
-                MathSvgExtension()
-            ]
+                'mdx_math_svg'
+            ],
+            extension_configs=extension_configs
         )
         with self.out:
             self.out.clear_output()

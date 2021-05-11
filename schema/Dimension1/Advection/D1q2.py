@@ -4,7 +4,7 @@
 #     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
 #
 # License: BSD 3 clause
-from pydantic import BaseModel, Field
+# from pydantic import BaseModel, Field
 import sympy as sp
 import pylbm
 import traitlets
@@ -19,9 +19,6 @@ class D1Q2(LBM_scheme):
     dim = 1
     name = 'D1Q2'
     tex_name = r'$D_1Q_{{2}}$'
-
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
 
     def get_required_param(self):
         return [self.equation.c]
@@ -52,6 +49,7 @@ class D1Q2(LBM_scheme):
                 la_: la,
                 s_u_: s_u,
                 sigma_u: 1/s_u_-.5,
+                
             },
             'generator': 'numpy'
         }

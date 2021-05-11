@@ -14,37 +14,11 @@ from .widgets import *
 from schema import cases  # , default_case, known_cases
 
 
-################################################################
-# TO BE REMOVED
-################################################################
-def modify_format_case(case):
-    c = {}
-    kc = {}
-    for _, v in case.items():  # loop over Dimension
-        for _, vv in v.items():  # loop over model
-            lc = {}
-            lkc = {}
-            dtc = vv.get('test cases', None)
-            for name, vname in dtc.items():
-                if name != 'default':
-                    # print(name)
-                    lc[name] = vname['test case']
-                    lkc[vname['test case']] = vname['schemes']
-            c.update(lc)
-            kc.update(lkc)
-    return c, kc
-import copy
-cases_new = copy.deepcopy(cases)
-cases, known_cases = modify_format_case(cases)
-default_case = 'Sod'
-################################################################
-
-
 def main():
 
-    mc = ModelWidget(cases_new)
+    mc = ModelWidget(cases)
     tc = TestCaseWidget(mc)
-    lb = LBSchemeWidget(tc, known_cases)
+    lb = LBSchemeWidget(tc)
 
     stability =  StabilityWidget(tc, lb)
     simulation = SimulationWidget(tc, lb)
@@ -114,7 +88,7 @@ def main():
                     v.Btn(
                         class_='ma-2 gray',
                         children=[
-                            f"{mc.select_dim.v_model}: " + 
+                            f"{mc.select_category.v_model}: " + 
                             f"{mc.select_model.v_model}"
                         ]
                     )

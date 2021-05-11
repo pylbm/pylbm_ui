@@ -35,67 +35,70 @@ class ModelWidget:
 
         """
         self.cases = cases
-        default_dimension = next(iter(self.cases))
-        default_model = next(iter(self.cases[default_dimension]))
+        default_category = next(iter(self.cases))
 
         ##
         ## The menu
         ##
 
         # widget to select the model
-        self.select_dim = v.Select(
+        self.select_category = v.Select(
             items=list(self.cases.keys()),
-            v_model=default_dimension,
-            label='Spatial dimension',
-            # append_icon='mdi-numeric'
+            v_model=default_category,
+            label='Category',
         )
         self.select_model = v.Select(
-            items=list(self.cases[default_dimension].keys()),
-            v_model=default_model,
+            items=[],
+            v_model=None,
             label='Model'
         )
-        self.menu = [self.select_dim, self.select_model]
+        self.menu = [self.select_category, self.select_model]
 
         ##
         ## The main
         ##
 
-        # self.description = Markdown()
+        self.description = Markdown()
 
-        # plt.ioff()
-        # self.fig = plt.figure(figsize=(12,6))
-        # self.fig.canvas.header_visible = False
+        self.tabs = v.Tabs(
+            v_model=None,
+            children=[
+                v.Tab(children=['Description']),
+                v.TabItem(children=[self.description]),
+            ]
+        )
 
-        # tabs_content = [v.TabItem(children=[self.description]), v.TabItem(children=[self.fig.canvas])]
-        # self.tabs = v.Tabs(
-        #     v_model=None,
-        #     children=[v.Tab(children=['Description']),
-        #                 v.Tab(children=['Reference results'])]
-        #                 + tabs_content
-        # )
-
-        # self.main = [self.tabs]
-        self.main = []
+        self.main = [self.tabs]
 
         # Add the widget events
-        self.select_dim.observe(self.change_dim, 'v_model')
-        self.change_dim(None)
+        self.select_category.observe(self.change_category, 'v_model')
+        self.select_model.observe(self.change_model, 'v_model')
 
-    def change_dim(self, change):
+        # update the category to fix the default model
+        self.change_category(None)
+
+    def get_category(self):
+        """Return the current category"""
+        return self.select_category.v_model
+
+    def change_category(self, change):
         """
-        When the dimension is changed, we have to update the description
-        of the model.
+        When the category is changed, 
+        we have to update the list of models.
         """
         self.select_model.items = list(
-            self.cases[self.select_dim.v_model].keys()
+            self.cases[self.get_category()].keys()
         )
         self.select_model.v_model = self.select_model.items[0]
 
-    def get_dim(self):
-        """Return the current dimension"""
-        return self.select_dim.v_model
-
     def get_model(self):
         """Return the current model."""
-        return self.cases[self.get_dim()][self.select_model.v_model]
+        return self.cases[self.get_category()][self.select_model.v_model]
 
+    def change_model(self, change):
+        """
+        when the model is changed,
+        we have to update the description of the model.
+        """
+        model = self.get_model()['model']()
+        self.description.update_content(model.description)

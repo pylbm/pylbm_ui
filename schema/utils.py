@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import io
 from pydantic import BaseModel
 from pydantic.utils import Representation
+from pydantic.json import ENCODERS_BY_TYPE
+
 import numbers
 import sympy as sp
 from copy import deepcopy
@@ -35,26 +37,16 @@ def define_cases(filename, modulename):
 
     cases: dictionary
         the cases of the submodules
-
-    known_cases: dictionary
-        the known_cases of the submodules
-
     """
     cases = {}
     gbl = globals()
     package_dir = Path(filename).resolve().parent
-    
     for _, module_name, ispkg in iter_modules([package_dir]):
         if ispkg:
             module = f"{modulename}.{module_name}"
             gbl['md'] = import_module(module, package=None)
-            # cases.update(md.cases)
-            # known_cases.update(md.known_cases)
             cases[module_name] = md.cases
-            # known_cases[module_name] = md.known_cases
-    
     return cases
-
 
 
 def freeze(d):
@@ -66,6 +58,14 @@ def freeze(d):
 
 
 class HashBaseModel(BaseModel):
+    default_values = {}
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # duplicate the initial parameters to default_parameters
+        # This default_parameters are used to restart the scheme
+        self.default_values = kwargs
+
     def __hash__(self):
         set = frozenset((type(self),))
         set.union(freeze(self.__dict__))
@@ -91,7 +91,6 @@ class Scheme:
         for p in param:
             dico['parameters'][p] = state[p]
         scheme = pylbm.Scheme(dico)
-        # scheme = pylbm.Scheme(self.get_dictionary())
         stab = pylbm.Stability(scheme)
 
         consm0 = [0.] * len(stab.consm)
@@ -216,8 +215,6 @@ class RealParameterFinal:
 class LBM_scheme(HashBaseModel, Scheme):
     la: SchemeVelocity
 
-
-from pydantic.json import ENCODERS_BY_TYPE
 
 ENCODERS_BY_TYPE.update({
     SchemeVelocity: lambda o: o.value,

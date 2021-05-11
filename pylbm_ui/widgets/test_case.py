@@ -7,7 +7,6 @@
 
 import matplotlib.pyplot as plt
 import ipyvuetify as v
-import copy
 
 from ..utils import schema_to_widgets
 from .debug import debug
@@ -39,9 +38,6 @@ class TestCaseWidget:
 
         """
         self.model = model
-        self.default_cases = model.cases
-        # make a copy to not modify the input instances
-        self.cases = copy.deepcopy(model.cases)
         self.parameters = {}
 
         ##
@@ -49,16 +45,9 @@ class TestCaseWidget:
         ##
 
         # widget to select the test case
-        # liste_cases = list(self.cases.keys())
-        liste_cases = list(
-            self.model.get_model()['test cases'].keys()
-        )
-        default_case = self.model.get_model().get(
-            'default case', liste_cases[0]
-        )
         self.select_case = v.Select(
-            items=liste_cases,
-            v_model=default_case,
+            items=[],
+            v_model=None,
             label='Test cases'
         )
         self.panels = v.ExpansionPanels(
@@ -90,61 +79,54 @@ class TestCaseWidget:
         self.main = [self.tabs]
 
         # Observe the change of model
-        self.model.select_dim.observe(self.change_model, 'v_model')
+        self.model.select_category.observe(self.change_model, 'v_model')
         self.model.select_model.observe(self.change_model, 'v_model')
 
         # Add the widget events
         self.reset.on_event('click', self.reset_btn)
         self.select_case.observe(self.change_case, 'v_model')
         self.panels.children[0].bind(self.change_param)
+
+        # update the model to fix the default test case
+        self.change_model(None)
+
+    def change_model(self, change):
+        """
+        if the model is changed, update the test_cases
+        """
+        liste_cases = list(
+            self.model.get_model()['test cases'].keys()
+        )
+        default_case = self.model.get_model().get(
+            'default case', liste_cases[0]
+        )
+        self.select_case.items = liste_cases
+        self.select_case.v_model = default_case
+        # update the case to fix the parameters
         self.change_case(None)
 
-    def reset_btn(self, widget, event, data):
+    def get_dict_case(self):
         """
-        When the reset button is clicked, the current test case is
-        replaced by the origin test case to recover the default
-        parameters.
+        Return the dictionary of the current case.
         """
-        self.set_case(self.get_default_case())
-        self.change_case(None)
+        model = self.model.cases[
+            self.model.get_category()
+        ][self.model.select_model.v_model]
+        return model['test cases'][self.select_case.v_model]
 
-    def change_param(self, change):
+    def get_case(self):
         """
-        Check if the parameters are changed from the default
-        and show the reset button if yes.
-        Plot the reference solution if it exists.
+        Return the current case.
         """
-        case = self.get_case()
-        default_case = self.get_default_case()
+        dico = self.get_dict_case()
+        return dico['test case']
 
-        # check if the parameters of the current case are the
-        # same of the default one.
-        is_same = True
-        for k, v in self.parameters.items():
-            setattr(case, k, v.value)
-            attr = getattr(default_case, k)
-            if v.value != attr:
-                is_same = False
-
-        # if the parameters are different from the default one
-        # we show the reset button
-        if not is_same:
-            self.reset.class_ = ''
-        else:
-            self.reset.class_ = 'd-none'
-
-        # if the test case has a plot_ref_solution method
-        # call it to plot the exact solution
-        if hasattr(case, 'plot_ref_solution'):
-            for axe in self.fig.axes:
-                self.fig.delaxes(axe)
-            case.plot_ref_solution(self.fig)
-            self.fig.canvas.draw_idle()
-            self.tabs.children[1].disabled = False
-        else:
-            # disable the tab 'reference results'
-            self.tabs.children[1].disabled = True
-            self.tabs.v_model = 0
+    def get_schemes(self):
+        """
+        Return the schemes associated with the current case
+        """
+        dico = self.get_dict_case()
+        return dico['schemes']
 
     def change_case(self, change):
         """
@@ -169,43 +151,54 @@ class TestCaseWidget:
 
         self.change_param(None)
 
-    def get_case(self):
+    def change_param(self, change):
         """
-        Return the current case.
+        Check if the parameters are changed from the default
+        and show the reset button if yes.
+        Plot the reference solution if it exists.
         """
-        model = self.cases[
-            self.model.get_dim()
-        ][self.model.select_model.v_model]
-        return model['test cases'][self.select_case.v_model]['test case']
+        case = self.get_case()
+        default_values = case.default_values
 
-    def get_default_case(self):
-        """
-        Return the current case.
-        """
-        model = self.model.get_model()
-        return model['test cases'][self.select_case.v_model]['test case']
+        # check if the parameters of the current case are the
+        # same of the default one.
+        is_same = True
+        for k, v in self.parameters.items():
+            setattr(case, k, v.value)
+            attr = default_values.get(k, None)
+            if v.value != attr:
+                is_same = False
 
-    def set_case(self, icase):
-        """set the current case to icase"""
-        case = self.cases[
-            self.model.get_dim()
-        ][self.model.select_model.v_model]['test cases'][
-            self.select_case.v_model
-        ]
-        case['test case'] = icase
+        # if the parameters are different from the default one
+        # we show the reset button
+        if not is_same:
+            self.reset.class_ = ''
+        else:
+            self.reset.class_ = 'd-none'
 
-    def change_model(self, change):
+        # if the test case has a plot_ref_solution method
+        # call it to plot the exact solution
+        if hasattr(case, 'plot_ref_solution'):
+            for axe in self.fig.axes:
+                self.fig.delaxes(axe)
+            case.plot_ref_solution(self.fig)
+            self.fig.canvas.draw_idle()
+            self.tabs.children[1].disabled = False
+        else:
+            # disable the tab 'reference results'
+            self.tabs.children[1].disabled = True
+            self.tabs.v_model = 0
+
+    def reset_btn(self, widget, event, data):
         """
-        if the model is changed, update the test_cases
+        When the reset button is clicked, the current test case is
+        replaced by the origin test case to recover the default
+        parameters.
         """
-        liste_cases = list(
-            self.model.get_model()['test cases'].keys()
-        )
-        print(liste_cases)
-        default_case = self.model.get_model().get(
-            'default case', liste_cases[0]
-        )
-        self.select_case.items = liste_cases
-        self.select_case.v_model = default_case
-        # update the case
+        case = self.get_case()
+        # update the parameters of the scheme with
+        # those defined in default_values variable
+        for k, v in self.parameters.items():
+            v.v_model = case.default_values.get(k, None)
         self.change_case(None)
+        self.select_case.notify_change({'name': 'v_model', 'type': 'change'})

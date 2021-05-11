@@ -35,3 +35,7 @@ class Euler1D(EquationType):
         )
 
         return fields
+
+    @property
+    def description(self):
+        return ""

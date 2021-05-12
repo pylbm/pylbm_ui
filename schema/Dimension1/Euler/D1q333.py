@@ -164,7 +164,7 @@ that can be used for inviscid flows in dimension one.
 The D1Q333 is a vectorial scheme with one particle distribution function
 for each conserved moment (the mass, the momentum, and the total energy).
 Each particle distribution function is discretized with three velocities:
-$0$, $\\lambda$, and $-\\lambda$ where $\\lambda$ is the lattice velocity.
+$0$, $\lambda$, and $-\lambda$ where $\lambda$ is the lattice velocity.
 
 This scheme has more degrees of freedom than the D1Q222: the second-order operator corresponding to the numerical diffusion can be modified by choosing the equilibrium value of the second-order moments. However, the stability zone according to the parameters of the scheme is not easy to determine.
 
@@ -177,33 +177,48 @@ Two versions of this scheme are proposed: the D1Q333_0 and the D1Q333_1 that dif
 The equilibrium value of all the non-conserved moments are fixed in this version of the D1Q333. 
 Seven parameters are left free:
 
-* the **lattice velocity** denoted by $\\lambda$;
-* the **three relaxation parameters** of first-order $s_{\\rho}$, $s_u$, and $s_p$;
-* the **three relaxation parameters** of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{px}$.
+* the **lattice velocity** denoted by $\lambda$;
+* the **three relaxation parameters of first-order** $s_{\\rho}$ , $s_u$ , and $s_p$ ;
+* the **three relaxation parameters of second-order** $s_{\\rho x}$ , $s_{ux}$ , and $s_{px}$ .
 
-1. *The lattice velocity $\\lambda$*
+1. *The lattice velocity $\lambda$*
 
 > The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
 >
 > This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
 >
-> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
-> - The parameter $\\lambda$ should be as small as possible while preserving the stability.
+> - The parameter $\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\lambda$ should be as small as possible while preserving the stability.
 
-2. *The relaxation parameters of first-order $s_{\\rho}$, $s_u$, and $s_p$*
+2. *The relaxation parameters of first-order $s_{\\rho}$ , $s_u$ , and $s_p$*
 
-> These three relaxation parameters are involved in the relaxation towards equilibrium for the three first-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three first-order non-conserved moments of the scheme. These parameters should take real values between $0$ and $2$.
 >
-> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
+> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$ , $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
 >
-> - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
+> - Increasing the values of the parameters $s_{\\rho}$ , $s_u$ , and $s_p$ decreases the numerical diffusion;
 > - Decreasing the values improves the stability.
 
-3. *The relaxation parameters of second-order $s_{\\rho x}$, $s_{ux}$, and $s_{px}$*
+3. *The relaxation parameters of second-order $s_{\\rho x}$ , $s_{ux}$ , and $s_{px}$*
 
-> These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+> These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between $0$ and $2$.
 >
 > These parameters do not play a role in the second-order numerical diffusion but in the stability. A good choice is often to take these three parameters equal to 1 except when the pressure can be closed to 0.
+
+---
+
+**How to choose the parameters ?**
+
+Even if the equivalent equations give only an asymptotic representation of the scheme, the structure of the second-order operator (corresponding to a numerical diffusion) is very helpfull for selecting the several parameters.
+The complete structure can be computed using the tab `Equivalent equations`.
+
+For each relaxation parameter $s \in \lbrace s_{\\rho}, s_u, s_p \\rbrace$ , the Henon parameter is defined by $\sigma = 1/s - 1/2$ and the amplitude of the associated numerical diffusion is given by $\Delta x \lambda\sigma$ , where $\Delta x$ is the space step.
+
+> &rarr; the lattice velocity $\lambda$ has to be large enough to ensure that the second-order operator is positive (in the sense of the parabolic system);
+>
+> &rarr; the relaxation parameters of first-order should be chosen as close to $2$ as possible to minimise the effect of the numerical diffusion;
+>
+> &rarr; the relaxation parameters of second-order do not play a role in the numerical diffusion: a good compromise is to choose a value close to $1$.
 
 ---
 

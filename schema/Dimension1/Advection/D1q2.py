@@ -78,47 +78,60 @@ class D1Q2(LBM_scheme):
     @property
     def description(self):
         return """
-The D1Q222 scheme is the smallest vectorial scheme
-that can be used for inviscid flows in dimension one.
+The D1Q2 scheme is the smallest scheme
+that can be used for the advection equation in dimension one.
 
 ---
 
-**Vectorial scheme**
+**The simplest scheme**
 
-The D1Q222 is a vectorial scheme with one particle distribution function
-for each conserved moment (the mass, the momentum, and the total energy).
-Each particle distribution function is discretized with two velocities:
-$\\lambda$ and $-\\lambda$ where $\\lambda$ is the lattice velocity.
+The D1Q2 is a scheme with one particle distribution function 
+discretized with two velocities:
+$\lambda$ and $-\lambda$ where $\lambda$ is the lattice velocity.
 
 The main interest of this scheme is its simplicity.
-This scheme is very rough and robust. However, the structure of the numerical diffusion cannot be modified to fit the physical diffusion operator of Navier-Stokes.
+This scheme is very rough and robust. However, the structure of the numerical diffusion cannot be modified.
 
 ---
 
 **Parameters**
 
-Four parameters are left free:
+Only two parameters are left free:
 
-* the **lattice velocity** denoted by $\\lambda$;
-* the **three relaxation parameters** $s_{\\rho}$, $s_u$, and $s_p$.
+* the **lattice velocity** denoted by $\lambda$;
+* the **relaxation parameter** $s$.
 
-1. *The lattice velocity $\\lambda$*
+1. *The lattice velocity $\lambda$*
 
 > The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
 >
 > This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
 >
-> - The parameter $\\lambda$ has to be greater than all the physical velocities of the problem;
-> - The parameter $\\lambda$ should be as small as possible while preserving the stability.
+> - The parameter $\lambda$ has to be greater than all the physical velocities of the problem;
+> - The parameter $\lambda$ should be as small as possible while preserving the stability.
 
-2. *The relaxation parameters $s_{\\rho}$, $s_u$, and $s_p$*
+2. *The relaxation parameter $s$*
 
-> The three relaxation parameters are involved in the relaxation towards equilibrium for the three non-conserved moments of the scheme. These parameters should take real values between 0 and 2.
+> The relaxation parameter is involved in the relaxation towards equilibrium for the non-conserved moment of the scheme. This parameter should take a real value between $0$ and $2$.
 >
-> These parameters play also a role in the numerical diffusion: $s_{\\rho}$ (*resp.* $s_u$, $s_p$) appears in the numerical diffusion operator of the mass (*resp.* momentum, energy) conservation through the Henon parameter.
+> This parameter plays also a role in the numerical diffusion through the Henon parameter denoted by $\sigma=1/s-1/2$.
 >
-> - Increasing the values of the parameters $s_{\\rho}$, $s_u$, and $s_p$ decreases the numerical diffusion;
-> - Decreasing the values improves the stability.
+> - Increasing the value of the parameters $s$ decreases the numerical diffusion;
+> - Decreasing the value improves the stability.
+
+---
+
+The D1Q2 can be used to simulate the advection equation as its second-order equivalent equation (*See the tab `Equivalent equations` for more details*) reads
+
+$$
+    \partial_t u + c \partial_x u = \Delta t \sigma (\lambda^2 - c^2) \partial_{xx} u + \mathcal{O}(\Delta t^2).
+$$
+
+where $\Delta t$ is the time step of the scheme.
+
+For this very simple scheme, we obtain through the second-order operator the following properties :
+> 1. the lattice velocity $\lambda$ must satisfy $\lambda \geq |c|$;
+> 2. the numerical diffusion is driven by the coefficient $\lambda\sigma(\lambda^2-c^2)$.
 
 ---
 

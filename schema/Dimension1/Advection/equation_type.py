@@ -40,6 +40,7 @@ class Transport1D(EquationType):
 
 The advection equation in dimension 1 is
 the simplest model of hyperbolic equation.
+
 Denoting $c$ a real constant, the scalar quantity $u(t, x)$,
 where $t$ is the time and $x$ the one-dimensional space variable,
 satisfies the advection equation

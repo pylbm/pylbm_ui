@@ -149,7 +149,6 @@ class LBSchemeWidget:
         for k, v in self.parameters.items():
             attr = getattr(case, k)
             if hasattr(attr, 'value'):
-                print(v)
                 attr.value = v.value
             else:
                 attr = v.value
@@ -183,7 +182,6 @@ class LBSchemeWidget:
         # same of the default one.
         is_same = True
         for k, v in self.parameters.items():
-            setattr(case, k, v.value)
             attr = default_values.get(k, None)
             if v.value != attr:
                 is_same = False
@@ -229,5 +227,5 @@ class LBSchemeWidget:
         for k, v in self.parameters.items():
             v.v_model = case.default_values.get(k, None)
 
-        self.change_case(None)
+        self.parameters_widget2scheme()
         self.select_case.notify_change({'name': 'v_model', 'type': 'change'})

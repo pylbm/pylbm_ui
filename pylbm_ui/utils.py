@@ -19,7 +19,8 @@ class FloatField(v.TextField, FloatMixin):
 
     @property
     def value(self):
-        return float(self.v_model)
+        out = float(self.v_model) if self.v_model != '' else 0.
+        return out
 
     @value.setter
     def value(self, v):
@@ -35,7 +36,8 @@ class IntField(v.TextField, IntMixin):
 
     @property
     def value(self):
-        return int(self.v_model)
+        out = int(self.v_model) if self.v_model != '' else 0
+        return out
 
     @value.setter
     def value(self, v):

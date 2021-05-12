@@ -8,7 +8,7 @@
 # model
 from .equation_type import Transport1D
 # test cases
-from .tc_bump import Bump_discont, Bump_C0
+from .tc_bump import Bump_discont, Bump_C0, Bump_C1
 # schemes
 from .D1q2 import D1Q2
 
@@ -24,6 +24,12 @@ cases = {
         },
         'Bump_C0': {
             'test case': Bump_C0,
+            'schemes': [
+                D1Q2(la=2, s_u=1.9),
+            ]
+        },
+        'Bump_C1': {
+            'test case': Bump_C1,
             'schemes': [
                 D1Q2(la=2, s_u=1.9),
             ]

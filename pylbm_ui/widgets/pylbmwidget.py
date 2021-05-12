@@ -11,6 +11,8 @@ from traitlets import Unicode
 import ipywidgets as widgets
 import IPython.display as ipydisplay
 
+from .message import Message
+
 out = widgets.Output()
 
 
@@ -121,33 +123,7 @@ class Markdown(v.Layout):
     def __init__(self, mkd_str="", **kwargs):
 
         self.out = widgets.Output()
-
-        extension_configs = {
-            'mdx_math_svg': {
-                'inline_class': 'math',
-                'display_class': 'math'
-            }
-        }
-
-        mkd = markdown(
-            mkd_str,
-            extensions=[
-                # 'tables',
-                'fenced_code',
-                'sane_lists',
-                'mdx_math_svg'
-            ],
-            extension_configs=extension_configs
-        )
-
-        with self.out:
-            ipydisplay.display(ipydisplay.HTML(mkd))
-
-        # create a Html widget
-        # class MyHTML(v.VuetifyTemplate):
-        #     template = Unicode(f'<div>{mkd}</div>').tag(sync=True)
-
-        # self.content = MyHTML()
+        self.update_content(mkd_str)
 
         super().__init__(
             row=True,
@@ -178,9 +154,13 @@ class Markdown(v.Layout):
         )
         with self.out:
             self.out.clear_output()
+            #### TO BE REMOVED WITH IPYTHON 7.23
             ipydisplay.display(ipydisplay.HTML(mkd))
-
-        # self.content.template = f'<div>{mkd}</div>'
+            #### AND REPLACED BY
+            # ipydisplay.display(
+            #     Message('Compile the LaTeX script')
+            # )
+            # ipydisplay.display(ipydisplay.HTML(mkd), clear=True)
 
 
 class Tooltip(v.Tooltip):

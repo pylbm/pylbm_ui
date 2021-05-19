@@ -7,7 +7,6 @@
 
 import ipyvuetify as v
 import os
-import markdown
 import plotly.graph_objects as go
 import numpy as np
 from skopt.sampler import Lhs, Sobol, Halton, Hammersly

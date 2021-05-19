@@ -30,7 +30,7 @@ class tc_2D_wedge(HashBaseModel):
     equation = Euler2D()
     name = 'Wedge2D'
     BCType  = 'none'
-    description = 'none'
+    # description = 'none'
     responses = {}
 
     def get_dictionary(self):
@@ -117,10 +117,10 @@ Wedge_Ma2p5 = tc_2D_wedge(
 
 
 
-    description =
-"""Wedge 2D is a 2D test case proposed in....
+#     description =
+# """Wedge 2D is a 2D test case proposed in....
 
-"""
+# """
     )
 Wedge_Ma8 = tc_2D_wedge(
     name = 'Wedge_Ma8',
@@ -136,10 +136,10 @@ Wedge_Ma8 = tc_2D_wedge(
 
 
 
-    description =
-"""Wedge 2D is a 2D test case proposed in....
+#     description =
+# """Wedge 2D is a 2D test case proposed in....
 
-"""
+# """
     )
 
 

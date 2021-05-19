@@ -26,7 +26,7 @@ from importlib import import_module
 def define_cases(filename, modulename):
     """
     return the cases and known_cases of the local submodules
-    
+
     Parameters
     ----------
     filename: string
@@ -59,6 +59,7 @@ def freeze(d):
 
 class HashBaseModel(BaseModel):
     default_values = {}
+    description_file = 'none'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -71,7 +72,24 @@ class HashBaseModel(BaseModel):
         set.union(freeze(self.__dict__))
         return hash(set)
 
+    @property
+    def description(self):
+        import os
+        import inspect
 
+        full_path = inspect.getfile(self.__class__)
+        path = os.path.dirname(full_path)
+
+        if self.description_file != 'none':
+            html_filename = os.path.join(path, self.description_file)
+        else:
+            class_name = self.__class__.__name__.lower()
+            html_filename = os.path.join(path, f'{class_name}.html')
+
+        if os.path.exists(html_filename):
+            return open(html_filename).read()
+
+        return ''
 class Scheme:
     def get_information(self):
         scheme = pylbm.Scheme(self.get_dictionary())
@@ -221,4 +239,3 @@ ENCODERS_BY_TYPE.update({
     RelaxationParameterFinal: lambda o: o.value,
     RealParameterFinal: lambda o: o.value,
     })
-

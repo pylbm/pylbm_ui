@@ -11,7 +11,7 @@ import copy
 
 from ..utils import schema_to_widgets
 from .debug import debug
-from .pylbmwidget import Markdown, ParametersPanel
+from .pylbmwidget import HTML, ParametersPanel
 
 
 @debug
@@ -58,7 +58,7 @@ class ModelWidget:
         ## The main
         ##
 
-        self.description = Markdown()
+        self.description = HTML()
 
         self.tabs = v.Tabs(
             v_model=None,
@@ -83,7 +83,7 @@ class ModelWidget:
 
     def change_category(self, change):
         """
-        When the category is changed, 
+        When the category is changed,
         we have to update the list of models.
         """
         self.select_model.items = list(

@@ -30,7 +30,6 @@ class Bump(HashBaseModel):
     dim = 1
     equation = Transport1D()
     name = 'Bump'
-    description = 'none'
 
     def get_dictionary(self):
         init = {
@@ -121,11 +120,7 @@ Bump_discont = Bump(
     x_top=0.25, width_bump=0.125,
     duration=1.5,
     name='Bump discontinuous',
-    description="""
-Une description du cas test pour voir
-
-Mettre que l'on a des conditions aux limites périodiques
-    """
+    description_file='./bump_discont.html'
 )
 
 
@@ -136,7 +131,7 @@ Bump_C0 = Bump(
     x_top=0.25, width_bump=0.125,
     duration=1.5,
     name='Bump C0',
-    description=""
+    description_file='./bump_c0.html'
 )
 
 
@@ -147,5 +142,5 @@ Bump_C1 = Bump(
     x_top=0.25, width_bump=0.125,
     duration=1.5,
     name='Bump C1',
-    description=""
+    description_file='./bump_c1.html'
 )

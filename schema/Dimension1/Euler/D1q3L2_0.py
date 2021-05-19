@@ -30,7 +30,7 @@ class D1Q3L2(LBM_scheme):
         q = self.equation.q
         E = self.equation.E
         gamma = self.equation.gamma
-        
+
         la_, la = self.la.symb, self.la.value
         s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
         s_u_, s_u = self.s_u.symb, self.s_u.value
@@ -135,75 +135,3 @@ class D1Q3L2(LBM_scheme):
                 },
             },
         }
-
-    @property
-    def description(self):
-        return """
-The D1Q3L2 scheme is a LBM scheme
-with two levels of internal energy
-that can be used for inviscid flows in dimension one.
-
----
-
-**Scheme with internal energy levels**
-
-The D1Q3L2 is a scheme with two particle distribution functions, one for each internal energy level. The two internal energy levels are scaled by $\lambda^2$ ($\lambda$ is the lattice velocity) and the difference between their values is parametrized by $\\alpha$.
-
-Each particle distribution function is discretized with three velocities:
-$0$, $\lambda$, and $-\lambda$ where $\lambda$ is the lattice velocity.
-
-This scheme has exactly the same number of degrees of freedom than the D1Q222 but the second-order operator corresponding to the numerical diffusion is different: its contribution in the mass conservation equation vanishes.
-
----
-
-**Parameters**
-
-The equilibrium value of all the non-conserved moments are fixed.
-Five parameters are left free:
-
-* the **lattice velocity** denoted by $\lambda$;
-* the **three relaxation parameters** $s_{\\rho}$ , $s_u$ , and $s_p$ ;
-* the **difference between the levels of internal energy** $\\alpha$.
-
-1. *The lattice velocity $\lambda$*
-
-> The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.
->
-> This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.
->
-> - The parameter $\lambda$ has to be greater than all the physical velocities of the problem;
-> - The parameter $\lambda$ should be as small as possible while preserving the stability;
-
-2. *The relaxation parameters $s_{\\rho}$ , $s_u$ , and $s_p$*
-
-> These three parameters should take real values between $0$ and $2$. Two of these three relaxation parameters ($s_u$ and $s_p$) are involved in the relaxation towards equilibrium for the associated non-conserved moments.
-
-3. *The difference of internal energy levels $\\alpha$*
-
-> The parameter $\\alpha$ is involved in the second-order operator (the numerical diffusion), more precisely in the conservation equation of the energy. 
-
----
-
-**Warning**
-
-Choose the several parameters to ensure the stability of this scheme is not an easy task!
-
----
-
-**How to choose the parameters ?**
-
-Even if the equivalent equations give only an asymptotic representation of the scheme, the structure of the second-order operator (corresponding to a numerical diffusion) is very helpfull for selecting the several parameters.
-The complete structure can be computed using the tab `Equivalent equations`.
-
-For each relaxation parameter $s \in \lbrace s_u, s_p \\rbrace$ , the Henon parameter is defined by $\sigma = 1/s - 1/2$ and the amplitude of the associated numerical diffusion is given by $\Delta x \lambda\sigma$ , where $\Delta x$ is the space step.
-
-The second-order operator of the mass conservation equation vanishes: the Henon parameter associated to the mass does not play a role in the numerical diffusion.
-
-> &rarr; the lattice velocity $\lambda$ has to be large enough to ensure that the second-order operator is positive (in the sense of the parabolic system);
->
-> &rarr; the relaxation parameters should be chosen as close to $2$ as possible to minimise the effect of the numerical diffusion.
-
----
-
-*See the tabs `Linear Stability` and `Parametric Study` for more informations*.
-        """

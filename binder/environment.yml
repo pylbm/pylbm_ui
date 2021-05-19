@@ -7,8 +7,6 @@ dependencies:
   - ipyvuetify
   - ipympl
   - matplotlib
-  - markdown
-  - python-markdown-math
   - pydantic
   - scipy
   - jupyterlab
@@ -17,4 +15,3 @@ dependencies:
   - nodejs
   - plotly
   - voila
-  - lxml

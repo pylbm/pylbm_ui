@@ -33,7 +33,7 @@ class tc_2D_FFS(HashBaseModel):
     equation = Euler2D()
     name = 'FFS'
     BCType  = 'none'
-    description = 'none'
+    # description = 'none'
     responses = {}
 
     def get_dictionary(self):
@@ -126,10 +126,10 @@ FFS_Ma3 = tc_2D_FFS(
     gamma = 1.4,
     duration = 5.,
 
-    description =
-"""FFS 2D is a 2D test case proposed in....
+#     description =
+# """FFS 2D is a 2D test case proposed in....
 
-"""
+# """
     )
 
 

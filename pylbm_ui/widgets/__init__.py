@@ -13,3 +13,4 @@ from .simulation import SimulationWidget
 from .parametric_study import ParametricStudyWidget
 from .post_treatment import PostTreatmentWidget
 from .pylbmwidget import out
+from .debug import debug, debug_func

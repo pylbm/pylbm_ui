@@ -11,9 +11,50 @@ import sys
 import ipyvuetify as v
 from .widgets import *
 
-from schema import cases  # , default_case, known_cases
+from schema import cases
 
+@debug_func
+def get_information(tab_id, mc, tc, lb):
+    if tab_id == 0:
+        return []
 
+    items = [
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"{mc.select_category.v_model}: " + f"{mc.select_model.v_model}"
+            ],
+            class_='px-4 py-0'
+            )
+        ],
+        class_='mb-0'),
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"Test case: {tc.select_case.v_model}"
+            ],
+            class_='px-4 py-0',
+            )
+        ],
+        class_='mb-0'),
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"Scheme: {lb.select_case.v_model}"
+            ],
+            class_='px-4 py-0',
+            )
+        ],
+        class_='mb-0'),
+    ]
+
+    return [
+        v.Card(children=[
+            v.CardTitle(children=['Information'], class_='pb-1'),
+            v.List(children=items[0:min(tab_id, 3)],
+            dense=True,
+            class_='pa-0')
+        ])
+    ]
+
+@debug_func
 def main():
 
     mc = ModelWidget(cases)
@@ -62,52 +103,25 @@ def main():
     )
     content = v.Content(children=[])
 
-    resume = v.Html(
-        tag='div', class_='d-flax flex-column',
-        children=[],
-        nav=True,
-        v_model='drawer',
-    )
-
     def tab_change(change):
         tab_id = tab.v_model
+
+        items = []
+        if tab_id < 6:
+            items.extend(get_information(tab_id, mc, tc, lb))
+
         widget = tab_widgets[tab_id]
-        menu.children = [
+        items.extend([
             v.ListItem(
                 children=[
                     v.ListItemContent(children=[m])
                 ]
             ) for m in widget.menu
-        ]
+        ])
+
+        menu.children = items
         content.children = widget.main
 
-        res_child = []
-        if tab_id < 6:
-            if tab_id >= 1:
-                res_child.append(
-                    v.Btn(
-                        class_='ma-2 gray',
-                        children=[
-                            f"{mc.select_category.v_model}: " + 
-                            f"{mc.select_model.v_model}"
-                        ]
-                    )
-                )
-            if tab_id >= 2:
-                res_child.append(
-                    v.Btn(
-                        class_='ma-2 gray',
-                        children=[f"Test case:{tc.select_case.v_model}"]
-                    )
-                )
-            if tab_id >= 3:
-                res_child.append(
-                    v.Btn(
-                        class_='ma-2 gray',
-                        children=[f"Scheme: {lb.select_case.v_model}"]
-                    )
-                )
-        resume.children = res_child
         if tab_id == 6:
             posttreatment.update(None)
 
@@ -121,7 +135,6 @@ def main():
             v.Row(
                 children=[
                     v.Img(
-                        # src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg',
                         src='img/pylbm_with_text.svg',
                         max_width=250, class_='ma-5'
                     )
@@ -129,7 +142,6 @@ def main():
                 align='center',
                 justify='center'
             ),
-            resume,
             menu
         ],
         v_model=True,

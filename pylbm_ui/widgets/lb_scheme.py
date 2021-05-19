@@ -9,7 +9,7 @@ import ipyvuetify as v
 
 from ..utils import schema_to_widgets
 from .debug import debug
-from .pylbmwidget import Markdown, ParametersPanel
+from .pylbmwidget import HTML, ParametersPanel
 from .message import Message
 
 
@@ -63,7 +63,7 @@ class LBSchemeWidget:
         ##
         ## The main
         ##
-        self.description = Markdown()
+        self.description = HTML()
         self.properties = v.Layout()
         self.eq_pde = v.Layout()
 
@@ -117,7 +117,7 @@ class LBSchemeWidget:
 
     def change_test_case(self, change):
         """
-        If the test case is changed, 
+        If the test case is changed,
         update the default_cases and cases dictionary,
         update the selection widget and update the list of parameters.
         """

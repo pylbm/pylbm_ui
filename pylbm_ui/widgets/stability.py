@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..utils import schema_to_widgets, FloatField
-from .pylbmwidget import Markdown, ParametersPanel, out, Container
+from .pylbmwidget import Container
 from .dialog_form import Form, Item, Dialog, add_rule
 from .debug import debug
 

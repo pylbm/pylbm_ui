@@ -35,7 +35,7 @@ class tc_2D_implosion2D(HashBaseModel):
     equation = Euler2D()
     name = 'Implosion2D'
     BCType  = 'none'
-    description = 'none'
+    # description = 'none'
     responses = {}
 
     def get_dictionary(self):
@@ -136,8 +136,8 @@ Implosion2D_Symmetric = tc_2D_implosion2D(
     name = 'Implosion2D_Symmetric',
     BCType = "symmetric",
 
-    description =
-"""Implosion 2D is a 2D test case proposed in....
+#     description =
+# """Implosion 2D is a 2D test case proposed in....
 
-"""
+# """
 )

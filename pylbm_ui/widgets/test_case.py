@@ -10,7 +10,7 @@ import ipyvuetify as v
 
 from ..utils import schema_to_widgets
 from .debug import debug
-from .pylbmwidget import Markdown, ParametersPanel, out
+from .pylbmwidget import HTML, ParametersPanel, out
 
 
 @debug
@@ -60,7 +60,7 @@ class TestCaseWidget:
         ##
         ## The main
         ##
-        self.description = Markdown()
+        self.description = HTML()
 
         plt.ioff()
         self.fig = plt.figure(figsize=(12, 6))

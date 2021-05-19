@@ -6,12 +6,9 @@
 # License: BSD 3 clause
 
 import ipyvuetify as v
-from markdown import markdown
 from traitlets import Unicode
 import ipywidgets as widgets
 import IPython.display as ipydisplay
-
-from .mdx_math_svg import MathSvgExtension
 
 from .message import Message
 
@@ -114,18 +111,18 @@ class Container(PylbmWidget, v.Container):
         )
 
 
-class Markdown(v.Layout):
+class HTML(v.Layout):
     """
-    Custom Layout based on the markdown text given
+    Custom Layout based on the html text given
 
     Args:
-        mkd_str (str): the text to display using the markdown convention. multi-line string are also interpreted
+        html_str (str): the text to display using html format
     """
 
-    def __init__(self, mkd_str="", **kwargs):
+    def __init__(self, html_str="", **kwargs):
 
         self.out = widgets.Output()
-        self.update_content(mkd_str)
+        self.update_content(html_str)
 
         super().__init__(
             row=True,
@@ -135,35 +132,11 @@ class Markdown(v.Layout):
             **kwargs
         )
 
-    def update_content(self, mkd_str):
+    def update_content(self, html_str):
 
-        extension_configs = {
-            'mdx_math_svg': {
-                'inline_class': 'math',
-                'display_class': 'math'
-            }
-        }
-
-        mkd = markdown(
-            mkd_str,
-            extensions=[
-                # 'tables',
-                'fenced_code',
-                'sane_lists',
-                MathSvgExtension()
-            ],
-            extension_configs=extension_configs
-        )
         with self.out:
             self.out.clear_output()
-            #### TO BE REMOVED WITH IPYTHON 7.23
-            ipydisplay.display(ipydisplay.HTML(mkd))
-            #### AND REPLACED BY
-            # ipydisplay.display(
-            #     Message('Compile the LaTeX script')
-            # )
-            # ipydisplay.display(ipydisplay.HTML(mkd), clear=True)
-
+            ipydisplay.display(ipydisplay.HTML(html_str))
 
 class Tooltip(v.Tooltip):
     def __init__(self, widget, tooltip, *args, activate=True, **kwargs):

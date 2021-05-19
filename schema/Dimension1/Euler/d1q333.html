@@ -1,0 +1,54 @@
+<p>The D1Q333 scheme is a vectorial scheme that can be used for inviscid flows in dimension one.</p>
+<hr />
+<p><strong>Vectorial scheme</strong></p>
+<p>The D1Q333 is a vectorial scheme with one particle distribution function for each conserved moment (the mass, the momentum, and the total energy). Each particle distribution function is discretized with three velocities: <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" />, <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" />, and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20-%5Clambda" alt="-\lambda" title="-\lambda" class="math inline" /> where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> is the lattice velocity.</p>
+<p>This scheme has more degrees of freedom than the D1Q222: the second-order operator corresponding to the numerical diffusion can be modified by choosing the equilibrium value of the second-order moments. However, the stability zone according to the parameters of the scheme is not easy to determine.</p>
+<p>Two versions of this scheme are proposed: the D1Q333_0 and the D1Q333_1 that differ in their equilibrium values for the second-order moments.</p>
+<hr />
+<p><strong>Parameters</strong></p>
+<p>The equilibrium value of all the non-conserved moments are fixed in this version of the D1Q333. Seven parameters are left free:</p>
+<ul>
+<li>the <strong>lattice velocity</strong> denoted by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" />;</li>
+<li>the <strong>three relaxation parameters of first-order</strong> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" /> ;</li>
+<li>the <strong>three relaxation parameters of second-order</strong> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%20x%7D" alt="s_{\rho x}" title="s_{\rho x}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7Bux%7D" alt="s_{ux}" title="s_{ux}" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7Bpx%7D" alt="s_{px}" title="s_{px}" class="math inline" /> .</li>
+</ul>
+<ol type="1">
+<li><em>The lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /></em></li>
+</ol>
+<blockquote>
+<p>The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.</p>
+<p>This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.</p>
+<ul>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> has to be greater than all the physical velocities of the problem;</li>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> should be as small as possible while preserving the stability.</li>
+</ul>
+</blockquote>
+<ol start="2" type="1">
+<li>_The relaxation parameters of first-order <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" />_</li>
+</ol>
+<blockquote>
+<p>These three relaxation parameters are involved in the relaxation towards equilibrium for the three first-order non-conserved moments of the scheme. These parameters should take real values between <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" />.</p>
+<p>These parameters play also a role in the numerical diffusion: <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> (<em>resp.</em> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" />) appears in the numerical diffusion operator of the mass (<em>resp.</em> momentum, energy) conservation through the Henon parameter.</p>
+<ul>
+<li>Increasing the values of the parameters <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" /> decreases the numerical diffusion;</li>
+<li>Decreasing the values improves the stability.</li>
+</ul>
+</blockquote>
+<ol start="3" type="1">
+<li>_The relaxation parameters of second-order <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%20x%7D" alt="s_{\rho x}" title="s_{\rho x}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7Bux%7D" alt="s_{ux}" title="s_{ux}" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7Bpx%7D" alt="s_{px}" title="s_{px}" class="math inline" />_</li>
+</ol>
+<blockquote>
+<p>These three relaxation parameters are involved in the relaxation towards equilibrium for the three second-order non-conserved moments of the scheme. These parameters should take real values between <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" />.</p>
+<p>These parameters do not play a role in the second-order numerical diffusion but in the stability. A good choice is often to take these three parameters equal to 1 except when the pressure can be closed to 0.</p>
+</blockquote>
+<hr />
+<p><strong>How to choose the parameters ?</strong></p>
+<p>Even if the equivalent equations give only an asymptotic representation of the scheme, the structure of the second-order operator (corresponding to a numerical diffusion) is very helpfull for selecting the several parameters. The complete structure can be computed using the tab <code>Equivalent equations</code>.</p>
+<p>For each relaxation parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s%20%5Cin%20%5Clbrace%20s_%7B%5Crho%7D%2C%20s_u%2C%20s_p%20%5Crbrace" alt="s \in \lbrace s_{\rho}, s_u, s_p \rbrace" title="s \in \lbrace s_{\rho}, s_u, s_p \rbrace" class="math inline" /> , the Henon parameter is defined by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Csigma%20%3D%201%2Fs%20-%201%2F2" alt="\sigma = 1/s - 1/2" title="\sigma = 1/s - 1/2" class="math inline" /> and the amplitude of the associated numerical diffusion is given by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5CDelta%20x%20%5Clambda%5Csigma" alt="\Delta x \lambda\sigma" title="\Delta x \lambda\sigma" class="math inline" /> , where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5CDelta%20x" alt="\Delta x" title="\Delta x" class="math inline" /> is the space step.</p>
+<blockquote>
+<p>→ the lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> has to be large enough to ensure that the second-order operator is positive (in the sense of the parabolic system);</p>
+<p>→ the relaxation parameters of first-order should be chosen as close to <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" /> as possible to minimise the effect of the numerical diffusion;</p>
+<p>→ the relaxation parameters of second-order do not play a role in the numerical diffusion: a good compromise is to choose a value close to <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%201" alt="1" title="1" class="math inline" />.</p>
+</blockquote>
+<hr />
+<p><em>See the tabs <code>Linear Stability</code> and <code>Parametric Study</code> for more informations</em>.</p>

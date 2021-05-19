@@ -1,0 +1,51 @@
+<p>The D1Q3L2 scheme is a LBM scheme with two levels of internal energy that can be used for inviscid flows in dimension one.</p>
+<hr />
+<p><strong>Scheme with internal energy levels</strong></p>
+<p>The D1Q3L2 is a scheme with two particle distribution functions, one for each internal energy level. The two internal energy levels are scaled by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda%5E2" alt="\lambda^2" title="\lambda^2" class="math inline" /> (<img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> is the lattice velocity) and the difference between their values is parametrized by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Calpha" alt="\alpha" title="\alpha" class="math inline" />.</p>
+<p>Each particle distribution function is discretized with three velocities: <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" />, <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" />, and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20-%5Clambda" alt="-\lambda" title="-\lambda" class="math inline" /> where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> is the lattice velocity.</p>
+<p>This scheme has exactly the same number of degrees of freedom than the D1Q222 but the second-order operator corresponding to the numerical diffusion is different: its contribution in the mass conservation equation vanishes.</p>
+<hr />
+<p><strong>Parameters</strong></p>
+<p>The equilibrium value of all the non-conserved moments are fixed. Five parameters are left free:</p>
+<ul>
+<li>the <strong>lattice velocity</strong> denoted by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" />;</li>
+<li>the <strong>three relaxation parameters</strong> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" /> ;</li>
+<li>the <strong>difference between the levels of internal energy</strong> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Calpha" alt="\alpha" title="\alpha" class="math inline" />.</li>
+</ul>
+<ol type="1">
+<li><em>The lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /></em></li>
+</ol>
+<blockquote>
+<p>The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.</p>
+<p>This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.</p>
+<ul>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> has to be greater than all the physical velocities of the problem;</li>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> should be as small as possible while preserving the stability;</li>
+</ul>
+</blockquote>
+<ol start="2" type="1">
+<li>_The relaxation parameters <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_%7B%5Crho%7D" alt="s_{\rho}" title="s_{\rho}" class="math inline" /> , <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> , and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" />_</li>
+</ol>
+<blockquote>
+<p>These three parameters should take real values between <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" />. Two of these three relaxation parameters (<img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_u" alt="s_u" title="s_u" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s_p" alt="s_p" title="s_p" class="math inline" />) are involved in the relaxation towards equilibrium for the associated non-conserved moments.</p>
+</blockquote>
+<ol start="3" type="1">
+<li><em>The difference of internal energy levels <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Calpha" alt="\alpha" title="\alpha" class="math inline" /></em></li>
+</ol>
+<blockquote>
+<p>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Calpha" alt="\alpha" title="\alpha" class="math inline" /> is involved in the second-order operator (the numerical diffusion), more precisely in the conservation equation of the energy.</p>
+</blockquote>
+<hr />
+<p><strong>Warning</strong></p>
+<p>Choose the several parameters to ensure the stability of this scheme is not an easy task!</p>
+<hr />
+<p><strong>How to choose the parameters ?</strong></p>
+<p>Even if the equivalent equations give only an asymptotic representation of the scheme, the structure of the second-order operator (corresponding to a numerical diffusion) is very helpfull for selecting the several parameters. The complete structure can be computed using the tab <code>Equivalent equations</code>.</p>
+<p>For each relaxation parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s%20%5Cin%20%5Clbrace%20s_u%2C%20s_p%20%5Crbrace" alt="s \in \lbrace s_u, s_p \rbrace" title="s \in \lbrace s_u, s_p \rbrace" class="math inline" /> , the Henon parameter is defined by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Csigma%20%3D%201%2Fs%20-%201%2F2" alt="\sigma = 1/s - 1/2" title="\sigma = 1/s - 1/2" class="math inline" /> and the amplitude of the associated numerical diffusion is given by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5CDelta%20x%20%5Clambda%5Csigma" alt="\Delta x \lambda\sigma" title="\Delta x \lambda\sigma" class="math inline" /> , where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5CDelta%20x" alt="\Delta x" title="\Delta x" class="math inline" /> is the space step.</p>
+<p>The second-order operator of the mass conservation equation vanishes: the Henon parameter associated to the mass does not play a role in the numerical diffusion.</p>
+<blockquote>
+<p>→ the lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> has to be large enough to ensure that the second-order operator is positive (in the sense of the parabolic system);</p>
+<p>→ the relaxation parameters should be chosen as close to <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" /> as possible to minimise the effect of the numerical diffusion.</p>
+</blockquote>
+<hr />
+<p><em>See the tabs <code>Linear Stability</code> and <code>Parametric Study</code> for more informations</em>.</p>

@@ -1,0 +1,51 @@
+<p>The D1Q2 scheme is the smallest scheme that can be used for the advection equation in dimension one.</p>
+<hr />
+<p><strong>The simplest scheme</strong></p>
+<p>The D1Q2 is a scheme with one particle distribution function discretized with two velocities: <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20-%5Clambda" alt="-\lambda" title="-\lambda" class="math inline" /> where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> is the lattice velocity.</p>
+<p>The main interest of this scheme is its simplicity. This scheme is very rough and robust. However, the structure of the numerical diffusion cannot be modified.</p>
+<hr />
+<p><strong>Parameters</strong></p>
+<p>Only two parameters are left free:</p>
+<ul>
+<li>the <strong>lattice velocity</strong> denoted by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" />;</li>
+<li>the <strong>relaxation parameter</strong> <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s" alt="s" title="s" class="math inline" />.</li>
+</ul>
+<ol type="1">
+<li><em>The lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /></em></li>
+</ol>
+<blockquote>
+<p>The lattice velocity is defined as the ratio between the space step and the time step. This velocity must satisfy a CFL type condition to ensure the stability of the scheme.</p>
+<p>This parameter is involved in the numerical diffusion: the higher the lattice velocity, the higher the numerical diffusion.</p>
+<ul>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> has to be greater than all the physical velocities of the problem;</li>
+<li>The parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> should be as small as possible while preserving the stability.</li>
+</ul>
+</blockquote>
+<ol start="2" type="1">
+<li><em>The relaxation parameter <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s" alt="s" title="s" class="math inline" /></em></li>
+</ol>
+<blockquote>
+<p>The relaxation parameter is involved in the relaxation towards equilibrium for the non-conserved moment of the scheme. This parameter should take a real value between <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%200" alt="0" title="0" class="math inline" /> and <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%202" alt="2" title="2" class="math inline" />.</p>
+<p>This parameter plays also a role in the numerical diffusion through the Henon parameter denoted by <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Csigma%3D1%2Fs-1%2F2" alt="\sigma=1/s-1/2" title="\sigma=1/s-1/2" class="math inline" />.</p>
+<ul>
+<li>Increasing the value of the parameters <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20s" alt="s" title="s" class="math inline" /> decreases the numerical diffusion;</li>
+<li>Decreasing the value improves the stability.</li>
+</ul>
+</blockquote>
+<hr />
+<p>The D1Q2 can be used to simulate the advection equation as its second-order equivalent equation (<em>See the tab <code>Equivalent equations</code> for more details</em>) reads</p>
+<p><img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Cdisplaystyle%20%0A%20%20%20%20%5Cpartial_t%20u%20%2B%20c%20%5Cpartial_x%20u%20%3D%20%5CDelta%20t%20%5Csigma%20%28%5Clambda%5E2%20-%20c%5E2%29%20%5Cpartial_%7Bxx%7D%20u%20%2B%20%5Cmathcal%7BO%7D%28%5CDelta%20t%5E2%29.%0A" alt="
+    \partial_t u + c \partial_x u = \Delta t \sigma (\lambda^2 - c^2) \partial_{xx} u + \mathcal{O}(\Delta t^2).
+" title="
+    \partial_t u + c \partial_x u = \Delta t \sigma (\lambda^2 - c^2) \partial_{xx} u + \mathcal{O}(\Delta t^2).
+" class="math display" /></p>
+<p>where <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5CDelta%20t" alt="\Delta t" title="\Delta t" class="math inline" /> is the time step of the scheme.</p>
+<p>For this very simple scheme, we obtain through the second-order operator the following properties :</p>
+<blockquote>
+<ol type="1">
+<li>the lattice velocity <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda" alt="\lambda" title="\lambda" class="math inline" /> must satisfy <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda%20%5Cgeq%20%7Cc%7C" alt="\lambda \geq |c|" title="\lambda \geq |c|" class="math inline" />;</li>
+<li>the numerical diffusion is driven by the coefficient <img style="vertical-align:middle" src="https://latex.codecogs.com/png.latex?%5Ctextstyle%20%5Clambda%5Csigma%28%5Clambda%5E2-c%5E2%29" alt="\lambda\sigma(\lambda^2-c^2)" title="\lambda\sigma(\lambda^2-c^2)" class="math inline" />.</li>
+</ol>
+</blockquote>
+<hr />
+<p><em>See the tabs <code>Linear Stability</code> and <code>Parametric Study</code> for more informations</em>.</p>

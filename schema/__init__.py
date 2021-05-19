@@ -4,12 +4,7 @@
 #     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
 #
 # License: BSD 3 clause
-# from pydantic import BaseModel
-import sympy as sp
 
-from .symbol import Symbol
-from .utils import HashBaseModel
+from .utils import define_cases
 
-
-class EquationType(HashBaseModel):
-    pass
+cases = define_cases(__file__, __name__)

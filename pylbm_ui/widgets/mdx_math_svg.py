@@ -63,8 +63,7 @@ from markdown.inlinepatterns import InlineProcessor
 from markdown.blockprocessors import BlockProcessor
 from markdown.extensions import attr_list
 from markdown import util as md_util
-# import xml.etree.ElementTree as ET
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 
 # Other import statements
 import os
@@ -342,6 +341,8 @@ class LaTeX2SVG:
             else:
                 style = ''
 
+            ET.register_namespace('', 'http://www.w3.org/2000/svg')
+            ET.register_namespace('xlink', 'http://www.w3.org/1999/xlink')
             root = ET.fromstring(svg.encode())
 
             root.attrib['style'] = style
@@ -428,8 +429,6 @@ class InlineMathSvgPattern(InlineProcessor):
         latex = r'\(' + latex + r'\)'
         svg = self.latex2svg.latex2svg(latex)
 
-        import xml.etree.ElementTree as ET
-
         el = ET.Element('span', {'class': self.inline_class})
         el.text = self.md.htmlStash.store(svg)
 
@@ -484,7 +483,6 @@ class BlockMathSvgProcessor(BlockProcessor):
         svg = self.latex2svg.latex2svg(latex)
         attrib_dict = {'class': self.display_class}
         if attrib and self.use_attr_list:
-            #print("\nFound attrib:", attrib)
             for k, v in attr_list.get_attrs(attrib):
                 if k == '.':
                     attrib_dict['class'] += ' ' + v
@@ -492,7 +490,6 @@ class BlockMathSvgProcessor(BlockProcessor):
                     attrib_dict['class'] = self.display_class + ' ' + v
                 else:
                     attrib_dict[k] = v
-            #print(attrib_dict)
             attrib = ''
 
         el = ET.SubElement(parent, 'div', attrib_dict)

@@ -9,8 +9,8 @@ import numpy as np
 import pylbm
 import matplotlib.pyplot as plt
 
-from .equation_type import EquationType, Euler2D
-from .utils import HashBaseModel
+from .equation_type import Euler2D
+from ...utils import HashBaseModel
 
 class tc_2D_wedge(HashBaseModel):
     xmin: float

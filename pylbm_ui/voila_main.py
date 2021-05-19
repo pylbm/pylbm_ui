@@ -11,77 +11,55 @@ import sys
 import ipyvuetify as v
 from .widgets import *
 
-from schema.toro import Toro1_1D, Toro2_1D, Toro3_1D, Toro4_1D, Toro5_1D
-from schema.tc_2D_Wedge import Wedge_Ma2p5, Wedge_Ma8
-from schema.tc_2D_Implosion import Implosion2D_Symmetric
-from schema.tc_2D_FFS import FFS_Ma3
+from schema import cases
 
-cases = {'Toro 1': Toro1_1D,
-         'Toro 2': Toro2_1D,
-         'Toro 3': Toro3_1D,
-         'Toro 4': Toro4_1D,
-         'Toro 5': Toro5_1D,
-         'Wedge Ma2p5': Wedge_Ma2p5,
-         'Wedge Ma 8': Wedge_Ma8,
-         'Implosion': Implosion2D_Symmetric,
-         'Forward Facing Step': FFS_Ma3,
-}
-default_case = 'Toro 1'
+@debug_func
+def get_information(tab_id, mc, tc, lb):
+    if tab_id == 0:
+        return []
 
-from schema.D1q222 import D1Q222
-from schema.D1q333 import D1Q333, D1Q333_NS
-from schema.D1q3L2_0 import D1Q3L2
-from schema.D2q4444 import D2Q4444
+    items = [
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"{mc.select_category.v_model}: " + f"{mc.select_model.v_model}"
+            ],
+            class_='px-4 py-0'
+            )
+        ],
+        class_='mb-0'),
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"Test case: {tc.select_case.v_model}"
+            ],
+            class_='px-4 py-0',
+            )
+        ],
+        class_='mb-0'),
+        v.ListItem(children=[
+            v.ListItemContent(children=[
+                f"Scheme: {lb.select_case.v_model}"
+            ],
+            class_='px-4 py-0',
+            )
+        ],
+        class_='mb-0'),
+    ]
 
-known_cases = {
-    Toro1_1D: [
-        D1Q222(la=5, s_rho=1.9,s_u=1.8, s_p=2.),
-        D1Q333(la=10, s_rho=1.9, s_u=1.9, s_p=1.9, s_rhox=1.75, s_ux=1.75, s_px=1.75),
-        D1Q333_NS(la=10, s_rho=1.5, s_u=1.5, s_p=1.5, s_rhox=1., s_ux=1., s_px=1.),
-        D1Q3L2(la=5, s_rho=1.5, s_u=1.5, s_p=1.5, alpha=0.01),
-    ],
-    Toro2_1D: [
-        D1Q222(la=4, s_rho=1.7, s_u=1.7, s_p=1.7),
-        D1Q333(la=10, s_rho=1.95, s_u=1.95, s_p=1.95, s_rhox=1.75, s_ux=1.5, s_px=1.75),
-        D1Q333_NS(la=20, s_rho=1.6, s_u=1.6, s_p=1.6, s_rhox=1.6, s_ux=1.6, s_px=1.6),
-        D1Q3L2(la=4, s_rho=1.7, s_u=1.7, s_p=1.7, alpha=0.01),
-    ],
-    Toro3_1D: [
-        D1Q222(la=60, s_rho=1.5, s_u=1.5, s_p=1.5),
-        D1Q333(la=250, s_rho=1.9, s_u=1.9, s_p=1.9, s_rhox=1.5, s_ux=1.5, s_px=1.5),
-        D1Q333_NS(la=250, s_rho=1.6, s_u=1.6, s_p=1.6, s_rhox=1., s_ux=1., s_px=1.),
-        D1Q3L2(la=175, s_rho=1.6, s_u=1.6, s_p=1.6, alpha=0.01),
-    ],
-    Toro4_1D: [
-        D1Q222(la=50, s_rho=1.8, s_u=1.8, s_p=1.8),
-        D1Q333(la=100, s_rho=1.8, s_u=1.8, s_p=1.8, s_rhox=1.5, s_ux=1.5, s_px=1.5),
-        D1Q333_NS(la=100, s_rho=1.6, s_u=1.6, s_p=1.6, s_rhox=1., s_ux=1., s_px=1.),
-        D1Q3L2(la=100, s_rho=1.8, s_u=1.8, s_p=1.8, alpha=0.01),
-    ],
-    Toro5_1D: [
-        D1Q222(la=40, s_rho=1.85, s_u=1.8, s_p=1.6),
-        D1Q333(la=100, s_rho=1.9, s_u=1.8, s_p=1.8, s_rhox=1.8, s_ux=1.8, s_px=1.8),
-        D1Q333_NS(la=100, s_rho=1.5, s_u=1.5, s_p=1.5, s_rhox=1., s_ux=1., s_px=1.),
-        D1Q3L2(la=100, s_rho=1.5, s_u=1.5, s_p=1.5, alpha=0.01),
-    ],
-    Wedge_Ma2p5: [
-        D2Q4444(la=15, s_rho=1.7647, s_u=1.7647, s_p=1.7647, s_rho2=1.7647, s_u2=1.7647, s_p2=1.7647)
-    ],
-    Wedge_Ma8: [
-        D2Q4444(la=40, s_rho=1.7647, s_u=1.7647, s_p=1.7647, s_rho2=1.7647, s_u2=1.7647, s_p2=1.7647)
-    ],
-    Implosion2D_Symmetric: [
-        D2Q4444(la=10, s_rho=1.904, s_u=1.904, s_p=1.904, s_rho2=1.904, s_u2=1.904, s_p2=1.904)
-    ],
-    FFS_Ma3: [
-        D2Q4444(la=15, s_rho=1.7647, s_u=1.7647, s_p=1.7647, s_rho2=1.7647, s_u2=1.7647, s_p2=1.7647)
-    ],
-}
+    return [
+        v.Card(children=[
+            v.CardTitle(children=['Information'], class_='pb-1'),
+            v.List(children=items[0:min(tab_id, 3)],
+            dense=True,
+            class_='pa-0')
+        ])
+    ]
 
+@debug_func
 def main():
 
-    tc = TestCaseWidget(cases, default_case)
-    lb = LBSchemeWidget(tc, known_cases)
+    mc = ModelWidget(cases)
+    tc = TestCaseWidget(mc)
+    lb = LBSchemeWidget(tc)
 
     stability =  StabilityWidget(tc, lb)
     simulation = SimulationWidget(tc, lb)
@@ -93,8 +71,20 @@ def main():
             self.menu = []
             self.main = [out]
 
-    tab_widgets = [tc, lb, stability, simulation, parametric, posttreatment, DebugWidget()]
-    tab_titles = ['Test case', 'Scheme', 'Linear stability', 'LBM Simulation', 'Parametric study', 'Post treatment', 'Debug']
+    tab_widgets = [
+        mc,
+        tc, lb,
+        stability, simulation,
+        parametric, posttreatment,
+        DebugWidget()
+    ]
+    tab_titles = [
+        'Model',
+        'Test case', 'Scheme',
+        'Linear stability', 'LBM Simulation',
+        'Parametric study', 'Post treatment',
+        'Debug'
+    ]
 
     tab = v.Tabs(
         v_model=0,
@@ -106,7 +96,8 @@ def main():
         children=[v.Tab(children=[k]) for k in tab_titles],
     )
 
-    menu = v.List(children=[],
+    menu = v.List(
+        children=[],
         nav=True,
         v_model='drawer',
     )
@@ -114,31 +105,49 @@ def main():
 
     def tab_change(change):
         tab_id = tab.v_model
+
+        items = []
+        if tab_id < 6:
+            items.extend(get_information(tab_id, mc, tc, lb))
+
         widget = tab_widgets[tab_id]
-        menu.children = [v.ListItem(children=[
-                                       v.ListItemContent(children=[m])]) for m in widget.menu
-        ]
+        items.extend([
+            v.ListItem(
+                children=[
+                    v.ListItemContent(children=[m])
+                ]
+            ) for m in widget.menu
+        ])
+
+        menu.children = items
         content.children = widget.main
 
-        if tab_id == 5:
+        if tab_id == 6:
             posttreatment.update(None)
-
 
     tab_change(None)
     tab.observe(tab_change, 'v_model')
 
     navicon = v.AppBarNavIcon()
 
-    drawer = v.NavigationDrawer(children=[
-        v.Row(children=[
-            v.Img(src='https://pylbm.readthedocs.io/en/latest/_static/img/pylbm_with_text.svg', max_width=250, class_='ma-5')],
-                  align='center',
-                  justify='center'),
-            menu],
-            v_model=True,
-            width=350,
-            clipped=True,
-            app=True
+    drawer = v.NavigationDrawer(
+        children=[
+            v.Row(
+                children=[
+                    v.Img(
+                        src='img/pylbm_with_text.svg',
+                        max_width=250, class_='ma-5'
+                    )
+                ],
+                align='center',
+                justify='center'
+            ),
+            menu
+        ],
+        v_model=True,
+        width=350,
+        clipped=True,
+        app=True
     )
 
     def show_drawer(widget, event, data):
@@ -146,15 +155,18 @@ def main():
 
     navicon.on_event("click.stop", show_drawer)
 
-    return v.App(children=[
-                v.AppBar(children=[
+    return v.App(
+        children=[
+            v.AppBar(
+                children=[
                     navicon,
                     tab,
                 ],
                 clipped_left=True,
                 app=True,
                 dark=True,
-                ),
-        drawer,
-        content,
-    ])
+            ),
+            drawer,
+            content,
+        ]
+    )

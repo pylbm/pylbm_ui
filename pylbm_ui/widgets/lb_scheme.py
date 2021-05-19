@@ -6,16 +6,16 @@
 # License: BSD 3 clause
 
 import ipyvuetify as v
-import copy
 
 from ..utils import schema_to_widgets
 from .debug import debug
 from .pylbmwidget import Markdown, ParametersPanel
 from .message import Message
 
+
 @debug
 class LBSchemeWidget:
-    def __init__(self, test_case, known_cases):
+    def __init__(self, test_case):
         """
         Widget definition for lattice Boltzmann schemes.
 
@@ -43,17 +43,20 @@ class LBSchemeWidget:
         """
 
         self.test_case = test_case
-        self.known_cases = known_cases
-        self.default_cases = {c.name: c for c in known_cases[test_case.get_case()]}
-        self.cases = {c.name: copy.copy(c) for c in known_cases[test_case.get_case()]}
         self.parameters = {}
 
         ##
         ## The menu
         ##
-        default_case = list(self.cases.keys())[0]
-        self.select_case = v.Select(items=list(self.cases.keys()), v_model=default_case, label='LBM schemes')
-        self.panels = v.ExpansionPanels(v_model=None, children=[ParametersPanel('Show parameters')])
+        # default_case = next(iter(self.cases.keys()))
+        self.select_case = v.Select(
+            items=[],
+            v_model=None,
+            label='LBM schemes'
+        )
+        self.panels = v.ExpansionPanels(
+            v_model=None, children=[ParametersPanel('Show parameters')]
+        )
         self.reset = v.Btn(children=['reset to default'], class_='d-none')
         self.menu = [self.select_case, self.panels, self.reset]
 
@@ -66,8 +69,7 @@ class LBSchemeWidget:
 
         self.tabs = v.Tabs(
             v_model=0,
-            children=
-            [
+            children=[
                 v.Tab(children=['Description']),
                 v.Tab(children=['Properties']),
                 v.Tab(children=['Equivalent equations']),
@@ -78,8 +80,10 @@ class LBSchemeWidget:
         )
         self.main = [self.tabs]
 
-        # populate the parameters and the description of the selected
-        # lb scheme
+        # populate the schemes of the selected test case
+        self.change_test_case(None)
+        # populate the parameters and the description of
+        # the selected lb scheme
         self.change_case(None)
 
         ##
@@ -103,48 +107,55 @@ class LBSchemeWidget:
         # to make the reset button available if needed.
         self.panels.children[0].bind(self.change_param)
 
-    def change_param(self, change):
-        self.reset.class_ = ''
-
-    def change_tab(self, change):
-        """
-        Check the tab id.
-
-        if 1, compute the properties of the scheme
-        if 2, compute the equivalent equations
-        """
-        case = self.cases[self.select_case.v_model]
-        if self.tabs.v_model == 1 and not self.properties.children:
-            self.properties.children = [Message('Compute the properties of the scheme')]
-            self.properties.children = [case.get_information().vue()]
-        if self.tabs.v_model == 2 and not self.eq_pde.children:
-            self.eq_pde.children = [Message('Compute the equivalent equations of the scheme')]
-            self.eq_pde.children = [case.get_eqpde().vue()]
+    def fix_selected_cases(self):
+        self.selected_schemes_names = [
+            scheme.name for scheme in self.test_case.get_schemes()
+        ]
+        self.selected_schemes_indices = {
+            nk: k for k, nk in enumerate(self.selected_schemes_names)
+        }
 
     def change_test_case(self, change):
         """
-        If the test case is changed, update the default_cases and cases dictionary,
+        If the test case is changed, 
+        update the default_cases and cases dictionary,
         update the selection widget and update the list of parameters.
         """
         current_case = self.select_case.v_model
-        test_case = self.test_case.get_case()
-        self.default_cases = {c.name: c for c in self.known_cases[test_case]}
-        self.cases = {c.name: c for c in self.known_cases[test_case]}
+        self.fix_selected_cases()
 
         # if the current lb scheme is in the list take it,
         # otherwise keep the first in the new selection list.
-        if current_case not in self.cases.keys():
-            current_case = list(self.cases.keys())[0]
+        if current_case not in self.selected_schemes_names:
+            current_case = self.selected_schemes_names[0]
 
-        self.select_case.items = list(self.cases.keys())
+        self.select_case.items = self.selected_schemes_names
         self.select_case.v_model = current_case
 
         # update the parameters list of the selected lb scheme.
         self.change_case(None)
 
+    def get_case(self):
+        return self.test_case.get_schemes()[
+            self.selected_schemes_indices[self.select_case.v_model]
+        ]
+
+    def parameters_widget2scheme(self):
+        """
+        update the parameters of the scheme with
+        those defined in the menu
+        """
+        case = self.get_case()
+        for k, v in self.parameters.items():
+            attr = getattr(case, k)
+            if hasattr(attr, 'value'):
+                attr.value = v.value
+            else:
+                attr = v.value
+
     def change_case(self, change):
         v_model = self.tabs.v_model
-        case = self.cases[self.select_case.v_model]
+        case = self.get_case()
         self.parameters = schema_to_widgets(self.parameters, case)
         self.description.update_content(case.description)
         self.properties.children = []
@@ -156,8 +167,53 @@ class LBSchemeWidget:
         if self.tabs.v_model > 0:
             self.change_tab(None)
 
-        self.change_param(None)
         self.reset.class_ = 'd-none'
+
+    def change_param(self, change):
+        """
+        Check if the parameters are changed from the default
+        and show the reset button if yes.
+        Plot the reference solution if it exists.
+        """
+        case = self.get_case()
+        default_values = case.default_values
+
+        # check if the parameters of the current case are the
+        # same of the default one.
+        is_same = True
+        for k, v in self.parameters.items():
+            attr = default_values.get(k, None)
+            if v.value != attr:
+                is_same = False
+
+        # if the parameters are different from the default one
+        # we show the reset button
+        if not is_same:
+            self.reset.class_ = ''
+            self.parameters_widget2scheme()
+        else:
+            self.reset.class_ = 'd-none'
+        # update the tab
+        self.change_tab(None)
+
+    def change_tab(self, change):
+        """
+        Check the tab id.
+
+        if 1, compute the properties of the scheme
+        if 2, compute the equivalent equations
+        """
+        case = self.get_case()
+        if self.tabs.v_model == 1 and not self.properties.children:
+            self.properties.children = [
+                Message('Compute the properties of the scheme')
+            ]
+            self.properties.children = [case.get_information().vue()]
+        if self.tabs.v_model == 2 and not self.eq_pde.children:
+            self.eq_pde.children = [
+                Message('Compute the equivalent equations of the scheme')
+            ]
+            self.eq_pde.children = [case.get_eqpde().vue()]
 
     def reset_btn(self, widget, event, data):
         """
@@ -165,23 +221,11 @@ class LBSchemeWidget:
         replaced by the origin lb scheme to recover the default
         parameters.
         """
-        case = self.select_case.v_model
-        self.cases[case] = copy.deepcopy(self.default_cases[case])
-        self.change_case(None)
-        self.select_case.notify_change({'name': 'v_model', 'type': 'change'})
-
-    def get_case(self):
-        """
-        Get the current scheme.
-        """
-        case = self.cases[self.select_case.v_model]
-
+        case = self.get_case()
         # update the parameters of the scheme with
-        # those defined in the menu.
+        # those defined in default_values variable
         for k, v in self.parameters.items():
-            attr = getattr(case, k)
-            if hasattr(attr, 'value'):
-                attr.value = v.value
-            else:
-                attr = v.value
-        return case
+            v.v_model = case.default_values.get(k, None)
+
+        self.parameters_widget2scheme()
+        self.select_case.notify_change({'name': 'v_model', 'type': 'change'})

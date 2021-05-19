@@ -357,7 +357,7 @@ class StabilityWidget:
         Check the stability of each state and change their status button.
         """
         for state in self.state_widget.item_list.children:
-            test_case = self.test_case_widget.get_case()
+            # test_case = self.test_case_widget.get_case()
             case = self.lb_scheme_widget.get_case()
             stability = case.get_stability(state.state)
             if stability.is_stable_l2:

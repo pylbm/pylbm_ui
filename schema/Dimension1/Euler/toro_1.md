@@ -85,7 +85,7 @@ the numerical methods.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![Toro1](schema/Dimension1/Euler/Toro_Test1.png "Toro test case 1")
+![Toro1](./Dimension1/Euler/Toro_Test1.png "Toro test case 1")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

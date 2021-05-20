@@ -85,7 +85,7 @@ for low-density flows.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![Toro2](schema/Dimension1/Euler/Toro_Test2.png "Toro test case 2")
+![Toro2](./Dimension1/Euler/Toro_Test2.png "Toro test case 2")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

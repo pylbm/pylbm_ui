@@ -37,10 +37,6 @@ class Euler2D(EquationType):
 
         return fields
 
-    @property
-    def description(self):
-        return ""
-
 
 # class NS1D(EquationType):
 #     rho: sp.Symbol = field(init=False, default=sp.symbols('rho'))

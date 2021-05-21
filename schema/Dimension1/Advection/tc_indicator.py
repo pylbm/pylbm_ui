@@ -11,33 +11,36 @@ import numpy as np
 import sympy as sp
 
 from .equation_type import Transport1D
-from ..utils import bump as bump_init
+from ..utils import indicator as indicator_init
 from ...utils import HashBaseModel
 
 
-class Bump(HashBaseModel):
-    u_ground: float
-    u_bump: float
+class Indicator(HashBaseModel):
+    u_out: float
+    u_in: float
     c: float
     duration: float
     xmin: float
     xmax: float
-    x_bump: float
-    width_bump: float
+    pos_left: float
+    width_left: float
+    pos_right: float
+    width_right: float
     reg: int
 
     dim = 1
     equation = Transport1D()
-    name = 'Bump'
+    name = 'Indicator'
 
     def get_dictionary(self):
         init = {
             self.equation.u: (
-                bump_init,
+                indicator_init,
                 (
                     self.reg,
-                    self.x_bump, self.width_bump,
-                    self.u_ground, self.u_bump
+                    self.pos_left, self.pos_right,
+                    self.width_left, self.width_right,
+                    self.u_out, self.u_in
                 )
             )
         }
@@ -65,23 +68,24 @@ class Bump(HashBaseModel):
         return [
             {
                 'name': 'Ground state',
-                self.equation.u: self.u_ground,
+                self.equation.u: self.u_out,
                 self.equation.c: self.c,
             },
             {
                 'name': 'Bump state',
-                self.equation.u: self.u_bump,
+                self.equation.u: self.u_in,
                 self.equation.c: self.c,
             },
         ]
 
     def ref_solution(self, t, x, field=None):
         xloc = self.xmin + (x - self.c*t - self.xmin) % (self.xmax-self.xmin)
-        sol_e = bump_init(
+        sol_e = indicator_init(
             xloc,
             self.reg,
-            self.x_bump, self.width_bump,
-            self.u_ground, self.u_bump
+            self.pos_left, self.pos_right,
+            self.width_left, self.width_right,
+            self.u_out, self.u_in
         )
         return sol_e
 
@@ -111,12 +115,13 @@ class Bump(HashBaseModel):
 ### predefined cases
 ##################################
 
-tc_bumpy = Bump(
-    u_ground=0, u_bump=1,
-    c=1, reg=0,
+tc_indy = Indicator(
+    u_out=0, u_in=1,
+    c=1, reg=1,
     xmin=0, xmax=1,
-    x_bump=0.25, width_bump=0.125,
+    pos_left=0.2, pos_right=0.4,
+    width_left=0.05, width_right=0.05,
     duration=1.5,
-    name='Bump',
-    description_file='./bump.html'
+    name='Indicator',
+    description_file='./indicator.html'
 )

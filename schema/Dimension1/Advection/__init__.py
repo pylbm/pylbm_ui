@@ -8,31 +8,26 @@
 # model
 from .equation_type import Transport1D
 # test cases
-from .tc_bump import Bump_discont, Bump_C0, Bump_C1
+from .tc_bump import tc_bumpy
+from .tc_indicator import tc_indy
 # schemes
 from .D1q2 import D1Q2
 
 cases = {
     'model': Transport1D,
-    'default case': 'Bump_C0',
+    'default case': 'Bump',
     'test cases': {
-        'Bump_disc': {
-            'test case': Bump_discont,
+        'Bump': {
+            'test case': tc_bumpy,
             'schemes': [
                 D1Q2(la=2, s_u=1.9),
             ]
         },
-        'Bump_C0': {
-            'test case': Bump_C0,
+        'Indicator': {
+            'test case': tc_indy,
             'schemes': [
                 D1Q2(la=2, s_u=1.9),
             ]
-        },
-        'Bump_C1': {
-            'test case': Bump_C1,
-            'schemes': [
-                D1Q2(la=2, s_u=1.9),
-            ]
-        },
+        }
     }
 }

@@ -1,1 +1,0 @@
-Discontinuous bump description

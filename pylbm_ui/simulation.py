@@ -198,6 +198,8 @@ class simulation:
         return data
 
     def save_data(self, field):
+        has_ref = hasattr(self.test_case, 'ref_solution')
+
         if isinstance(field, set):
             filename = 'solution'
         else:
@@ -214,9 +216,15 @@ class simulation:
             for f in field:
                 data = self.get_data(f)
                 h5.add_scalar(f, data)
+                if has_ref:
+                    data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, f)
+                    h5.add_scalar(f'{f}_ref', data_ref)
         else:
             data = self.get_data(field)
             h5.add_scalar(field, data)
+            if has_ref:
+                data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, field)
+                h5.add_scalar(f'{field}_ref', data_ref)
 
         h5.save()
 

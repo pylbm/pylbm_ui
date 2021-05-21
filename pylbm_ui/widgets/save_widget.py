@@ -41,6 +41,9 @@ class SaveForm(Form):
 
         super().__init__(v_model='valid', children=[self.select_field, self.select_when,self.when_properties,])
 
+    def update_fields(self, new_fields):
+        self.select_field.items = ['all'] + new_fields
+
     @add_rule
     def select_fields_rules(self, change):
         if self.select_field.v_model is None:
@@ -143,6 +146,10 @@ class Save_widget(Dialog):
         with out:
             self.all_fields = all_fields
             super().__init__(all_fields)
+
+    def update_fields(self, new_fields):
+        self.all_fields = new_fields
+        self.form.update_fields(new_fields)
 
     def create_item(self):
         return SaveItem(self.all_fields,

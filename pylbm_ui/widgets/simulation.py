@@ -155,6 +155,8 @@ class SimulationWidget:
         self.simu.reset_fields(self.lb_scheme_widget.get_case().equation.get_fields())
         self.result.items = list(self.simu.fields.keys())
         self.result.v_model = list(self.simu.fields.keys())[0]
+        self.save_fields.purge()
+        self.save_fields.update_fields(list(self.lb_scheme_widget.get_case().equation.get_fields().keys()))
 
     async def run_simu(self):
     # def run_simu(self):

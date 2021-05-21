@@ -261,6 +261,7 @@ class ParametricStudyWidget:
                 output = pool.map(run_simulation, args)
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
+                dimensions = [dict(values=np.arange(len(output)), label='id')]
 
                 dimensions.extend([dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())])
 
@@ -271,6 +272,7 @@ class ParametricStudyWidget:
                 for isamp in range(len(sampling)):
                     tmp_design = {f'{k}': sampling[isamp, ik] for ik, k in enumerate(design_space.keys())}
                     tmp_responses = {r: output[isamp][ir + 1] for ir, r in enumerate(self.responses.widget.v_model)}
+                    tmp_responses['id'] = isamp
                     tmp_responses['stability'] = output[isamp][0]
                     simu_path = os.path.join(path, f'simu_{isamp}')
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)

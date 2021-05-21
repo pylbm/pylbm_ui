@@ -90,6 +90,7 @@ class ModelWidget:
             self.cases[self.get_category()].keys()
         )
         self.select_model.v_model = self.select_model.items[0]
+        self.change_model(None)
 
     def get_model(self):
         """Return the current model."""

@@ -39,9 +39,13 @@ class Form(v.Form, metaclass=MetaForm):
             r(self, None)
 
         for f in self.fields:
-            if f.error:
-                self.v_model = False
-                break
+            if hasattr(f, 'error'):
+                if f.error:
+                    self.v_model = False
+                    break
+
+    def check_changes(self, change):
+        self.check_rules()
 
     def reset_form(self):
         for f in self.fields:

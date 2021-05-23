@@ -10,6 +10,7 @@ import ipyvuetify as v
 from .pylbmwidget import out
 
 import sympy as sp
+import numpy as np
 from traitlets import Unicode, Float, List, Bool
 
 from schema.utils import SchemeVelocity, RelaxationParameterFinal
@@ -39,13 +40,15 @@ class DesignForm(Form):
         lb_scheme_widget.select_case.observe(self.update_select_fields, 'v_model')
         discret_widget['dx'].observe(self.update_select_fields, 'v_model')
 
-        self.select_param.observe(self.select_param_changed, 'v_model')
-        self.select_relax.observe(self.select_relax_rules, 'v_model')
-        self.select_relax.observe(self.select_relax_all, 'v_model')
-
         self.fields = [self.select_param, self.select_relax, self.srt_relax, self.sigma, self.in_log, self.minmax]
 
         super().__init__(v_model='valid', children=self.fields)
+
+        self.select_param.observe(self.select_param_changed, 'v_model')
+        self.select_relax.observe(self.select_relax_all, 'v_model')
+        self.select_relax.observe(self.check_changes, 'v_model')
+        self.in_log.observe(self.check_changes, 'v_model')
+        self.sigma.observe(self.check_changes, 'v_model')
 
     def update_select_fields(self, change):
         fields = required_fields(self.test_case_widget.get_case())
@@ -87,8 +90,8 @@ class DesignForm(Form):
                 self.select_relax.v_model = []
 
             for c in self.minmax.children:
-                c.observe(self.minmax_rules, 'v_model')
-                c.observe(self.minmax_rules, 'v_model')
+                c.observe(self.check_changes, 'v_model')
+                c.observe(self.check_changes, 'v_model')
 
     def select_relax_all(self, change):
         if 'all' in self.select_relax.v_model:
@@ -107,26 +110,69 @@ class DesignForm(Form):
 
     @add_rule
     def minmax_rules(self, change):
-        min_widget, max_widget = self.minmax.children
-        min, max = min_widget.value, max_widget.value
-        if min == max:
-            min_widget.rules = ['Min must be different from Max']
-            min_widget.error = True
-            max_widget.rules = ['Max must be different from Min']
-            max_widget.error = True
-            self.minmax.error = True
-            return
-        elif min > max:
-            min_widget.rules = ['Min must be lower than Max']
-            min_widget.error = True
-            max_widget.rules = ['Max must be greater than Min']
-            max_widget.error = True
-            self.minmax.error = True
-            return
-        else:
-            min_widget.check(None)
-            max_widget.check(None)
-            self.minmax.error = min_widget.error | max_widget.error
+        if self.minmax.children:
+            min_widget, max_widget = self.minmax.children
+            min, max = min_widget.value, max_widget.value
+            if min == max:
+                min_widget.rules = ['Min must be different from Max']
+                min_widget.error = True
+                max_widget.rules = ['Max must be different from Min']
+                max_widget.error = True
+                self.minmax.error = True
+                return
+            elif min > max:
+                min_widget.rules = ['Min must be lower than Max']
+                min_widget.error = True
+                max_widget.rules = ['Max must be greater than Min']
+                max_widget.error = True
+                self.minmax.error = True
+                return
+            else:
+                min_widget.check(None)
+                max_widget.check(None)
+                self.minmax.error = min_widget.error | max_widget.error
+
+    @add_rule
+    def check_relax_values(self, change):
+        if self.minmax.children:
+            min_widget, max_widget = self.minmax.children
+            min, max = min_widget.value, max_widget.value
+            if self.select_param.v_model == 'relaxation parameters':
+                if self.sigma.v_model:
+                    if not self.in_log.v_model:
+                        if min < 0:
+                            min_widget.rules = ['Min must be positive']
+                            min_widget.error = True
+                            self.minmax.error = True
+                            return
+                        if max < 0:
+                            max_widget.rules = ['Max must be positive']
+                            max_widget.error = True
+                            self.minmax.error = True
+                            return
+                else:
+                    if self.in_log.v_model:
+                        if min > np.log10(2):
+                            min_widget.rules = [f'Min must be lower than {np.log10(2)}']
+                            min_widget.error = True
+                            self.minmax.error = True
+                            return
+                        if max > np.log10(2):
+                            max_widget.rules = [f'Max must be lower than {np.log10(2)}']
+                            max_widget.error = True
+                            self.minmax.error = True
+                            return
+                    else:
+                        if min < 0 or min > 2:
+                            min_widget.rules = ['Min must be between 0 and 2']
+                            min_widget.error = True
+                            self.minmax.error = True
+                            return
+                        if max < 0 or max > 2:
+                            max_widget.rules = ['Max must be between 0 and 2']
+                            max_widget.error = True
+                            self.minmax.error = True
+                            return
 
     def reset_form(self):
         super().reset_form()
@@ -216,18 +262,10 @@ class DesignWidget(Dialog):
             if c.relax:
                 attrs = [getattr(lb_scheme, r).symb for r in c.relax]
 
-                smin, smax = c.min, c.max
-                if c.in_log:
-                    smin = 10**smin
-                    smax = 10**smax
-
-                if c.sigma:
-                    smin, smax = 2/(2*smax + 1), 2/(2*smin + 1)
-
                 if c.srt:
-                    output.update({tuple(attrs): (smin, smax)})
+                    output.update({tuple(attrs): (c.min, c.max)})
                 else:
-                    output.update({a: (smin, smax) for a in attrs})
+                    output.update({a: (c.min, c.max) for a in attrs})
             else:
                 if c.param == 'dx':
                     output.update({'dx': (c.min, c.max)})
@@ -241,5 +279,24 @@ class DesignWidget(Dialog):
                     if not isinstance(attr, sp.Symbol):
                         attr = c.param
                     output.update({attr: (c.min, c.max)})
-        print(output)
         return output
+
+    def transform_design_space(self, sample):
+        test_case = self.test_case_widget.get_case()
+        lb_scheme = self.lb_scheme_widget.get_case()
+        discret = self.discret_widget
+
+        def update(i, c):
+            if c.in_log:
+                sample[i] = 10**sample[i]
+            if c.sigma:
+                sample[i] = 2./(2.*sample[i] + 1.)
+
+        ic = 0
+        for c in self.item_list.children:
+            if c.relax:
+                for r in c.relax:
+                    update(ic, c)
+                    ic += 1
+            else:
+                ic += 1

@@ -218,6 +218,7 @@ class ParametricStudyWidget:
             tmp_case = test_case.copy()
             for i, s in enumerate(sampling):
                 design_sample = {}
+                self.design.transform_design_space(s)
 
                 for ik, k in enumerate(design_space.keys()):
                     if k in test_case.__dict__:

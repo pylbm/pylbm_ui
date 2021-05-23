@@ -313,7 +313,16 @@ class PostTreatmentWidget:
                             dirname = os.path.dirname(os.path.abspath(h5))
 
                             ite = int(os.path.splitext(h5)[0].split('_')[-1])
-                            h5_data = h5py.File(h5)
+
+                            # check if the h5 file is not used for the save process
+                            # which means that the ressource is temporarely unavailable
+                            is_available = False
+                            while (not is_available):
+                                try:
+                                    h5_data = h5py.File(h5)
+                                    is_available = True
+                                except OSError:
+                                    pass
 
                             for k in h5_data.keys():
                                 if k not in ['x_0', 'x_1', 'x_2']:

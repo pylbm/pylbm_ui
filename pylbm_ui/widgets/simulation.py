@@ -20,6 +20,7 @@ from ..utils import StrictlyPositiveIntField, StrictlyPositiveFloatField
 from .message import Message
 from .debug import debug
 
+
 @debug
 class SimulationWidget:
     def __init__(self, test_case_widget, lb_scheme_widget):
@@ -55,7 +56,11 @@ class SimulationWidget:
         ## The menu
         ##
 
-        self.simulation_name = v.TextField(label='Simulation name', v_model='simu_0')
+        # configure the default simulation name
+        self.simulation_name = v.TextField(
+            label='Simulation name', v_model=''
+        )
+        self.update_name(None)
 
         input_file = v.FileInput(label='Choose a simu_config.json', accept=".json")
 
@@ -132,6 +137,8 @@ class SimulationWidget:
         test_case_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.update_result, 'v_model')
+        test_case_widget.select_case.observe(self.update_name, 'v_model')
+        lb_scheme_widget.select_case.observe(self.update_name, 'v_model')
 
     def stop_simulation(self, change):
         """
@@ -158,8 +165,22 @@ class SimulationWidget:
         self.save_fields.purge()
         self.save_fields.update_fields(list(self.lb_scheme_widget.get_case().equation.get_fields().keys()))
 
-    async def run_simu(self):
+    def update_name(self, change):
+        """
+        When the test case or the scheme is changed,
+        the default name of the simulation is updated
+        """
+        test_case = self.test_case_widget.get_case()
+        # tc_param = self.test_case_widget.parameters
+        lb_case = self.lb_scheme_widget.get_case()
+        # lb_param = self.lb_scheme_widget.parameters
+        simu_name = f"{test_case.name}"
+        simu_name += f"_{lb_case.name}_0"
+        self.simulation_name.v_model = simu_name
+
+
     # def run_simu(self):
+    async def run_simu(self):
         """
         Run the simulation asynchronously.
         """
@@ -203,7 +224,7 @@ class SimulationWidget:
                         self.simu.save_data(self.result.v_model)
                         self.simu.plot(self.plot, self.result.v_model)
                         self.plot_output.children[0].draw_idle()
-                        # await asyncio.sleep(0.2)
+                        ###### await asyncio.sleep(0.2)
 
                 if self.simu.sol.nt in ite_to_save:
                     self.simu.save_data(ite_to_save[self.simu.sol.nt])

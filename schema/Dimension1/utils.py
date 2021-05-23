@@ -98,7 +98,7 @@ def indicator(
     return output
 
 
-def bump(x, reg, middle=None, width=None, ub=0, ut=1):
+def bump(x_o, reg, middle=None, width=None, ub=0, ut=1):
     """
     initial condition with a bump
 
@@ -129,6 +129,7 @@ def bump(x, reg, middle=None, width=None, ub=0, ut=1):
     output
         ndarray
     """
+    x = x_o.astype(float)
     if middle is None:
         middle = .75*min(x)+.25*max(x)
     if width is None:

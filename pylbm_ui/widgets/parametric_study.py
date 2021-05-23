@@ -262,7 +262,7 @@ class ParametricStudyWidget:
                 output = pool.map(run_simulation, args)
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
-                dimensions = [dict(values=np.arange(len(output)), label='id')]
+                dimensions.extend([dict(values=np.arange(len(output)), label='id')])
 
                 dimensions.extend([dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())])
 

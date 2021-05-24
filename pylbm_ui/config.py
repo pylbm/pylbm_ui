@@ -10,6 +10,7 @@ import copy
 import matplotlib
 
 default_path = os.path.join(os.getcwd(), 'Outputs')
+voila_notebook = os.getcwd()
 
 plot_config = {
     'linewidth': 2,

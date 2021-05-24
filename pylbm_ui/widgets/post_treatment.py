@@ -13,14 +13,13 @@ import h5py
 from matplotlib.lines import Line2D
 
 import ipyvuetify as v
+import ipywidgets as widgets
+import traitlets
 
-from ..config import default_path, plot_config
+from ..config import default_path, plot_config, voila_notebook
 from ..utils import IntField, FloatField
 from ..simulation import Plot
 from .pylbmwidget import out
-
-import ipyvuetify as v
-import traitlets
 
 class SelectedDataTable(v.VuetifyTemplate):
     template = traitlets.Unicode('''
@@ -211,13 +210,8 @@ class PostTreatmentWidget:
 
         def create_zip(widget, event, data):
             from zipfile import ZipFile
-            import webbrowser
-            import tempfile
 
-            zipdir = tempfile.TemporaryDirectory().name
-            if not os.path.exists(zipdir):
-                os.makedirs(zipdir)
-            zipfilename = os.path.join(zipdir, 'results.zip')
+            zipfilename = os.path.join(voila_notebook, 'results.zip')
             with ZipFile(zipfilename, 'w') as zipObj:
                 for folderName, subfolders, filenames in os.walk(default_path):
                     for filename in filenames:
@@ -227,11 +221,22 @@ class PostTreatmentWidget:
                         # Add file to zip
                         zipObj.write(filePath, filePath.replace(default_path, ''))
 
-            webbrowser.open(f'file://{zipfilename}')
+            dialog.children = [
+                v.Card(children=[
+                    v.CardTitle(children=[
+                        widgets.HTML(f'<a href="./results.zip" download="results.zip">Download the archive</a>')
+                    ])
 
+                ])
+            ]
+            dialog.v_model = True
+
+        dialog = v.Dialog()
+        dialog.v_model = False
+        dialog.width = '200'
         download_zip.on_event('click', create_zip)
 
-        self.menu = [self.select_dim, headers_select, download_zip]
+        self.menu = [self.select_dim, headers_select, download_zip, dialog]
         self.main = [
             v.Card(children=[
                 v.CardTitle(children=[

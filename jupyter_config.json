@@ -1,0 +1,6 @@
+{
+    "VoilaConfiguration":
+    {
+        "file_whitelist": [".*\\.(svg|zip)"]
+    }
+}

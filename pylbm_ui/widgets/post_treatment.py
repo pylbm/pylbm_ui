@@ -214,24 +214,36 @@ class PostTreatmentWidget:
             import webbrowser
             import tempfile
 
-            zipdir = tempfile.TemporaryDirectory().name
-            if not os.path.exists(zipdir):
-                os.makedirs(zipdir)
-            zipfilename = os.path.join(zipdir, 'results.zip')
-            with ZipFile(zipfilename, 'w') as zipObj:
-                for folderName, subfolders, filenames in os.walk(default_path):
-                    for filename in filenames:
-                        #create complete filepath of file in directory
-                        filePath = os.path.join(folderName, filename)
+            with out:
+                zipdir = tempfile.TemporaryDirectory().name
+                if not os.path.exists(zipdir):
+                    os.makedirs(zipdir)
+                zipfilename = os.path.join('..', default_path, 'results.zip')
+                with ZipFile(zipfilename, 'w') as zipObj:
+                    for folderName, subfolders, filenames in os.walk(default_path):
+                        for filename in filenames:
+                            #create complete filepath of file in directory
+                            filePath = os.path.join(folderName, filename)
 
-                        # Add file to zip
-                        zipObj.write(filePath, filePath.replace(default_path, ''))
+                            # Add file to zip
+                            zipObj.write(filePath, filePath.replace(default_path, ''))
 
-            webbrowser.open(f'file://{zipfilename}')
+                import ipywidgets as widgets
+                dialog.children = [
+                    v.Card(children=[
+                        v.CardTitle(children=[
+                            widgets.HTML(f'<a href="./Outputs/results.zip" download="results.zip">Download the archive</a>')
+                        ])
+                    ])
+                ]
+                dialog.v_model = True
 
+        dialog = v.Dialog()
+        dialog.v_model = False
+        dialog.width = '500'
         download_zip.on_event('click', create_zip)
 
-        self.menu = [self.select_dim, headers_select, download_zip]
+        self.menu = [self.select_dim, headers_select, download_zip, dialog]
         self.main = [
             v.Card(children=[
                 v.CardTitle(children=[

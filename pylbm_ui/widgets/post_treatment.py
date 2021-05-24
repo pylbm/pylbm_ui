@@ -13,14 +13,13 @@ import h5py
 from matplotlib.lines import Line2D
 
 import ipyvuetify as v
+import ipywidgets as widgets
+import traitlets
 
-from ..config import default_path, plot_config
+from ..config import default_path, plot_config, voila_notebook
 from ..utils import IntField, FloatField
 from ..simulation import Plot
 from .pylbmwidget import out
-
-import ipyvuetify as v
-import traitlets
 
 class SelectedDataTable(v.VuetifyTemplate):
     template = traitlets.Unicode('''
@@ -211,36 +210,30 @@ class PostTreatmentWidget:
 
         def create_zip(widget, event, data):
             from zipfile import ZipFile
-            import webbrowser
-            import tempfile
 
-            with out:
-                zipdir = tempfile.TemporaryDirectory().name
-                if not os.path.exists(zipdir):
-                    os.makedirs(zipdir)
-                zipfilename = os.path.join('..', default_path, 'results.zip')
-                with ZipFile(zipfilename, 'w') as zipObj:
-                    for folderName, subfolders, filenames in os.walk(default_path):
-                        for filename in filenames:
-                            #create complete filepath of file in directory
-                            filePath = os.path.join(folderName, filename)
+            zipfilename = os.path.join(voila_notebook, 'results.zip')
+            with ZipFile(zipfilename, 'w') as zipObj:
+                for folderName, subfolders, filenames in os.walk(default_path):
+                    for filename in filenames:
+                        #create complete filepath of file in directory
+                        filePath = os.path.join(folderName, filename)
 
-                            # Add file to zip
-                            zipObj.write(filePath, filePath.replace(default_path, ''))
+                        # Add file to zip
+                        zipObj.write(filePath, filePath.replace(default_path, ''))
 
-                import ipywidgets as widgets
-                dialog.children = [
-                    v.Card(children=[
-                        v.CardTitle(children=[
-                            widgets.HTML(f'<a href="./Outputs/results.zip" download="results.zip">Download the archive</a>')
-                        ])
+            dialog.children = [
+                v.Card(children=[
+                    v.CardTitle(children=[
+                        widgets.HTML(f'<a href="./results.zip" download="results.zip">Download the archive</a>')
                     ])
-                ]
-                dialog.v_model = True
+
+                ])
+            ]
+            dialog.v_model = True
 
         dialog = v.Dialog()
         dialog.v_model = False
-        dialog.width = '500'
+        dialog.width = '200'
         download_zip.on_event('click', create_zip)
 
         self.menu = [self.select_dim, headers_select, download_zip, dialog]

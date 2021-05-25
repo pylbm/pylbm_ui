@@ -7,20 +7,86 @@
 
 import os
 import glob
+import hashlib
 import json
 import h5py
 
 from matplotlib.lines import Line2D
+import matplotlib.pyplot as plt
+import numpy as np
 
 import ipyvuetify as v
 import ipywidgets as widgets
 import traitlets
 
+from .debug import debug
 from ..config import default_path, plot_config, voila_notebook
 from ..utils import IntField, FloatField
 from ..simulation import Plot
 from .pylbmwidget import out
 
+@debug
+class FormProperties_1D:
+    def __init__(self):
+        self.label = v.TextField(label='label', v_model='')
+        self.line_style = v.Select(label='Line style', items=[{'text': v, 'value': k} for k, v in Line2D.lineStyles.items()], v_model=plot_config['linestyle'])
+        self.line_width = IntField(label='linewidth', v_model=plot_config['linewidth'])
+        self.marker = v.Select(label='Marker', items=[{'text': v, 'value': k} for k, v in Line2D.markers.items()], v_model=plot_config['marker'])
+        self.marker_size = IntField(label='Marker size', v_model=plot_config['markersize'])
+        self.alpha = FloatField(label='alpha', v_model=plot_config['alpha'])
+        self.color = v.ColorPicker(v_model=plot_config['colors'][0])
+
+        self.widget = [
+            self.label,
+            self.line_style,
+            self.line_width,
+            self.marker,
+            self.marker_size,
+            self.alpha,
+            v.Row(children=[
+                self.color
+            ],justify='center'),
+        ]
+
+@debug
+class FormProperties_2D:
+    def __init__(self):
+        self.label = v.TextField(label='label', v_model='')
+        self.min_value = FloatField(label='minimum value')
+        self.max_value = FloatField(label='maximum value')
+
+        headers=[
+            {'text': 'Name', 'value': 'name'},
+            {'text': 'Color', 'value': 'color'}
+        ]
+
+        self.cmap = v.ListItemGroup(
+            v_model=plt.colormaps().index('RdBu'),
+            children=[
+                v.ListItem(children=[
+                    v.ListItemContent(children=[
+                        v.ListItemTitle(children=[name]),
+                        v.ListItemSubtitle(children=[
+                            v.Img(src=f'pylbm_ui/widgets/cmap/{name}.png', height=30, width=400)
+                        ])
+                    ])
+                ])
+            for name in plt.colormaps()
+        ])
+
+        self.widget = [
+            self.label,
+            self.min_value,
+            self.max_value,
+            v.ExpansionPanels(v_model=None, children=[
+                v.ExpansionPanel(children=[
+                    v.ExpansionPanelHeader(children=['Colormaps']),
+                    v.ExpansionPanelContent(children=[self.cmap])
+                ])
+            ])
+        ]
+
+@debug
 class SelectedDataTable(v.VuetifyTemplate):
     template = traitlets.Unicode('''
         <template>
@@ -51,21 +117,18 @@ class SelectedDataTable(v.VuetifyTemplate):
     selected = traitlets.List([]).tag(sync=True)
     headers = traitlets.List([]).tag(sync=True)
     items = traitlets.List([]).tag(sync=True)
-    palette = traitlets.List([]).tag(sync=True)
+    properties = traitlets.List([]).tag(sync=True)
 
     def __init__(self, table, **kwargs):
         self.table = table
 
-        update = v.Btn(children=['update'])
-        close = v.Btn(children=['close'])
+        update = v.Btn(children=['update'], color='success')
+        close = v.Btn(children=['close'], color='error')
 
-        self.form = [IntField(label='linewidth', v_model=plot_config['linewidth']),
-                     v.Select(label='Line style', items=[{'text': v, 'value': k} for k, v in Line2D.lineStyles.items()], v_model=plot_config['linestyle']),
-                     v.Select(label='Marker', items=[{'text': v, 'value': k} for k, v in Line2D.markers.items()], v_model=plot_config['marker']),
-                     IntField(label='Marker size', v_model=plot_config['markersize']),
-                     FloatField(label='alpha', v_model=plot_config['alpha']),
-                     v.ColorPicker(v_model=plot_config['colors'][0]),
-        ]
+        self.form_1d = FormProperties_1D()
+        self.form_2d = FormProperties_2D()
+
+        self.form = v.CardText(children=self.form_1d.widget)
 
         self.dialog = v.Dialog(
                 width='500',
@@ -75,7 +138,7 @@ class SelectedDataTable(v.VuetifyTemplate):
                         v.CardTitle(class_='headline gray lighten-2', primary_title=True, children=[
                             'Plot properties'
                         ]),
-                        v.CardText(children=self.form),
+                        self.form,
                         v.CardActions(children=[v.Spacer(), update, close])
                 ]),
             ])
@@ -85,42 +148,67 @@ class SelectedDataTable(v.VuetifyTemplate):
 
         update.on_event('click', self.update_btn)
         close.on_event('click', close_btn)
+
         super().__init__(**kwargs)
 
     def vue_edit_plot_item(self, item):
         with out:
             index = self.items.index(item)
-            self.form[0].value  = self.palette[index]['linewidth']
-            self.form[1].v_model = self.palette[index]['linestyle']
-            self.form[2].v_model = self.palette[index]['marker']
-            self.form[3].value   = self.palette[index]['markersize']
-            self.form[4].value   = self.palette[index]['alpha']
-            self.form[5].v_model = self.palette[index]['color']
+
+            if item['dim'] == 1:
+                form = self.form_1d
+                form.label.v_model = self.properties[index]['label']
+                form.line_width.value  = self.properties[index]['linewidth']
+                form.line_style.v_model = self.properties[index]['linestyle']
+                form.marker.v_model = self.properties[index]['marker']
+                form.marker_size.value   = self.properties[index]['markersize']
+                form.alpha.value   = self.properties[index]['alpha']
+                form.color.v_model = self.properties[index]['color']
+            elif item['dim'] == 2:
+                form = self.form_2d
+                form.label.v_model = self.properties[index]['label']
+                form.min_value.value = self.properties[index]['min_value']
+                form.max_value.value = self.properties[index]['max_value']
+                form.cmap.v_model = self.properties[index]['cmap']
+
+            self.form.children = form.widget
             self.current_index = index
             self.dialog.v_model = True
 
     def update_btn(self, widget, event, data):
         index = self.current_index
-        self.palette[index]['linewidth'] = self.form[0].value
-        self.palette[index]['linestyle'] = self.form[1].v_model
-        self.palette[index]['marker'] = self.form[2].v_model
-        self.palette[index]['markersize'] = self.form[3].value
-        self.palette[index]['alpha'] = self.form[4].value
-        self.palette[index]['color'] = self.form[5].v_model
-        self.notify_change({'name': 'palette', 'type': 'change'})
+
+        if self.items[index]['dim'] == 1:
+            form = self.form_1d
+            self.properties[index]['label'] = form.label.v_model
+            self.properties[index]['linewidth'] = form.line_width.value
+            self.properties[index]['linestyle'] = form.line_style.v_model
+            self.properties[index]['marker'] = form.marker.v_model
+            self.properties[index]['markersize'] = form.marker_size.value
+            self.properties[index]['alpha'] = form.alpha.value
+            self.properties[index]['color'] = form.color.v_model
+        elif self.items[index]['dim'] == 2:
+            form = self.form_2d
+            self.properties[index]['label'] = form.label.v_model
+            self.properties[index]['min_value'] = form.min_value.value
+            self.properties[index]['max_value'] = form.max_value.value
+            self.properties[index]['cmap'] = form.cmap.v_model
+
+        self.notify_change({'name': 'properties', 'type': 'change'})
         self.dialog.v_model = False
 
 
     def vue_remove_item(self, item):
         with out:
             index = self.items.index(item)
-            self.palette.pop(index)
+            self.properties.pop(index)
             self.items.remove(item)
             self.table.items.append(item)
             self.selected = [i for i in self.selected if item != i]
             self.notify_change({'name': 'items', 'type': 'change'})
             self.table.notify_change({'name': 'items', 'type': 'change'})
 
+@debug
 class PostTreatmentWidget:
     def __init__(self):
 
@@ -128,6 +216,7 @@ class PostTreatmentWidget:
         self.previous_dim = 1
 
         headers=[
+            {'text': 'Id', 'value': 'id'},
             {'text': 'Iteration', 'value': 'iteration'},
             {'text': 'Time', 'value': 'time' },
             {'text': 'Field', 'value': 'field' },
@@ -139,7 +228,7 @@ class PostTreatmentWidget:
 
         headers_select = v.Select(label='Show columns',
                                   items=[{'text': v['text'], 'value': i} for i, v in enumerate(headers)],
-                                  v_model=list(range(5)),
+                                  v_model=list(range(1, 6)),
                                   multiple=True)
 
         search = v.TextField(
@@ -162,7 +251,7 @@ class PostTreatmentWidget:
 
         self.selected_cache = [[]]*3
         self.select_item_cache = [[]]*3
-        self.palette_cache = [[]]*3
+        self.properties_cache = [[]]*3
         self.select_table = SelectedDataTable(self.table,
             headers=[headers[i] for i in headers_select.v_model] + [{'text': 'Action', 'value': 'action'}],
         )
@@ -173,13 +262,23 @@ class PostTreatmentWidget:
             with out:
                 for e in list(self.table.v_model):
                     self.select_table.items.append(e)
-                    self.select_table.palette.append({'color': plot_config['colors'][0],
-                                                      'alpha': plot_config['alpha'],
-                                                      'linewidth': plot_config['linewidth'],
-                                                      'linestyle': plot_config['linestyle'],
-                                                      'marker': plot_config['marker'],
-                                                      'markersize': plot_config['markersize']
-                    })
+                    if e['dim'] == 1:
+                        self.select_table.properties.append({'label': e['field'],
+                                                             'color': plot_config['colors'][0],
+                                                             'alpha': plot_config['alpha'],
+                                                             'linewidth': plot_config['linewidth'],
+                                                             'linestyle': plot_config['linestyle'],
+                                                             'marker': plot_config['marker'],
+                                                             'markersize': plot_config['markersize']
+                        })
+                    elif e['dim'] == 2:
+                        h5 = os.path.join(e['directory'], e['file'])
+                        h5_data = h5py.File(h5)
+                        data = h5_data[e['field']][:]
+                        self.select_table.properties.append({'label': e['field'],
+                                                             'min_value': np.nanmin(data),
+                                                             'max_value': np.nanmax(data),
+                                                             'cmap': plt.colormaps().index(plot_config['cmap'])})
                     self.table.items.remove(e)
                 self.table.v_model = []
                 self.select_table.notify_change({'name': 'items', 'type': 'change'})
@@ -188,10 +287,10 @@ class PostTreatmentWidget:
         def search_text(change):
             self.table.search = search.v_model
 
-        self.update(None)
+        # self.update(None)
 
         self.select_table.observe(self.plot_result, 'items')
-        self.select_table.observe(self.plot_result, 'palette')
+        self.select_table.observe(self.plot_result, 'properties')
         self.select_table.observe(self.plot_result, 'selected')
         search.observe(search_text, 'v_model')
         self.table.observe(select, 'v_model')
@@ -231,12 +330,31 @@ class PostTreatmentWidget:
             ]
             dialog.v_model = True
 
+        self.title = v.TextField(label='Plot title', v_model='')
+        self.xlabel = v.TextField(label='x label', v_model='')
+        self.ylabel = v.TextField(label='y label', v_model='')
+        self.legend = v.Switch(label='Add legend', v_model=False)
+
+        self.title.observe(self.set_plot_properties, 'v_model')
+        self.xlabel.observe(self.set_plot_properties, 'v_model')
+        self.ylabel.observe(self.set_plot_properties, 'v_model')
+        self.legend.observe(self.set_plot_properties, 'v_model')
+
         dialog = v.Dialog()
         dialog.v_model = False
         dialog.width = '200'
         download_zip.on_event('click', create_zip)
 
-        self.menu = [self.select_dim, headers_select, download_zip, dialog]
+        self.menu = [
+            self.select_dim,
+            headers_select,
+            self.title,
+            self.xlabel,
+            self.ylabel,
+            self.legend,
+            download_zip,
+            dialog
+        ]
         self.main = [
             v.Card(children=[
                 v.CardTitle(children=[
@@ -257,7 +375,6 @@ class PostTreatmentWidget:
                 class_='ma-2',
             ),
             v.Row(children=[self.plot.fig.canvas], justify='center'),
-            # out
             ]
 
     def plot_result(self, change):
@@ -269,7 +386,9 @@ class PostTreatmentWidget:
             class Domain:
                 pass
 
-            for item, palette in zip(self.select_table.selected, self.select_table.palette):
+            for item in self.select_table.selected:
+                index = self.select_table.items.index(item)
+                properties = self.select_table.properties[index]
                 domain = Domain()
                 h5 = os.path.join(item['directory'], item['file'])
                 h5_data = h5py.File(h5)
@@ -281,18 +400,39 @@ class PostTreatmentWidget:
                 data = h5_data[item['field']][:]
                 time = item['time']
                 self.plot.plot_type = None
-                self.plot.plot(time, domain, item['field'], data, transpose=False, palette=palette)
+                self.plot.plot(time, domain, item['field'], data, transpose=False, properties=properties)
+
+            self.set_plot_properties(None)
+            self.plot.fig.canvas.draw_idle()
+
+    def set_plot_properties(self, change):
+        with out:
+            self.plot.ax.title.set_text(f'{self.title.v_model}')
+            self.plot.ax.set_xlabel(f'{self.xlabel.v_model}')
+            self.plot.ax.set_ylabel(f'{self.ylabel.v_model}')
+
+            handles, labels = self.plot.ax.get_legend_handles_labels()
+            if handles:
+                if self.legend.v_model:
+                    self.plot.ax.legend()
+                else:
+                    self.plot.ax.legend().remove()
             self.plot.fig.canvas.draw_idle()
 
     def cache(self, change):
+        if self.select_dim.v_model == 1:
+            self.legend.class_ = ''
+        else:
+            self.legend.class_ = 'd-none'
+
         self.selected_cache[self.previous_dim - 1] = [i for i in self.select_table.selected]
         self.select_item_cache[self.previous_dim - 1] = [i for i in self.select_table.items]
-        self.palette_cache[self.previous_dim - 1] = [i for i in self.select_table.palette]
+        self.properties_cache[self.previous_dim - 1] = [i for i in self.select_table.properties]
 
         self.previous_dim = self.select_dim.v_model
         self.select_table.selected = self.selected_cache[self.select_dim.v_model - 1]
         self.select_table.items = self.select_item_cache[self.select_dim.v_model - 1]
-        self.select_table.palette = self.palette_cache[self.select_dim.v_model - 1]
+        self.select_table.properties = self.properties_cache[self.select_dim.v_model - 1]
 
         self.update(None)
 
@@ -331,7 +471,10 @@ class PostTreatmentWidget:
 
                             for k in h5_data.keys():
                                 if k not in ['x_0', 'x_1', 'x_2']:
-                                    data.append({'iteration': ite,
+                                    data.append({
+                                                # 'id': id,
+                                                'iteration': ite,
+                                                'dim': cfg['dim'],
                                                 'time': ite*dt,
                                                 'field': k,
                                                 'test case': cfg['test_case']['class'],
@@ -339,28 +482,21 @@ class PostTreatmentWidget:
                                                 'file': filename,
                                                 'directory': dirname,
                                     })
+                                    dhash = hashlib.md5()
+                                    encoded = json.dumps(data[-1], sort_keys=True).encode()
+                                    dhash.update(encoded)
+                                    data[-1]['id'] = dhash.hexdigest()
 
-            items = [{k: v for k, v in item.items() if k != 'id'} for item in self.select_table.items]
+            items = self.select_table.items
             index = [i for i, item in enumerate(items) if item in data]
 
             self.select_table.items = [items[i] for i in index]
-            self.select_table.palette = [self.select_table.palette[i] for i in index]
+            self.select_table.properties = [self.select_table.properties[i] for i in index]
 
-            items = [{k: v for k, v in item.items() if k != 'id'} for item in self.select_table.selected]
+            items = self.select_table.selected
             selected = [self.select_table.items.index(item) for item in items if item in self.select_table.items]
 
             self.table.items = [i for i in data if i not in self.select_table.items]
-
-            # add Id
-            id = 0
-            for i in range(len(self.table.items)):
-                self.table.items[i]['id'] = id
-                id += 1
-
-            for i in range(len(self.select_table.items)):
-                self.select_table.items[i]['id'] = id
-                id += 1
-
             self.select_table.selected = [self.select_table.items[i] for i in selected]
 
             self.select_table.notify_change({'name': 'items', 'type': 'change'})

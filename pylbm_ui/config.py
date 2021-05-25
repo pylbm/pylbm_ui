@@ -19,7 +19,7 @@ plot_config = {
     'alpha': 0.8,
     'markersize': 10,
     'marker': '.',
-    'cmap': copy.copy(matplotlib.cm.get_cmap("RdBu")),
+    'cmap': "RdBu",
     'nan_color': 'black',
 }
 

@@ -12,15 +12,18 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 import matplotlib
+import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylbm
 
+from .widgets.debug import debug
 from .config import plot_config
 from .json import save_simu_config
 
 from .widgets.pylbmwidget import out
 
 
+@debug
 class Plot:
     def __init__(self):
         plt.ioff()
@@ -30,12 +33,14 @@ class Plot:
         self.color_bar = None
         # plt.ion()
 
-    def plot(self, t, domain, field, data, transpose=True, palette=None):
+    def plot(self, t, domain, field, data, transpose=True, properties=None):
+        properties = properties or {}
         with out:
             if domain.dim == 1:
                 x = domain.x
                 if self.plot_type is None:
-                    if palette is None:
+                    if properties is None:
+                        label = f'{field}'
                         color = plot_config['colors'][0]
                         alpha = plot_config['alpha']
                         linewidth = plot_config['linewidth']
@@ -43,15 +48,17 @@ class Plot:
                         marker = plot_config['marker']
                         markersize = plot_config['markersize']
                     else:
-                        color = palette['color']
-                        alpha = palette['alpha']
-                        linewidth = palette['linewidth']
-                        linestyle = palette['linestyle']
-                        marker = palette['marker']
-                        markersize = palette['markersize']
+                        label = properties['label']
+                        color = properties['color']
+                        alpha = properties['alpha']
+                        linewidth = properties['linewidth']
+                        linestyle = properties['linestyle']
+                        marker = properties['marker']
+                        markersize = properties['markersize']
 
                     self.plot_type, = self.ax.plot(
                         x, data,
+                        label=label,
                         color=color,
                         alpha=alpha,
                         linewidth=linewidth,
@@ -64,11 +71,17 @@ class Plot:
 
                 self.ax.relim()
                 self.ax.autoscale_view()
-                self.ax.set_xlabel('x')
-                self.ax.set_ylabel(field)
+
+                if not properties:
+                    self.ax.set_xlabel('x')
+                    self.ax.set_ylabel(field)
+
             elif domain.dim == 2:
                 if self.plot_type is None:
                     cmap = plot_config['cmap']
+                    if 'cmap' in properties:
+                        cmap = plt.colormaps()[int(properties['cmap'])]
+                    cmap = copy.copy(matplotlib.cm.get_cmap(cmap))
                     cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
                     x, y = domain.x, domain.y
                     extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
@@ -76,20 +89,32 @@ class Plot:
                         to_plot = data.T
                     else:
                         to_plot = data
-                    self.plot_type = self.ax.imshow(to_plot, origin='lower', cmap=cmap, extent=extent, interpolation='bilinear')
+
+                    self.plot_type = self.ax.imshow(to_plot, origin='lower',
+                                                    cmap=cmap, extent=extent,
+                                                    interpolation='bilinear')
                     divider = make_axes_locatable(self.ax)
-                    cax = divider.append_axes("bottom", size="5%", pad=0.25)
+                    cax = divider.append_axes("bottom", size="5%", pad=0.55)
                     self.color_bar = self.fig.colorbar(
                         self.plot_type, cax=cax, orientation="horizontal"
                     )
                 else:
                     self.plot_type.set_array(data.T)
-                self.plot_type.set_clim(
-                    vmin=np.nanmin(data), vmax=np.nanmax(data)
-                )
-                self.color_bar.set_label(label=field)
+                if 'min_value' in properties:
+                    vmin = properties['min_value']
+                else:
+                    vmin = np.nanmin(data)
 
-            self.ax.title.set_text(f"time: {t} s")  #, fontsize=18)
+                if 'max_value' in properties:
+                    vmax = properties['max_value']
+                else:
+                    vmax = np.nanmax(data)
+                self.plot_type.set_clim(vmin=vmin, vmax=vmax)
+                label = properties['label'] if 'label' in properties else field
+                self.color_bar.set_label(label=label)
+
+            if not properties:
+                self.ax.title.set_text(f"time: {t} s")  #, fontsize=18)
 
 
 def get_config(

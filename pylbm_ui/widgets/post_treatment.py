@@ -457,7 +457,7 @@ class PostTreatmentWidget:
                             filename = os.path.basename(h5)
                             dirname = os.path.dirname(os.path.abspath(h5))
 
-                            ite = int(os.path.splitext(h5)[0].split('_')[-1])
+                            ite = int(os.path.splitext(filename)[0].split('_')[-1])
 
                             # check if the h5 file is not used for the save process
                             # which means that the ressource is temporarely unavailable

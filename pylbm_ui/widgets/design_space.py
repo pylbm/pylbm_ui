@@ -294,9 +294,13 @@ class DesignWidget(Dialog):
 
         ic = 0
         for c in self.item_list.children:
-            if c.relax:
-                for r in c.relax:
+            if c.param == 'relaxation parameters':
+                if c.srt:
                     update(ic, c)
                     ic += 1
+                else:
+                    for r in c.relax:
+                        update(ic, c)
+                        ic += 1
             else:
                 ic += 1

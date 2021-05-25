@@ -39,21 +39,26 @@ class Plot:
             if domain.dim == 1:
                 x = domain.x
                 if self.plot_type is None:
-                    if properties is None:
-                        label = f'{field}'
-                        color = plot_config['colors'][0]
-                        alpha = plot_config['alpha']
-                        linewidth = plot_config['linewidth']
-                        linestyle = plot_config['linestyle']
-                        marker = plot_config['marker']
-                        markersize = plot_config['markersize']
-                    else:
+                    label = f'{field}'
+                    color = plot_config['colors'][0]
+                    alpha = plot_config['alpha']
+                    linewidth = plot_config['linewidth']
+                    linestyle = plot_config['linestyle']
+                    marker = plot_config['marker']
+                    markersize = plot_config['markersize']
+                    if 'label' in properties:
                         label = properties['label']
+                    if 'color' in properties:
                         color = properties['color']
+                    if 'alpha' in properties:
                         alpha = properties['alpha']
+                    if 'linewidth' in properties:
                         linewidth = properties['linewidth']
+                    if 'linestyle' in properties:
                         linestyle = properties['linestyle']
+                    if 'marker' in properties:
                         marker = properties['marker']
+                    if 'markersize' in properties:
                         markersize = properties['markersize']
 
                     self.plot_type, = self.ax.plot(

@@ -14,6 +14,8 @@ import enum
 from traitlets import List, UseEnum, Unicode
 
 from .dialog_form import Form, Item, Dialog, add_rule
+
+
 class SaveType(enum.Enum):
     frequency = 'Frequency'
     steps = 'List of steps'
@@ -21,11 +23,21 @@ class SaveType(enum.Enum):
     times = 'List of times'
     time_period = 'Time period'
 
+
 class SaveForm(Form):
     def __init__(self, fields, *args, **kwargs):
-        self.select_field = v.Select(label='Fields', v_model=[], items=['all'] + fields, required=True, multiple=True)
-        self.select_when = v.Select(label='When', v_model=None, items=[t.value for t in SaveType], required=True)
-        self.when_properties = v.TextField(label='when save the fields?', v_model=None, required=True)
+        self.select_field = v.Select(
+            label='Fields', v_model=[],
+            items=['all'] + fields, required=True, multiple=True
+        )
+        self.select_when = v.Select(
+            label='When', v_model=None,
+            items=[t.value for t in SaveType],
+            required=True
+        )
+        self.when_properties = v.TextField(
+            label='when save the fields?', v_model=None, required=True
+        )
 
         def select_fields_all(change):
             if 'all' in self.select_field.v_model:
@@ -37,9 +49,16 @@ class SaveForm(Form):
         self.select_when.observe(self.when_properties_rules, 'v_model')
         self.when_properties.observe(self.when_properties_rules, 'v_model')
 
-        self.fields = [self.select_field, self.select_when, self.when_properties]
+        self.fields = [
+            self.select_field, self.select_when, self.when_properties
+        ]
 
-        super().__init__(v_model='valid', children=[self.select_field, self.select_when,self.when_properties,])
+        super().__init__(
+            v_model='valid',
+            children=[
+                self.select_field, self.select_when, self.when_properties,
+            ]
+        )
 
     def update_fields(self, new_fields):
         self.select_field.items = ['all'] + new_fields
@@ -57,7 +76,9 @@ class SaveForm(Form):
     @add_rule
     def select_when_rules(self, change):
         if self.select_when.v_model is None:
-            self.select_when.rules = ['You must select one item indicating when to save the fields']
+            self.select_when.rules = [
+                'You must select one item indicating when to save the fields'
+            ]
             self.select_when.error = True
             return
         else:
@@ -91,7 +112,9 @@ class SaveForm(Form):
                 self.when_properties.rules = []
                 self.when_properties.error = False
             except:
-                self.when_properties.rules = ['You must enter a list of integers. For example: 1, 2-4, 6']
+                self.when_properties.rules = [
+                    'You must enter a list of integers. For example: 1, 2-4, 6'
+                ]
                 self.when_properties.error = True
                 return
         elif self.select_when.v_model == 'List of times':
@@ -100,7 +123,9 @@ class SaveForm(Form):
                 self.when_properties.rules = []
                 self.when_properties.error = False
             except:
-                self.when_properties.rules = ['You must enter a list of floats. For example: 0.1, 0.25, 0.6']
+                self.when_properties.rules = [
+                    'You must enter a list of floats. For example: 0.1, 0.25, 0.6'
+                ]
                 self.when_properties.error = True
                 return
         elif self.select_when.v_model == 'Time period':
@@ -112,6 +137,7 @@ class SaveForm(Form):
                 self.when_properties.rules = ['You must enter a float.']
                 self.when_properties.error = True
                 return
+
 
 class SaveItem(Item):
     form_class = SaveForm
@@ -132,11 +158,12 @@ class SaveItem(Item):
 
     def field2form(self):
         self.form.select_field.v_model = self.field_list
-        self.form.select_when.v_model =  self.when.value
-        self.form.when_properties.v_model =  self.when_properties
+        self.form.select_when.v_model = self.when.value
+        self.form.when_properties.v_model = self.when_properties
 
     def __str__(self):
         return ', '.join(self.field_list) + f' ({self.when.value}: {self.when_properties})'
+
 
 class Save_widget(Dialog):
     item_class = SaveItem
@@ -152,12 +179,13 @@ class Save_widget(Dialog):
         self.form.update_fields(new_fields)
 
     def create_item(self):
-        return SaveItem(self.all_fields,
-                        field_list=self.form.select_field.v_model,
-                        when=SaveType(self.form.select_when.v_model),
-                        when_properties=self.form.when_properties.v_model,
-                        class_='ma-1',
-                        style_='background-color: #F8F8F8;'
+        return SaveItem(
+            self.all_fields,
+            field_list=self.form.select_field.v_model,
+            when=SaveType(self.form.select_when.v_model),
+            when_properties=self.form.when_properties.v_model,
+            class_='ma-1',
+            style_='background-color: #F8F8F8;'
         )
 
     def get_save_time(self, dt, final_time):
@@ -174,8 +202,8 @@ class Save_widget(Dialog):
         for c in self.item_list.children:
             if c.when == SaveType.frequency:
                 freq = int(c.when_properties)
-                for i in range(freq):
-                    ite = int(nsteps * (i+1)/freq)
+                for i in range(freq+1):
+                    ite = int(nsteps * i / freq)
                     add_ite(ite, c.field_list)
             elif c.when == SaveType.steps:
                 clean_str = c.when_properties.replace(' ', '')
@@ -188,7 +216,7 @@ class Save_widget(Dialog):
                         add_ite(int(steps[0]), c.field_list)
             elif c.when == SaveType.step_period:
                 step = int(c.when_properties)
-                for ite in range(0, nsteps, step):
+                for ite in range(0, nsteps+1, step):
                     add_ite(ite, c.field_list)
             elif c.when == SaveType.times:
                 clean_str = c.when_properties.replace(' ', '')
@@ -197,7 +225,7 @@ class Save_widget(Dialog):
                     add_ite(ite, c.field_list)
             elif c.when == SaveType.time_period:
                 step = int(float(c.when_properties)/dt)
-                for ite in range(0, nsteps, step):
+                for ite in range(0, nsteps+1, step):
                     add_ite(ite, c.field_list)
 
         return output

@@ -68,7 +68,9 @@ class SimulationWidget:
 
         self.codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
 
-        self.save_fields = Save_widget(list(lb_scheme_widget.get_case().equation.get_fields().keys()))
+        self.save_fields = Save_widget(
+            list(lb_scheme_widget.get_case().equation.get_fields().keys())
+        )
 
         self.menu = [
             self.simulation_name,
@@ -191,35 +193,46 @@ class SimulationWidget:
             self.stop_simulation(None)
             return
 
-        nite = 1
-
         self.plot_output.children = [Message('Prepare the simulation')]
 
         test_case = self.test_case_widget.get_case()
         lb_scheme = self.lb_scheme_widget.get_case()
 
-        self.simu.reset_path(os.path.join(default_path, self.simulation_name.v_model))
-        self.simu.reset_sol(test_case, lb_scheme, self.discret['dx'].value, self.codegen.v_model)
+        self.simu.reset_path(
+            os.path.join(default_path, self.simulation_name.v_model)
+        )
+        self.simu.reset_sol(
+            test_case, lb_scheme,
+            self.discret['dx'].value,
+            self.codegen.v_model
+        )
         self.simu.save_config()
 
         self.plot = Plot()
         self.iplot = 0
         self.plot_output.children = [self.plot.fig.canvas]
 
+        self.simu.save_data(self.result.v_model)
         self.simu.plot(self.plot, self.result.v_model)
         self.plot_output.children[0].draw_idle()
 
-        ite_to_save = self.save_fields.get_save_time(self.simu.sol.dt, self.simu.duration)
+        ite_to_save = self.save_fields.get_save_time(
+            self.simu.sol.dt, self.simu.duration
+        )
+
+        nite = 1
+        stop_time = self.simu.duration + .5*self.simu.sol.dt
 
         await asyncio.sleep(0.01)
-        while self.simu.sol.t <= self.simu.duration:
-            self.progress_bar.value = float(self.simu.sol.t)/self.simu.duration*100
+        while self.simu.sol.t < stop_time:
+            self.progress_bar.value = float(
+                self.simu.sol.t
+            )/self.simu.duration*100
 
             if not self.pause.v_model:
-                self.simu.sol.one_time_step()
 
                 if not self.period.error:
-                    if nite >= self.period.value:
+                    if nite > self.period.value:
                         nite = 1
                         self.simu.save_data(self.result.v_model)
                         self.simu.plot(self.plot, self.result.v_model)
@@ -229,6 +242,7 @@ class SimulationWidget:
                 if self.simu.sol.nt in ite_to_save:
                     self.simu.save_data(ite_to_save[self.simu.sol.nt])
 
+                self.simu.sol.one_time_step()
                 nite += 1
                 self.iplot += 1
 

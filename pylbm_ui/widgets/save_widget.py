@@ -25,10 +25,11 @@ class SaveType(enum.Enum):
 
 
 class SaveForm(Form):
-    def __init__(self, fields, *args, **kwargs):
+    def __init__(self, phys_fields, *args, **kwargs):
+        self.phys_fields = phys_fields
         self.select_field = v.Select(
             label='Fields', v_model=[],
-            items=['all'] + fields, required=True, multiple=True
+            items=['all'] + phys_fields, required=True, multiple=True
         )
         self.select_when = v.Select(
             label='When', v_model=None,
@@ -39,12 +40,8 @@ class SaveForm(Form):
             label='when save the fields?', v_model=None, required=True
         )
 
-        def select_fields_all(change):
-            if 'all' in self.select_field.v_model:
-                self.select_field.v_model = fields
-
         self.select_field.observe(self.select_fields_rules, 'v_model')
-        self.select_field.observe(select_fields_all, 'v_model')
+        self.select_field.observe(self.select_fields_all, 'v_model')
         self.select_when.observe(self.select_when_rules, 'v_model')
         self.select_when.observe(self.when_properties_rules, 'v_model')
         self.when_properties.observe(self.when_properties_rules, 'v_model')
@@ -60,8 +57,13 @@ class SaveForm(Form):
             ]
         )
 
-    def update_fields(self, new_fields):
-        self.select_field.items = ['all'] + new_fields
+    def select_fields_all(self, change):
+        if 'all' in self.select_field.v_model:
+            self.select_field.v_model = self.phys_fields
+
+    def update_fields(self, new_phys_fields):
+        self.phys_fields = new_phys_fields
+        self.select_field.items = ['all'] + new_phys_fields
 
     @add_rule
     def select_fields_rules(self, change):

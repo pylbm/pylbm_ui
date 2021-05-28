@@ -117,7 +117,7 @@ class Error(AfterSimulation):
         return np.log10(norm) if self.log10 else norm
 
 class ErrorStd(DuringSimulation):
-    def __init__(self, field, ref_func, expr, call_at=0.8, log10=True):
+    def __init__(self, field, ref_func, expr, call_at=0.9, log10=True):
         self.field = field
         self.ref_func = ref_func
         self.expr = expr
@@ -128,8 +128,8 @@ class ErrorStd(DuringSimulation):
 
     def __call__(self, sol, duration):
         self.nite += 1
-        startTime = duration - 2*0.01
-        #startTime = duration*self.call_at
+        #startTime = duration - 2*0.01
+        startTime = duration*self.call_at
         if sol.t >= startTime:
         #if self.nite >= self.call_at:
             self.nite = 0

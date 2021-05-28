@@ -10,7 +10,6 @@ At t$>$0, depending on the initial data, there are
     <thead align="center">
         <tr style="border:1px solid black">
             <th style="border:1px solid black; text-align: center"></th>
-            <th style="border:1px solid black; text-align: center">Sod</th>
             <th style="border:1px solid black; text-align: center">Toro 1</th>
             <th style="border:1px solid black; text-align: center">Toro 2</th>
             <th style="border:1px solid black; text-align: center">Toro 3</th>
@@ -25,13 +24,11 @@ At t$>$0, depending on the initial data, there are
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
-            <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">5.99924</td>
         </tr>
         <tr style="border:1px solid black">
             <th>velocity left</th>
             <td style="border:1px solid black; text-align: center">0</td>
-            <td style="border:1px solid black; text-align: center">0.75</td>
             <td style="border:1px solid black; text-align: center">-2</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">0</td>
@@ -39,7 +36,6 @@ At t$>$0, depending on the initial data, there are
         </tr>
         <tr style="border:1px solid black">
             <th>pressure left</th>
-            <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">0.4</td>
             <td style="border:1px solid black; text-align: center">1000</td>
@@ -49,7 +45,6 @@ At t$>$0, depending on the initial data, there are
         <tr style="border:1px solid black">
             <th>mass right</th>
             <td style="border:1px solid black; text-align: center">0.125</td>
-            <td style="border:1px solid black; text-align: center">0.125</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
@@ -57,7 +52,6 @@ At t$>$0, depending on the initial data, there are
         </tr>
         <tr style="border:1px solid black">
             <th>velocity right</th>
-            <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">0</td>
@@ -67,7 +61,6 @@ At t$>$0, depending on the initial data, there are
         <tr style="border:1px solid black">
             <th>pressure right</th>
             <td style="border:1px solid black; text-align: center">0.1</td>
-            <td style="border:1px solid black; text-align: center">0.1</td>
             <td style="border:1px solid black; text-align: center">0.4</td>
             <td style="border:1px solid black; text-align: center">0.01</td>
             <td style="border:1px solid black; text-align: center">100</td>
@@ -76,14 +69,9 @@ At t$>$0, depending on the initial data, there are
     </tbody>
 </table>
 
-Toro test case 1 is the Riemann problem where the Sod’s Shock Tube problem
-is modified slightly.
-The solution of the problem has a right shock wave,
+The solution of the Sod's problem has a right shock wave,
 a right travelling contact wave, and a left sonic rarefaction wave.
-The purpose of this test is to assess the entropy satisfaction property of
-the numerical methods.
-The analytical solution computed with the computer program from Toro
-is plotted in the next Figure.
+It was proposed to test the accuracy of computational fluid codes, like Riemann solvers.
 
 ![Toro1](./Dimension1/Euler/Toro_Test1.png "Toro test case 1")
 
@@ -94,7 +82,7 @@ The reference final results are computed using an exact Riemann solver
 that compute the two intermediate states.
 The `fsolve` function of the module `scipy.optimize` is used.
 
-> [[1] Eleuterio F. Toro, Riemann Solvers and Numerical Methods for Fluid Dynamics, March 2009, DOI:10.1007/b79761*3
-> In book: \_Riemann Solvers and Numerical Methods for Fluid Dynamics* (pp.87-114)](https://www.researchgate.net/publication/278720679_Riemann_Solvers_and_Numerical_Methods_for_Fluid_Dynamics)
+> [[1] Eleuterio F. Toro, Riemann Solvers and Numerical Methods for Fluid Dynamics, March 2009, DOI:10.1007/b79761_3
+> In book: _Riemann Solvers and Numerical Methods for Fluid Dynamics_ (pp.87-114)](https://www.researchgate.net/publication/278720679_Riemann_Solvers_and_Numerical_Methods_for_Fluid_Dynamics)
 >
 > [[2] Gary A. Sod, _A Survey of Several Finite Difference Methods for Systems of Nonlinear Hyperbolic Conservation Laws_, J. Comput. Phys. **27** (pp. 1–31) 1978](https://hal.archives-ouvertes.fr/hal-01635155/file/GAS.pdf)

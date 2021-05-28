@@ -10,7 +10,6 @@ At t$>$0, depending on the initial data, there are
     <thead align="center">
         <tr style="border:1px solid black">
             <th style="border:1px solid black; text-align: center"></th>
-            <th style="border:1px solid black; text-align: center">Sod</th>
             <th style="border:1px solid black; text-align: center">Toro 1</th>
             <th style="border:1px solid black; text-align: center">Toro 2</th>
             <th style="border:1px solid black; text-align: center">Toro 3</th>
@@ -25,13 +24,11 @@ At t$>$0, depending on the initial data, there are
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
-            <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">5.99924</td>
         </tr>
         <tr style="border:1px solid black">
             <th>velocity left</th>
             <td style="border:1px solid black; text-align: center">0</td>
-            <td style="border:1px solid black; text-align: center">0.75</td>
             <td style="border:1px solid black; text-align: center">-2</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">0</td>
@@ -39,7 +36,6 @@ At t$>$0, depending on the initial data, there are
         </tr>
         <tr style="border:1px solid black">
             <th>pressure left</th>
-            <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">0.4</td>
             <td style="border:1px solid black; text-align: center">1000</td>
@@ -49,7 +45,6 @@ At t$>$0, depending on the initial data, there are
         <tr style="border:1px solid black">
             <th>mass right</th>
             <td style="border:1px solid black; text-align: center">0.125</td>
-            <td style="border:1px solid black; text-align: center">0.125</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">1</td>
@@ -58,7 +53,6 @@ At t$>$0, depending on the initial data, there are
         <tr style="border:1px solid black">
             <th>velocity right</th>
             <td style="border:1px solid black; text-align: center">0</td>
-            <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">1</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">0</td>
@@ -66,7 +60,6 @@ At t$>$0, depending on the initial data, there are
         </tr>
         <tr style="border:1px solid black">
             <th>pressure right</th>
-            <td style="border:1px solid black; text-align: center">0.1</td>
             <td style="border:1px solid black; text-align: center">0.1</td>
             <td style="border:1px solid black; text-align: center">0.4</td>
             <td style="border:1px solid black; text-align: center">0.01</td>
@@ -81,7 +74,7 @@ three strong discontinuities travelling to the right.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![Toro4](./Dimension1/Euler/Toro_Test4.png "Toro test case 4")
+![Toro4](./Dimension1/Euler/Toro_Test5.png "Toro test case 4")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

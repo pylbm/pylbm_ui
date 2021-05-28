@@ -47,10 +47,18 @@ def run_simulation(args):
             output[i] = r(simu_cfg, sample)
 
     def test_nan():
-        c = list(sol.scheme.consm.keys())[0]
+        c = list(sol.scheme.consm.keys())[0] ##??? are we shure that it is the mass field?
         sol.m_halo[c][solid_cells] = 0
         data = sol.m[c]
-        if np.isnan(np.sum(data)) or np.any(np.abs(data)>1e20):
+        if np.isnan(np.sum(data)) or np.any(np.abs(data)>1e10):
+            return True
+        return False
+    
+    def test_NegMass():
+        c = list(sol.scheme.consm.keys())[0] ##??? are we shure that it is the mass field?
+        sol.m_halo[c][solid_cells] = 0 
+        data = sol.m[c]
+        if np.any(data<=0.):
             return True
         return False
 
@@ -58,25 +66,25 @@ def run_simulation(args):
 
     nan_detected = False
     nite = 0
+    niteStab =  int(duration/sol.dt/10) # the number of stability check during the simulation = 10 
     while sol.t <= duration and not nan_detected:
         sol.one_time_step()
 
         for a in actions:
-            a(sol)
+            a(sol, duration)
 
-        if nite == 200:
+        if nite == niteStab:
             nite = 0
-            nan_detected = test_nan()
+            nan_detected = test_nan()|test_NegMass()
         nite += 1
 
-    nan_detected |= test_nan()
+    nan_detected |= test_nan()|test_NegMass()
 
     for i, r in enumerate(responses):
         if isinstance(r, AfterSimulation):
             output[i] = r(sol)
         elif isinstance(r, DuringSimulation):
             output[i] = r.value()
-
 
     return [not nan_detected] + output
 
@@ -179,8 +187,8 @@ class ParametricStudyWidget:
     async def run_study(self, path):
     # def run_study(self, path):
         """
-        Create the sampling using the design space defined in the menu and start the
-        parametric study on each sample.
+        Create the sampling using the design space defined in the menu 
+        and run the evaluation of each the each sample point in parallel.
         Then the results is represented by plotly.
         """
         while self.dialog.v_model:
@@ -258,7 +266,7 @@ class ParametricStudyWidget:
 
             def run_parametric_study():
                 from pathos.multiprocessing import ProcessingPool
-                pool = pp.ProcessPool()
+                pool = pp.ProcessPool(nodes = 4)
                 output = pool.map(run_simulation, args)
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]

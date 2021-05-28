@@ -41,4 +41,4 @@ $$
 
 **Figure**
 
-![Bump](./Dimension1/Advection/image_bump.png "The bump functions")
+![](./Dimension1/Advection/image_bump.png "The bump functions")

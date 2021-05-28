@@ -19,7 +19,7 @@ The notations are the following:
  
  A picture is worth a thousand words:
 
-![indicator](./Dimension1/Advection/image_indicator.png "The indicator functions")
+![](./Dimension1/Advection/image_indicator.png "The indicator functions")
 
 **Construction of the polynomials $P_n$**
 
@@ -56,5 +56,5 @@ C_n = \bigl(1+\frac{1}{2n}\bigr)C_{n-1}.
 $$
 The initialization is given for $n=0$ by $P_0(X)=X$ and $C_0=1$.
 
-![P_n](./Dimension1/Advection/image_indicator_Pn.png "The polynomial functions")
+![](./Dimension1/Advection/image_indicator_Pn.png "The polynomial functions")
 

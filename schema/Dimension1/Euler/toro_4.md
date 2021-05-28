@@ -74,7 +74,7 @@ three strong discontinuities travelling to the right.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![Toro4](./Dimension1/Euler/Toro_Test5.png "Toro test case 4")
+![](./Dimension1/Euler/Toro_Test4.png "Toro test case 4")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

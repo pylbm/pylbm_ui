@@ -53,7 +53,7 @@ At t$>$0, depending on the initial data, there are
         <tr style="border:1px solid black">
             <th>velocity right</th>
             <td style="border:1px solid black; text-align: center">0</td>
-            <td style="border:1px solid black; text-align: center">1</td>
+            <td style="border:1px solid black; text-align: center">2</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">0</td>
             <td style="border:1px solid black; text-align: center">-6.19633</td>
@@ -73,7 +73,7 @@ The solution of the Sod's problem has a right shock wave,
 a right travelling contact wave, and a left sonic rarefaction wave.
 It was proposed to test the accuracy of computational fluid codes, like Riemann solvers.
 
-![Toro1](./Dimension1/Euler/Toro_Test1.png "Toro test case 1")
+![](./Dimension1/Euler/Toro_Test1.png "Toro test case 1")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below
@@ -82,7 +82,6 @@ The reference final results are computed using an exact Riemann solver
 that compute the two intermediate states.
 The `fsolve` function of the module `scipy.optimize` is used.
 
-> [[1] Eleuterio F. Toro, Riemann Solvers and Numerical Methods for Fluid Dynamics, March 2009, DOI:10.1007/b79761_3
-> In book: _Riemann Solvers and Numerical Methods for Fluid Dynamics_ (pp.87-114)](https://www.researchgate.net/publication/278720679_Riemann_Solvers_and_Numerical_Methods_for_Fluid_Dynamics)
+> [[1] Eleuterio F. Toro, Riemann Solvers and Numerical Methods for Fluid Dynamics, March 2009, DOI:10.1007/b79761_3 In book: _Riemann Solvers and Numerical Methods for Fluid Dynamics_ (pp.87-114)](https://www.researchgate.net/publication/278720679_Riemann_Solvers_and_Numerical_Methods_for_Fluid_Dynamics)
 >
 > [[2] Gary A. Sod, _A Survey of Several Finite Difference Methods for Systems of Nonlinear Hyperbolic Conservation Laws_, J. Comput. Phys. **27** (pp. 1–31) 1978](https://hal.archives-ouvertes.fr/hal-01635155/file/GAS.pdf)

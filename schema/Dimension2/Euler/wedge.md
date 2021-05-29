@@ -36,3 +36,28 @@ The computation of the shock angle, being given the wedge angle and the inlet Ma
 For a wedge angle equal to 15 degrees, the outlet Mach number and the shock angle are plotted according to the inlet Mach number:
 
 ![](./Dimension2/Euler/wedge_theta_15.png)
+
+**Method to compute the shock angle and the Mach outlet**
+
+Denoting $\theta$ the wedge angle, $\rho_{\text{in}}$, $v_{\text{in}}$, and $p_{\text{in}}$ the inlet values of the mass, the norm of the velocity, and the pressure, the Rankine-Hugoniot relations yields
+$$
+\left\lbrace
+\begin{aligned}
+\rho_{\text{out}} &= \rho_{\text{in}} \frac{\tan(\beta)}{\tan(\beta-\theta)},\\
+v_{\text{out}} &= v_{\text{in}} \frac{\cos(\beta)}{\cos(\beta-\theta)},\\
+p_{\text{out}} &= p_{\text{in}} + \rho_{\text{in}}v_{\text{in}}^2 
+\frac{\sin(\beta)\sin(\theta)}{\cos(\beta-\theta)},
+\end{aligned}
+\right.
+$$
+where $\beta$ is the shock angle given as the smallest zero (if there is one) of the function $\varphi$ with
+\begin{align*}
+\varphi(\alpha) & = 
+(\gamma-1) M_{\text{in}}^2 \tan(\alpha) 
+\left[
+\frac{1}{2} \Big(\cos^2(\alpha-\theta)-\cos^2(\alpha)\Big)
+- \frac{\gamma}{\gamma-1} \cos(\alpha)\sin(\theta)\sin(\alpha-\theta)
+\right] \\
+& \phantom{=}\; - \cos^2(\alpha-\theta)\Big(\tan(\alpha-\theta)-\tan(\alpha)\Big),
+\end{align*}
+where the inlet Mach number $M_{\text{in}} = \sqrt{\rho_{\text{in}}v_{\text{in}}^2/(\gamma p_{\text{in}})}$.

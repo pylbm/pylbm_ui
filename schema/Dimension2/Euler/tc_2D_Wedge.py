@@ -88,12 +88,14 @@ class tc_2D_wedge(HashBaseModel):
     uy_in: float
     p_in: float
 
+    angle_degre: float
+
     gamma: float
     duration: float
 
     distance_relative = 0.2
     dim = 2
-    angle_degre = 15
+    # angle_degre = 15
     equation = Euler2D()
     name = 'Wedge2D'
     BCType = 'none'
@@ -296,6 +298,7 @@ Wedge_Ma2p5 = tc_2D_wedge(
     name='Wedge_Ma2p5',
     xmin=0., xmax=3.,
     ymin=0., ymax=2.,
+    angle_degre=15,
     rho_in=1.4,
     ux_in=2.5,
     uy_in=0.,
@@ -309,6 +312,7 @@ Wedge_Ma8 = tc_2D_wedge(
     name='Wedge_Ma8',
     xmin=0., xmax=3.,
     ymin=0., ymax=2.,
+    angle_degre=15,
     rho_in=1.4,
     ux_in=8,
     uy_in=0.,

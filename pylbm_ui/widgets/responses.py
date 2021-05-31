@@ -72,16 +72,19 @@ class ResponsesWidget:
             for name, expr in fields.items():
                 self.responses[f'plot {name}'] = Plot(name, expr)
                 if hasattr(test_case, 'ref_solution'):
-                    self.responses[f'error on {name}'] = Error(name, expr)
-                    self.responses[f'error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
-                    self.responses[f'error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
-                    self.responses[f'relative error on {name}'] = Error(name, expr, relative=True)
+                    self.responses[f'err_{name}'] = Error(name, expr)
+                    self.responses[f'errAvg_{name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
+                    self.responses[f'errStd_{name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
+                    self.responses[f'errRel_{name}'] = Error(name, expr, relative=True)
 
             def add_relax(v):
                 self.responses[k] = pylbm_responses.S(v.symb)
-                self.responses[f'sigma for {k}'] = pylbm_responses.Sigma(v.symb)
-                self.responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb)
-                self.responses[f'diff with dx=1 for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
+                self.responses[f'sigma_{k[2:]}'] = pylbm_responses.Sigma(v.symb)
+                self.responses[f'diff_{k[2:]}'] = pylbm_responses.Diff(v.symb)
+                self.responses[f'diffOdx_{k[2:]}'] = pylbm_responses.Diff(v.symb, with_dx=False)
+                self.responses[f'LogSigma_{k[2:]}'] = pylbm_responses.Sigma(v.symb, log10=True)
+                self.responses[f'LogDiff_{k[2:]}'] = pylbm_responses.Diff(v.symb, log10=True)
+                self.responses[f'LogDiffOdx_{k[2:]}'] = pylbm_responses.Diff(v.symb, with_dx=False, log10=True)
 
             for k, v in lb_case.__dict__.items():
                 if isinstance(v, RelaxationParameterFinal):

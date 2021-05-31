@@ -153,7 +153,7 @@ class D1Q333_general(LBM_scheme):
         }
 
 class D1Q333(D1Q333_general):
-    addvisc = 0.5
+    addvisc = 0.25
     name = 'D1Q333_0'
     tex_name = r'$D_1Q_{{333}}0$'
 

@@ -23,7 +23,7 @@ class AfterSimulation:
     pass
 
 class Sigma(FromConfig):
-    def __init__(self, s, log10=True):
+    def __init__(self, s, log10=False):
         self.log10 = log10
         self.s = s
 
@@ -36,8 +36,7 @@ class Sigma(FromConfig):
         return np.log10(output) if self.log10 else output
 
 class S(FromConfig):
-    def __init__(self, s, log10=True):
-        self.log10 = log10
+    def __init__(self, s):
         self.s = s
 
     def __call__(self, config, extra_config=None):
@@ -46,10 +45,10 @@ class S(FromConfig):
         params.update(extra_config)
 
         output = params[self.s]
-        return np.log10(output) if self.log10 else output
+        return  output
 
 class Diff(FromConfig):
-    def __init__(self, s, with_dx=True, log10=True):
+    def __init__(self, s, with_dx=True, log10=False):
         self.log10 = log10
         self.with_dx = with_dx
         self.s = s
@@ -89,7 +88,7 @@ class LinearStability(FromConfig):
         return True
 
 class Error(AfterSimulation):
-    def __init__(self, ref_solution, expr, log10=False, relative=False):
+    def __init__(self, ref_solution, expr, log10=True, relative=False):
         self.ref_solution = ref_solution
         self.expr = expr
         self.log10 = log10
@@ -118,7 +117,7 @@ class Error(AfterSimulation):
         return np.log10(norm) if self.log10 else norm
 
 class ErrorStd(DuringSimulation):
-    def __init__(self, field, ref_func, expr, call_at=10, log10=True):
+    def __init__(self, field, ref_func, expr, call_at=0.9, log10=True):
         self.field = field
         self.ref_func = ref_func
         self.expr = expr
@@ -127,9 +126,12 @@ class ErrorStd(DuringSimulation):
         self.nite = 0
         self.call_at = call_at
 
-    def __call__(self, sol):
+    def __call__(self, sol, duration):
         self.nite += 1
-        if self.nite == self.call_at:
+        #startTime = duration - 2*0.01
+        startTime = duration*self.call_at
+        if sol.t >= startTime:
+        #if self.nite >= self.call_at:
             self.nite = 0
             domain = sol.domain
             time_e = sol.t

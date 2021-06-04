@@ -65,9 +65,9 @@ class D1Q333_general(LBM_scheme):
         )
         # add numerical diffusion
         addvisc = self.addvisc
-        w0eq = (1-addvisc)*w0eq + addvisc/2*la**2*rho
-        w1eq = (1-addvisc)*w1eq + addvisc/2*la**2*q
-        w2eq = (1-addvisc)*w2eq + addvisc/2*la**2*E
+        w0eq = (1-addvisc)*w0eq + addvisc/2*la_**2*rho
+        w1eq = (1-addvisc)*w1eq + addvisc/2*la_**2*q
+        w2eq = (1-addvisc)*w2eq + addvisc/2*la_**2*E
 
         X = sp.symbols('X')
 

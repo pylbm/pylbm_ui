@@ -117,7 +117,7 @@ class Error(AfterSimulation):
         return np.log10(norm) if self.log10 else norm
 
 class ErrorStd(DuringSimulation):
-    def __init__(self, field, ref_func, expr, call_at=0.9, log10=True):
+    def __init__(self, field, ref_func, expr, call_at=0.92, log10=True):
         self.field = field
         self.ref_func = ref_func
         self.expr = expr
@@ -128,37 +128,43 @@ class ErrorStd(DuringSimulation):
 
     def __call__(self, sol, duration):
         self.nite += 1
-        #startTime = duration - 2*0.01
         startTime = duration*self.call_at
+        startIt = int(startTime/sol.dt)
         if sol.t >= startTime:
-        #if self.nite >= self.call_at:
+        #if self.nite == startIt:
             self.nite = 0
             domain = sol.domain
             time_e = sol.t
             ref_solution = self.ref_func(time_e, domain.x, field=self.field)
 
-            func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
-            to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
-            to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
+            #func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
+            #to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
+            #to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
 
-            args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
-            data = func(**args)
-            # remove element with NaN values
-            solid_cells = sol.domain.in_or_out != sol.domain.valin
+            #args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
+            #data = func(**args)
+            ## remove element with NaN values
+            #solid_cells = sol.domain.in_or_out != sol.domain.valin
 
-            vmax = sol.domain.stencil.vmax
-            ind = []
-            for vm in vmax:
-                ind.append(slice(vm, -vm))
-            ind = np.asarray(ind)
+            #vmax = sol.domain.stencil.vmax
+            #ind = []
+            #for vm in vmax:
+                #ind.append(slice(vm, -vm))
+            #ind = np.asarray(ind)
 
-            data[solid_cells[tuple(ind)]] = 0
-            norm = np.linalg.norm(ref_solution - data)
+            #data[solid_cells[tuple(ind)]] = 0
+            #norm = np.linalg.norm(ref_solution - data)
+            
+            error = Error(ref_solution, self.expr, log10=False, relative=False)
+            norm = error(sol)
+            
             self.error.append(norm)
 
     def value(self):
-        std = np.std(np.asarray(self.error))
-        return np.log10(std) if self.log10 else std
+        #std = np.std(np.asarray(self.error)) 
+        #return np.log10(std) if self.log10 else std
+        std = len(self.error)
+        return std
 
 class ErrorAvg(ErrorStd):
     def value(self):
@@ -238,12 +244,4 @@ class Plot(AfterSimulation):
         fig.savefig(self.filename, dpi=300)
 
 
-class StdError(AfterSimulation):
-    def __init__(self, ref_solution, field):
-        self.ref_solution = ref_solution
-        self.field = field
-
-    def __call__(self, simulation):
-        data = simulation.get_data(self.field, 0)
-        return np.linalg.norm(self.ref_solution - data)
 

@@ -46,7 +46,7 @@ def run_simulation(args):
         if isinstance(r, FromConfig):
             output[i] = r(simu_cfg, sample)
 
-    def test_stab():
+    def test_unstab():
         c = list(sol.scheme.consm.keys())[0] ##??? are we sure that it is the mass field?
         sol.m_halo[c][solid_cells] = 0
         data = sol.m[c]
@@ -70,12 +70,12 @@ def run_simulation(args):
 
         if nite == niteStab:
             nite = 0
-            unstable = test_stab()
+            unstable = test_unstab()
         nite += 1
 
-    unstable |= test_stab()
+    unstable |= test_unstab()
 
-    if not unstable:
+    if not unstable: # avoid meaningless responses values (or empty plots) when simulation is unstable 
         for i, r in enumerate(responses):
             if isinstance(r, AfterSimulation):
                 output[i] = r(sol)
@@ -262,7 +262,9 @@ class ParametricStudyWidget:
 
             def run_parametric_study():
                 from pathos.multiprocessing import ProcessingPool
-                pool = pp.ProcessPool()
+                import multiprocessing
+                nNodes = int(multiprocessing.cpu_count()/2)
+                pool = pp.ProcessPool(nodes=nNodes)
                 output = pool.map(run_simulation, args)
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]

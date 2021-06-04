@@ -25,7 +25,7 @@ def CFL(test_case):
     return pylbm_responses.CFL(eq.rho, vel)
 
 class Error:
-    def __init__(self, field, expr, relative=False, log10=False):
+    def __init__(self, field, expr, relative=False, log10=True):
         self.field = field
         self.expr = expr
         self.relative = relative

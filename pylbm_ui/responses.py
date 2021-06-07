@@ -12,6 +12,7 @@ import matplotlib
 import copy
 import pylbm
 
+from .widgets.debug import debug
 class FromConfig:
     pass
 
@@ -116,6 +117,7 @@ class Error(AfterSimulation):
             norm /= np.linalg.norm(self.ref_solution)
         return np.log10(norm) if self.log10 else norm
 
+@debug
 class ErrorStd(DuringSimulation):
     def __init__(self, field, ref_func, expr, call_at=0.92, log10=True):
         self.field = field
@@ -131,6 +133,7 @@ class ErrorStd(DuringSimulation):
         startTime = duration*self.call_at
         startIt = int(startTime/sol.dt)
         if sol.t >= startTime:
+            print(sol.t, duration, startTime)
         #if self.nite == startIt:
             self.nite = 0
             domain = sol.domain
@@ -154,14 +157,14 @@ class ErrorStd(DuringSimulation):
 
             #data[solid_cells[tuple(ind)]] = 0
             #norm = np.linalg.norm(ref_solution - data)
-            
+
             error = Error(ref_solution, self.expr, log10=False, relative=False)
             norm = error(sol)
-            
+
             self.error.append(norm)
 
     def value(self):
-        #std = np.std(np.asarray(self.error)) 
+        #std = np.std(np.asarray(self.error))
         #return np.log10(std) if self.log10 else std
         std = len(self.error)
         return std

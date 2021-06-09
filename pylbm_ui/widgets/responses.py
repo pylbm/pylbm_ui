@@ -52,6 +52,29 @@ class Plot:
 
             return pylbm_responses.Plot(os.path.join(path, f'{self.field}.png'), self.expr, ref)
 
+def build_responses_list(test_case, lb_scheme):
+    responses = {}
+    fields = test_case.equation.get_fields()
+    for name, expr in fields.items():
+        responses[f'plot {name}'] = Plot(name, expr)
+        if hasattr(test_case, 'ref_solution'):
+            responses[f'error on {name}'] = Error(name, expr)
+            responses[f'error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
+            responses[f'error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
+            responses[f'relative error on {name}'] = Error(name, expr, relative=True)
+
+    def add_relax(v):
+        responses[k] = pylbm_responses.S(v.symb)
+        responses[f'sigma for {k}'] = pylbm_responses.Sigma(v.symb)
+        responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb)
+        responses[f'diff with dx=1 for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
+
+    for k, v in lb_scheme.__dict__.items():
+        if isinstance(v, RelaxationParameterFinal):
+            add_relax(v)
+
+    return responses
+
 class ResponsesWidget:
     def __init__(self, test_case_widget, lb_scheme_widget):
 
@@ -66,26 +89,9 @@ class ResponsesWidget:
             }
 
             test_case = test_case_widget.get_case()
-            lb_case = lb_scheme_widget.get_case()
+            lb_scheme = lb_scheme_widget.get_case()
 
-            fields = test_case.equation.get_fields()
-            for name, expr in fields.items():
-                self.responses[f'plot {name}'] = Plot(name, expr)
-                if hasattr(test_case, 'ref_solution'):
-                    self.responses[f'error on {name}'] = Error(name, expr)
-                    self.responses[f'error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
-                    self.responses[f'error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
-                    self.responses[f'relative error on {name}'] = Error(name, expr, relative=True)
-
-            def add_relax(v):
-                self.responses[k] = pylbm_responses.S(v.symb)
-                self.responses[f'sigma for {k}'] = pylbm_responses.Sigma(v.symb)
-                self.responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb)
-                self.responses[f'diff with dx=1 for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
-
-            for k, v in lb_case.__dict__.items():
-                if isinstance(v, RelaxationParameterFinal):
-                    add_relax(v)
+            self.responses = build_responses_list(test_case, lb_scheme)
 
             self.responses_list.items = ['all'] + list(self.responses.keys())
 

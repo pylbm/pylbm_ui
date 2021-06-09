@@ -16,14 +16,6 @@ import copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pylbm
 
-from .widgets.debug import debug
-from .config import plot_config
-from .json import save_simu_config
-
-from .widgets.pylbmwidget import out
-
-
-@debug
 class Plot:
     def __init__(self):
         plt.ioff()
@@ -34,92 +26,92 @@ class Plot:
         # plt.ion()
 
     def plot(self, t, domain, field, data, transpose=True, properties=None):
+        from .config import plot_config
         properties = properties or {}
-        with out:
-            if domain.dim == 1:
-                x = domain.x
-                if self.plot_type is None:
-                    label = f'{field}'
-                    color = plot_config['colors'][0]
-                    alpha = plot_config['alpha']
-                    linewidth = plot_config['linewidth']
-                    linestyle = plot_config['linestyle']
-                    marker = plot_config['marker']
-                    markersize = plot_config['markersize']
-                    if 'label' in properties:
-                        label = properties['label']
-                    if 'color' in properties:
-                        color = properties['color']
-                    if 'alpha' in properties:
-                        alpha = properties['alpha']
-                    if 'linewidth' in properties:
-                        linewidth = properties['linewidth']
-                    if 'linestyle' in properties:
-                        linestyle = properties['linestyle']
-                    if 'marker' in properties:
-                        marker = properties['marker']
-                    if 'markersize' in properties:
-                        markersize = properties['markersize']
+        if domain.dim == 1:
+            x = domain.x
+            if self.plot_type is None:
+                label = f'{field}'
+                color = plot_config['colors'][0]
+                alpha = plot_config['alpha']
+                linewidth = plot_config['linewidth']
+                linestyle = plot_config['linestyle']
+                marker = plot_config['marker']
+                markersize = plot_config['markersize']
+                if 'label' in properties:
+                    label = properties['label']
+                if 'color' in properties:
+                    color = properties['color']
+                if 'alpha' in properties:
+                    alpha = properties['alpha']
+                if 'linewidth' in properties:
+                    linewidth = properties['linewidth']
+                if 'linestyle' in properties:
+                    linestyle = properties['linestyle']
+                if 'marker' in properties:
+                    marker = properties['marker']
+                if 'markersize' in properties:
+                    markersize = properties['markersize']
 
-                    self.plot_type, = self.ax.plot(
-                        x, data,
-                        label=label,
-                        color=color,
-                        alpha=alpha,
-                        linewidth=linewidth,
-                        linestyle=linestyle,
-                        marker=marker,
-                        markersize=markersize
-                    )
-                else:
-                    self.plot_type.set_ydata(data)
+                self.plot_type, = self.ax.plot(
+                    x, data,
+                    label=label,
+                    color=color,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                    linestyle=linestyle,
+                    marker=marker,
+                    markersize=markersize
+                )
+            else:
+                self.plot_type.set_ydata(data)
 
-                self.ax.relim()
-                self.ax.autoscale_view()
-
-                if not properties:
-                    self.ax.set_xlabel('x')
-                    self.ax.set_ylabel(field)
-
-            elif domain.dim == 2:
-                if self.plot_type is None:
-                    cmap = plot_config['cmap']
-                    if 'cmap' in properties:
-                        cmap = plt.colormaps()[int(properties['cmap'])]
-                    cmap = copy.copy(matplotlib.cm.get_cmap(cmap))
-                    cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
-                    x, y = domain.x, domain.y
-                    extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
-                    if transpose:
-                        to_plot = data.T
-                    else:
-                        to_plot = data
-
-                    self.plot_type = self.ax.imshow(to_plot, origin='lower',
-                                                    cmap=cmap, extent=extent,
-                                                    interpolation='bilinear')
-                    divider = make_axes_locatable(self.ax)
-                    cax = divider.append_axes("bottom", size="5%", pad=0.55)
-                    self.color_bar = self.fig.colorbar(
-                        self.plot_type, cax=cax, orientation="horizontal"
-                    )
-                else:
-                    self.plot_type.set_array(data.T)
-                if 'min_value' in properties:
-                    vmin = properties['min_value']
-                else:
-                    vmin = np.nanmin(data)
-
-                if 'max_value' in properties:
-                    vmax = properties['max_value']
-                else:
-                    vmax = np.nanmax(data)
-                self.plot_type.set_clim(vmin=vmin, vmax=vmax)
-                label = properties['label'] if 'label' in properties else field
-                self.color_bar.set_label(label=label)
+            self.ax.relim()
+            self.ax.autoscale_view()
 
             if not properties:
-                self.ax.title.set_text(f"time: {t} s")  #, fontsize=18)
+                self.ax.set_xlabel('x')
+                self.ax.set_ylabel(field)
+
+        elif domain.dim == 2:
+            if self.plot_type is None:
+                cmap = plot_config['cmap']
+                if 'cmap' in properties:
+                    cmap = plt.colormaps()[int(properties['cmap'])]
+                cmap = copy.copy(matplotlib.cm.get_cmap(cmap))
+                cmap.set_bad(plot_config['nan_color'], plot_config['alpha'])
+                x, y = domain.x, domain.y
+                extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
+                if transpose:
+                    to_plot = data.T
+                else:
+                    to_plot = data
+
+                self.plot_type = self.ax.imshow(to_plot, origin='lower',
+                                                cmap=cmap, extent=extent,
+                                                interpolation='bilinear')
+                divider = make_axes_locatable(self.ax)
+                cax = divider.append_axes("bottom", size="5%", pad=0.55)
+                self.color_bar = self.fig.colorbar(
+                    self.plot_type, cax=cax, orientation="horizontal"
+                )
+            else:
+                self.plot_type.set_array(data.T)
+            if 'min_value' in properties:
+                vmin = properties['min_value']
+            else:
+                vmin = np.nanmin(data)
+
+            if 'max_value' in properties:
+                vmax = properties['max_value']
+            else:
+                vmax = np.nanmax(data)
+            self.plot_type.set_clim(vmin=vmin, vmax=vmax)
+            label = properties['label'] if 'label' in properties else field
+            self.color_bar.set_label(label=label)
+
+        if not properties:
+            self.ax.title.set_text(f"time: {t} s")  #, fontsize=18)
 
 
 def get_config(
@@ -187,12 +179,14 @@ class simulation:
 
     def reset_sol(
         self,
+        v_model,
         test_case, lb_scheme,
         dx,
         codegen=None, codegen_dir=None,
         exclude=None, initialize=True,
         show_code=False
     ):
+        self.v_model = v_model
         self.test_case = test_case
         self.lb_scheme = lb_scheme
         self.dx = dx
@@ -263,4 +257,5 @@ class simulation:
         fig.plot(self.sol.t, self.sol.domain, field, data)
 
     def save_config(self, filename='simu_config.json'):
-        save_simu_config(self.path, filename, self.dx, self.test_case, self.lb_scheme)
+        from .json import save_simu_config
+        save_simu_config(self.path, filename, self.dx, self.v_model, self.test_case, self.lb_scheme)

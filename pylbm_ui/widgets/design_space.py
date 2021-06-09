@@ -252,6 +252,21 @@ class DesignWidget(Dialog):
                     style_='background-color: #F8F8F8;'
         )
 
+    def to_json(self):
+        output = []
+        for item in self.item_list.children:
+            data = {}
+            data['param'] = item.param
+            data['min'] = item.min
+            data['max'] = item.max
+            if item.param == 'relaxation parameters':
+                data['relax'] = item.relax
+                data['srt'] = item.srt
+                data['sigma'] = item.sigma
+                data['in_log'] = item.in_log
+            output.append(data)
+        return output
+
     def design_space(self):
         test_case = self.test_case_widget.get_case()
         lb_scheme = self.lb_scheme_widget.get_case()

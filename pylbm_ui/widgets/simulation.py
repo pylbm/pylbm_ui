@@ -9,6 +9,7 @@ import pylbm
 import asyncio
 import os
 import ipyvuetify as v
+import json
 
 from .discretization import DiscretizationWidget
 from .save_widget import Save_widget
@@ -62,7 +63,8 @@ class SimulationWidget:
         )
         self.update_name(None)
 
-        input_file = v.FileInput(label='Choose a simu_config.json', accept=".json")
+        self.simu_cfg = v.Select(label='Load simulation configuration', items=[], v_model=None)
+        self.update_simu_cfg_list()
 
         self.discret = DiscretizationWidget(test_case_widget, lb_scheme_widget)
 
@@ -74,7 +76,7 @@ class SimulationWidget:
 
         self.menu = [
             self.simulation_name,
-            input_file,
+            self.simu_cfg,
             v.ExpansionPanels(children=[
                 self.discret,
                 v.ExpansionPanel(children=[
@@ -135,12 +137,20 @@ class SimulationWidget:
         self.pause.on_event('click', self.on_pause_click)
         self.snapshot.on_event('click', self.take_snapshot)
         self.result.observe(self.replot, 'v_model')
+        self.simu_cfg.observe(self.load_simu_cfg, 'v_model')
 
         test_case_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.update_result, 'v_model')
         test_case_widget.select_case.observe(self.update_name, 'v_model')
         lb_scheme_widget.select_case.observe(self.update_name, 'v_model')
+
+    def update_simu_cfg_list(self):
+        simu_list = []
+        for root, d_names,f_names in os.walk(default_path):
+                if 'simu_config.json' in f_names:
+                    simu_list.append(os.path.join(root, 'simu_config.json'))
+        self.simu_cfg.items = simu_list
 
     def stop_simulation(self, change):
         """
@@ -173,13 +183,10 @@ class SimulationWidget:
         the default name of the simulation is updated
         """
         test_case = self.test_case_widget.get_case()
-        # tc_param = self.test_case_widget.parameters
         lb_case = self.lb_scheme_widget.get_case()
-        # lb_param = self.lb_scheme_widget.parameters
         simu_name = f"{test_case.name}"
         simu_name += f"_{lb_case.name}_0"
         self.simulation_name.v_model = simu_name
-
 
     # def run_simu(self):
     async def run_simu(self):
@@ -195,6 +202,11 @@ class SimulationWidget:
 
         self.plot_output.children = [Message('Prepare the simulation')]
 
+        v_model = {
+            'model': self.test_case_widget.model.select_model.v_model,
+            'test_case': self.test_case_widget.select_case.v_model,
+            'lb_scheme': self.lb_scheme_widget.select_case.v_model,
+        }
         test_case = self.test_case_widget.get_case()
         lb_scheme = self.lb_scheme_widget.get_case()
 
@@ -202,6 +214,7 @@ class SimulationWidget:
             os.path.join(default_path, self.simulation_name.v_model)
         )
         self.simu.reset_sol(
+            v_model,
             test_case, lb_scheme,
             self.discret['dx'].value,
             self.codegen.v_model
@@ -294,3 +307,33 @@ class SimulationWidget:
         """
         if self.plot:
             self.plot.fig.savefig(os.path.join(self.simu.path, f'snapshot_{self.result.v_model}_{self.iplot}.png'), dpi=300,  bbox_inches='tight')
+
+    def load_simu_cfg(self, change):
+        cfg = json.load(open(self.simu_cfg.v_model))
+
+        self.test_case_widget.model.select_category.v_model = f'Dimension{cfg["dim"]}'
+        self.test_case_widget.model.select_model.v_model = cfg['v_model']['model']
+        self.test_case_widget.select_case.v_model = cfg['v_model']['test_case']
+        self.lb_scheme_widget.select_case.v_model = cfg['v_model']['lb_scheme']
+
+        self.discret['dx'].value =  cfg['dx']
+
+        case = self.test_case_widget.get_case()
+        param = self.test_case_widget.parameters
+        for k, v in cfg['test_case']['args'].items():
+            if k in param:
+                param[k].value = v
+
+        case = self.lb_scheme_widget.get_case()
+        param = self.lb_scheme_widget.parameters
+        for k, v in cfg['lb_scheme']['args'].items():
+            if k in param:
+                param[k].value = v
+
+        if cfg['extra_config'] is not None:
+            for k, v in cfg['extra_config'].items():
+                key = k
+                if k == 'lambda':
+                    key = 'la'
+                if key in param:
+                    param[key].value = v

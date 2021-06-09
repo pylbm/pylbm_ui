@@ -122,11 +122,21 @@ def main():
         menu.children = items
         content.children = widget.main
 
+        if tab_id == 4:
+            simulation.update_simu_cfg_list()
+
+        if tab_id == 5:
+            parametric.update_param_cfg_list()
+
         if tab_id == 6:
             posttreatment.update(None)
 
     tab_change(None)
     tab.observe(tab_change, 'v_model')
+    mc.select_category.observe(tab_change, 'v_model')
+    mc.select_model.observe(tab_change, 'v_model')
+    tc.select_case.observe(tab_change, 'v_model')
+    lb.select_case.observe(tab_change, 'v_model')
 
     navicon = v.AppBarNavIcon()
 

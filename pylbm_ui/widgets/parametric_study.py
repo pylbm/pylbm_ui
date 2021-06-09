@@ -17,19 +17,21 @@ import shutil
 import asyncio
 import pathos
 import pathos.pools as pp
+import json
 
-from .debug import debug
-from .design_space import DesignWidget
+from .debug import debug, debug_func
+from .design_space import DesignWidget, DesignItem
 from .dialog_path import DialogPath
 from .discretization import dx_validity
 from .responses import ResponsesWidget
 from ..config import default_path
 from ..responses import FromConfig, DuringSimulation, AfterSimulation
 from ..simulation import simulation, get_config
-from ..utils import required_fields
-from ..json import save_simu_config, save_param_study_for_simu
+from ..utils import required_fields, NbPointsField
+from ..json import save_param_study, save_simu_config, save_param_study_for_simu
 from .message import Message
 
+@debug_func
 def run_simulation(args):
     simu_cfg, sample, duration, responses = args
     simu_cfg['codegen_option']['generate'] = False
@@ -58,11 +60,12 @@ def run_simulation(args):
 
     nan_detected = False
     nite = 0
+
     while sol.t <= duration and not nan_detected:
         sol.one_time_step()
 
         for a in actions:
-            a(sol)
+            a(duration, sol)
 
         if nite == 200:
             nite = 0
@@ -76,7 +79,6 @@ def run_simulation(args):
             output[i] = r(sol)
         elif isinstance(r, DuringSimulation):
             output[i] = r.value()
-
 
     return [not nan_detected] + output
 
@@ -119,6 +121,9 @@ class ParametricStudyWidget:
         ##
         self.study_name = v.TextField(label='Study name', v_model='PS_0')
 
+        self.param_cfg = v.Select(label='Load parametric study', items=[], v_model=None)
+        self.update_param_cfg_list()
+
         # self.space_step = v.TextField(label='Space step', v_model=0.01, type='number')
         self.codegen = v.Select(label='Code generator', items=['auto', 'numpy', 'cython'], v_model='auto')
 
@@ -126,12 +131,13 @@ class ParametricStudyWidget:
         self.responses = ResponsesWidget(test_case_widget, lb_scheme_widget)
 
         self.sampling_method = v.Select(label='Method', items=list(skopt_method.keys()), v_model=list(skopt_method.keys())[0])
-        self.sample_size = v.TextField(label='Number of samples', v_model=10, type='number')
+        self.sample_size = NbPointsField(label='Number of samples', v_model=10)
 
         self.run = v.Btn(v_model=True, children=['Run parametric study'], class_="ma-5", color='success')
 
         self.menu = [
             self.study_name,
+            self.param_cfg,
             # self.space_step,
             self.codegen,
             v.ExpansionPanels(children=[
@@ -165,30 +171,38 @@ class ParametricStudyWidget:
         self.test_case_widget.select_case.observe(self.purge, 'v_model')
         self.lb_scheme_widget.select_case.observe(self.purge, 'v_model')
         self.codegen.observe(self.purge, 'v_model')
+        self.param_cfg.observe(self.load_param_cfg, 'v_model')
+
+    def update_param_cfg_list(self):
+        param_list = []
+        for root, d_names,f_names in os.walk(default_path):
+                if 'parametric_study.json' in f_names:
+                    param_list.append(os.path.join(root, 'parametric_study.json'))
+        self.param_cfg.items = param_list
 
     def start_PS(self, widget, event, data):
         if self.run.v_model:
             path = os.path.join(default_path, self.study_name.v_model)
             self.dialog.check_path(path)
 
-            asyncio.ensure_future(self.run_study(path))
-            # self.run_study(path)
+            # asyncio.ensure_future(self.run_study(path))
+            self.run_study(path)
         else:
             self.stop_simulation(None)
 
-    async def run_study(self, path):
-    # def run_study(self, path):
+    # async def run_study(self, path):
+    def run_study(self, path):
         """
         Create the sampling using the design space defined in the menu and start the
         parametric study on each sample.
         Then the results is represented by plotly.
         """
-        while self.dialog.v_model:
-            await asyncio.sleep(0.01)
+        # while self.dialog.v_model:
+        #     await asyncio.sleep(0.01)
 
-        if not self.dialog.replace:
-            self.stop_simulation(None)
-            return
+        # if not self.dialog.replace:
+        #     self.stop_simulation(None)
+        #     return
 
         try:
             shutil.rmtree(self.tmp_dir.name)
@@ -203,6 +217,11 @@ class ParametricStudyWidget:
             self.run.color = 'error'
 
             dx = self.discret_widget['dx'].value
+            v_model = {
+                'model': self.test_case_widget.model.select_model.v_model,
+                'test_case': self.test_case_widget.select_case.v_model,
+                'lb_scheme': self.lb_scheme_widget.select_case.v_model,
+            }
             test_case = copy.deepcopy(self.test_case_widget.get_case())
             lb_scheme = copy.deepcopy(self.lb_scheme_widget.get_case())
 
@@ -210,9 +229,11 @@ class ParametricStudyWidget:
             self.plotly_plot.children = [message]
             sampling = np.asarray(skopt_method[self.sampling_method.v_model]().generate(list(design_space.values()), int(self.sample_size.v_model)))
 
+            save_param_study(path, 'parametric_study.json', self.discret_widget['dx'].value, v_model, test_case, lb_scheme, self, sampling)
+
             message.update(f'Prepare the simulation in {self.tmp_dir.name}')
             simu = simulation()
-            simu.reset_sol(test_case, lb_scheme, dx, self.codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=self.tmp_dir.name, show_code=False)
+            simu.reset_sol(v_model, test_case, lb_scheme, dx, self.codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=self.tmp_dir.name, show_code=False)
 
             args = []
             tmp_case = test_case.copy()
@@ -251,7 +272,7 @@ class ParametricStudyWidget:
 
                 simu_path = os.path.join(path, f'simu_{i}')
                 simu_cfg = get_config(tmp_case, lb_scheme, dx, self.codegen.v_model, exclude=design_space.keys(), codegen_dir=self.tmp_dir.name)
-                save_simu_config(simu_path, 'simu_cfg.json', dx, tmp_case, lb_scheme, {str(k): v for k, v in design_sample.items()})
+                save_simu_config(simu_path, 'simu_config.json', dx, v_model, tmp_case, lb_scheme, {str(k): v for k, v in design_sample.items()}, self.responses.responses_list.v_model)
                 args.append((simu_cfg, design_sample, tmp_case.duration, self.responses.get_list(simu_path, tmp_case, simu_cfg)))
 
             message.update('Run simulations on the sampling...')
@@ -316,6 +337,7 @@ class ParametricStudyWidget:
                 only_stable.observe(change_plot, 'v_model')
 
                 self.plotly_plot.children = [color, items, only_stable, fig]
+
                 self.stop_simulation(None)
 
             run_parametric_study()
@@ -341,3 +363,41 @@ class ParametricStudyWidget:
         except OSError:
             # Could be some issues on Windows
             pass
+
+    def load_param_cfg(self, change):
+        self.purge(None)
+        cfg = json.load(open(self.param_cfg.v_model))
+
+        self.test_case_widget.model.select_category.v_model = f'Dimension{cfg["dim"]}'
+        self.test_case_widget.model.select_model.v_model = cfg['v_model']['model']
+        self.test_case_widget.select_case.v_model = cfg['v_model']['test_case']
+        self.lb_scheme_widget.select_case.v_model = cfg['v_model']['lb_scheme']
+
+        self.discret_widget['dx'].value =  cfg['dx']
+
+        case = self.test_case_widget.get_case()
+        param = self.test_case_widget.parameters
+        for k, v in cfg['test_case']['args'].items():
+            if k in param:
+                param[k].value = v
+
+        case = self.lb_scheme_widget.get_case()
+        param = self.lb_scheme_widget.parameters
+        for k, v in cfg['lb_scheme']['args'].items():
+            if k in param:
+                param[k].value = v
+
+        self.sampling_method.v_model = cfg['sampling_method']
+        self.sample_size.value = cfg['sample_size']
+
+        items = []
+        for d in cfg['design_space']:
+            items.append(DesignItem(self.test_case_widget,
+                                    self.lb_scheme_widget,
+                                    self.discret_widget,
+                                    class_='ma-1',
+                                    style_='background-color: #F8F8F8;',
+                                    **d))
+        self.design.item_list.children = items
+
+        self.responses.widget.v_model = cfg['responses']

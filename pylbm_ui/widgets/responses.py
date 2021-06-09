@@ -53,7 +53,10 @@ class Plot:
             return pylbm_responses.Plot(os.path.join(path, f'{self.field}.png'), self.expr, ref)
 
 def build_responses_list(test_case, lb_scheme):
-    responses = {}
+    responses = {'linear stability': lambda path, test_case, simu_cfg: pylbm_responses.LinearStability(test_case.state()),
+                 'CFL': lambda path, test_case, simu_cfg: CFL(test_case),
+    }
+
     fields = test_case.equation.get_fields()
     for name, expr in fields.items():
         responses[f'plot {name}'] = Plot(name, expr)
@@ -84,10 +87,6 @@ class ResponsesWidget:
 
 
         def update_responses(change):
-            self.responses = {'linear stability': lambda path, test_case, simu_cfg: pylbm_responses.LinearStability(test_case.state()),
-                              'CFL': lambda path, test_case, simu_cfg: CFL(test_case),
-            }
-
             test_case = test_case_widget.get_case()
             lb_scheme = lb_scheme_widget.get_case()
 

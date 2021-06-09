@@ -90,58 +90,24 @@ class LinearStability(FromConfig):
 
 class Error(AfterSimulation):
     def __init__(self, ref_solution, expr, log10=False, relative=False):
+        self.func = None
         self.ref_solution = ref_solution
         self.expr = expr
         self.log10 = log10
         self.relative = relative
+        self.solid_index = None
 
     def __call__(self, sol):
-        func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
+        if self.func is None:
+            func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
         to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
         to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
 
         args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
         data = func(**args)
+
         # remove element with NaN values
-        solid_cells = sol.domain.in_or_out != sol.domain.valin
-
-        vmax = sol.domain.stencil.vmax
-        ind = []
-        for vm in vmax:
-            ind.append(slice(vm, -vm))
-        ind = np.asarray(ind)
-
-        data[solid_cells[tuple(ind)]] = 0
-        norm = np.linalg.norm(self.ref_solution - data)
-        if self.relative:
-            norm /= np.linalg.norm(self.ref_solution)
-        return np.log10(norm) if self.log10 else norm
-
-class ErrorStd(DuringSimulation):
-    def __init__(self, field, ref_func, expr, call_at=10, log10=True):
-        self.field = field
-        self.ref_func = ref_func
-        self.expr = expr
-        self.log10 = log10
-        self.error = []
-        self.nite = 0
-        self.call_at = call_at
-
-    def __call__(self, sol):
-        self.nite += 1
-        if self.nite == self.call_at:
-            self.nite = 0
-            domain = sol.domain
-            time_e = sol.t
-            ref_solution = self.ref_func(time_e, domain.x, field=self.field)
-
-            func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
-            to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
-            to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
-
-            args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
-            data = func(**args)
-            # remove element with NaN values
+        if self.solid_index is None:
             solid_cells = sol.domain.in_or_out != sol.domain.valin
 
             vmax = sol.domain.stencil.vmax
@@ -150,14 +116,52 @@ class ErrorStd(DuringSimulation):
                 ind.append(slice(vm, -vm))
             ind = np.asarray(ind)
 
-            data[solid_cells[tuple(ind)]] = 0
-            norm = np.linalg.norm(ref_solution - data)
-            self.error.append(norm)
+            self.solid_index = solid_cells[tuple(ind)]
+
+        data[self.solid_index] = 0
+
+        norm = np.linalg.norm(self.ref_solution - data)
+        if self.relative:
+            norm /= np.linalg.norm(self.ref_solution)
+        return np.log10(norm) if self.log10 else norm
+
+class ErrorStd(DuringSimulation):
+    def __init__(self, field, ref_func, expr, call_at=0.92, log10=True):
+        self.field = field
+        self.ref_func = ref_func
+        self.expr = expr
+        self.log10 = log10
+        self.error = []
+        self.call_at = call_at
+        self.error_func = None
+
+    def __call__(self, duration, sol):
+        start_time = self.call_at*duration
+        # print(start_time, duration)
+        if sol.t >= start_time:
+            domain = sol.domain
+            ref_solution = self.ref_func(sol.t, domain.x, field=self.field)
+
+            if self.error_func is None:
+                self.error_func = Error(ref_solution, self.expr, log10=False, relative=False)
+            else:
+                self.error_func.ref_solution = ref_solution
+
+            self.error.append(self.error_func(sol))
+            # self.error.append(ref_solution)
 
     def value(self):
         std = np.std(np.asarray(self.error))
         return np.log10(std) if self.log10 else std
 
+    def to_json(self):
+        output = {}
+        output['module'] = self.__module__
+        output['class'] = self.__class__.__name__
+        output['field'] = self.field
+        output['ref_func'] = self.ref_func
+        output['expr'] = self.expr
+        return output
 class ErrorAvg(ErrorStd):
     def value(self):
         avg = np.average(np.asarray(self.error))
@@ -234,14 +238,3 @@ class Plot(AfterSimulation):
             fig.colorbar(imshow, ax=ax)
 
         fig.savefig(self.filename, dpi=300)
-
-
-class StdError(AfterSimulation):
-    def __init__(self, ref_solution, field):
-        self.ref_solution = ref_solution
-        self.field = field
-
-    def __call__(self, simulation):
-        data = simulation.get_data(self.field, 0)
-        return np.linalg.norm(self.ref_solution - data)
-

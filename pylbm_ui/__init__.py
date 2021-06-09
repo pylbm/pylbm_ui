@@ -4,3 +4,7 @@
 #     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
 #
 # License: BSD 3 clause
+
+from . import simulation
+from . import responses
+from . import widgets

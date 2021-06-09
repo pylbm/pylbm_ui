@@ -138,7 +138,7 @@ class Scheme:
 
 class SchemeVelocity(Representation):
     def __init__(self, value):
-        self.symb = sp.symbols('lambda', constants=True)
+        self.symb = sp.symbols('lambda')
         self.value = value
 
     @classmethod

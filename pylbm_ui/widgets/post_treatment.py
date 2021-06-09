@@ -457,35 +457,37 @@ class PostTreatmentWidget:
                             filename = os.path.basename(h5)
                             dirname = os.path.dirname(os.path.abspath(h5))
 
-                            ite = int(os.path.splitext(filename)[0].split('_')[-1])
+                            tmp = os.path.splitext(filename)[0].split('_')
+                            if len(tmp) == 2:
+                                ite = int(os.path.splitext(filename)[0].split('_')[-1])
 
-                            # check if the h5 file is not used for the save process
-                            # which means that the ressource is temporarely unavailable
-                            is_available = False
-                            while (not is_available):
-                                try:
-                                    h5_data = h5py.File(h5)
-                                    is_available = True
-                                except OSError:
-                                    pass
+                                # check if the h5 file is not used for the save process
+                                # which means that the ressource is temporarely unavailable
+                                is_available = False
+                                while (not is_available):
+                                    try:
+                                        h5_data = h5py.File(h5)
+                                        is_available = True
+                                    except OSError:
+                                        pass
 
-                            for k in h5_data.keys():
-                                if k not in ['x_0', 'x_1', 'x_2']:
-                                    data.append({
-                                                # 'id': id,
-                                                'iteration': ite,
-                                                'dim': cfg['dim'],
-                                                'time': ite*dt,
-                                                'field': k,
-                                                'test case': cfg['test_case']['class'],
-                                                'lb scheme': cfg['lb_scheme']['class'],
-                                                'file': filename,
-                                                'directory': dirname,
-                                    })
-                                    dhash = hashlib.md5()
-                                    encoded = json.dumps(data[-1], sort_keys=True).encode()
-                                    dhash.update(encoded)
-                                    data[-1]['id'] = dhash.hexdigest()
+                                for k in h5_data.keys():
+                                    if k not in ['x_0', 'x_1', 'x_2']:
+                                        data.append({
+                                                    # 'id': id,
+                                                    'iteration': ite,
+                                                    'dim': cfg['dim'],
+                                                    'time': ite*dt,
+                                                    'field': k,
+                                                    'test case': cfg['test_case']['class'],
+                                                    'lb scheme': cfg['lb_scheme']['class'],
+                                                    'file': filename,
+                                                    'directory': dirname,
+                                        })
+                                        dhash = hashlib.md5()
+                                        encoded = json.dumps(data[-1], sort_keys=True).encode()
+                                        dhash.update(encoded)
+                                        data[-1]['id'] = dhash.hexdigest()
 
             items = self.select_table.items
             index = [i for i, item in enumerate(items) if item in data]

@@ -48,39 +48,45 @@ def run_simulation(args):
         if isinstance(r, FromConfig):
             output[i] = r(simu_cfg, sample)
 
-    def test_nan():
-        c = list(sol.scheme.consm.keys())[0]
+    def test_unstab():
+        c = list(sol.scheme.consm.keys())[0] ##??? are we sure that it is the mass field?
         sol.m_halo[c][solid_cells] = 0
         data = sol.m[c]
-        if np.isnan(np.sum(data)) or np.any(np.abs(data)>1e20):
+        if np.isnan(np.sum(data)) or np.any(np.abs(data)>1e10):
+            return True
+        if np.any(data<=0.): ## avoid negative mass
             return True
         return False
 
     actions = [r for r in responses if isinstance(r, DuringSimulation)]
 
-    nan_detected = False
+    unstable = False
     nite = 0
-
-    while sol.t <= duration and not nan_detected:
+    niteStab =  int(duration/sol.dt/10) # the number of stability check during the simulation = 10
+    can_continue = True
+    # while sol.t <= duration and not can_continue:
+    while sol.t <= duration and not unstable:
         sol.one_time_step()
 
         for a in actions:
-            a(duration, sol)
+            can_continue &= a(duration, sol)
 
-        if nite == 200:
+        if nite == niteStab:
             nite = 0
-            nan_detected = test_nan()
+            unstable = test_unstab()
+
         nite += 1
 
-    nan_detected |= test_nan()
+    unstable |= test_unstab()
 
-    for i, r in enumerate(responses):
-        if isinstance(r, AfterSimulation):
-            output[i] = r(sol)
-        elif isinstance(r, DuringSimulation):
-            output[i] = r.value()
+    if not unstable: # avoid meaningless responses values (or empty plots) when simulation is unstable
+        for i, r in enumerate(responses):
+            if isinstance(r, AfterSimulation):
+                output[i] = r(sol)
+            elif isinstance(r, DuringSimulation):
+                output[i] = r.value()
 
-    return [not nan_detected] + output
+    return [not unstable] + output
 
 skopt_method = {'Latin hypercube': Lhs,
                 'Sobol': Sobol,
@@ -279,7 +285,8 @@ class ParametricStudyWidget:
 
             def run_parametric_study():
                 from pathos.multiprocessing import ProcessingPool
-                pool = pp.ProcessPool()
+                from pathos.helpers import cpu_count
+                pool = pp.ProcessPool(nodes=cpu_count()//2)
                 output = pool.map(run_simulation, args)
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]

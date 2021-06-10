@@ -9,13 +9,14 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
+import hashlib
 
 from .equation_type import Euler1D
 from .exact_solvers import EulerSolver as exact_solver
 from ..utils import riemann_pb
 from ...utils import HashBaseModel
 
-
+cache_exact_solver = {}
 class ToroCase(HashBaseModel):
     rho_left: float
     rho_right: float
@@ -105,13 +106,26 @@ class ToroCase(HashBaseModel):
     def set_size(self, size):
         self.xmax = self.xmin + size[0]
 
-    def state(self):
-        exact_solution = exact_solver({
+    def get_exact_solution(self):
+        config = {
             'jump abscissa': self.x_disc,
             'left state': [self.rho_left, self.u_left, self.p_left],
             'right state': [self.rho_right, self.u_right, self.p_right],
             'gamma': self.gamma,
-        })
+        }
+
+        dhash = hashlib.md5()
+        dhash.update(f'{config.values()}'.encode())
+        hash = dhash.hexdigest()
+
+        if hash not in cache_exact_solver:
+            cache_exact_solver[hash] = exact_solver(config)
+
+        return cache_exact_solver[hash]
+
+    def state(self):
+        exact_solution = self.get_exact_solution()
+
         star_1 = exact_solution.u_star[0]
         star_2 = exact_solution.u_star[1]
         return [
@@ -146,12 +160,7 @@ class ToroCase(HashBaseModel):
         ]
 
     def ref_solution(self, t, x, field=None):
-        exact_solution = exact_solver({
-            'jump abscissa': self.x_disc,
-            'left state': [self.rho_left, self.u_left, self.p_left],
-            'right state': [self.rho_right, self.u_right, self.p_right],
-            'gamma': self.gamma,
-        })
+        exact_solution = self.get_exact_solution()
         sol_e = exact_solution.evaluate(x, t)
 
         to_subs = {self.equation.rho: sol_e[0],

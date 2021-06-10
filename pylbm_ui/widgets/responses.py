@@ -8,6 +8,7 @@
 import os
 import ipyvuetify as v
 import numpy as np
+import copy
 import pylbm
 
 from .pylbmwidget import out
@@ -61,6 +62,7 @@ def build_responses_list(test_case, lb_scheme):
     for name, expr in fields.items():
         responses[f'plot {name}'] = Plot(name, expr)
         if hasattr(test_case, 'ref_solution'):
+            # responses[f'stability on {name}'] = pylbm_responses.Stability(expr)
             responses[f'log of error on {name}'] = Error(name, expr)
             responses[f'log of error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
             responses[f'log of error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
@@ -115,7 +117,7 @@ class ResponsesWidget:
             if isinstance(self.responses[v], (pylbm_responses.FromConfig,
                                               pylbm_responses.DuringSimulation,
                                               pylbm_responses.AfterSimulation,)):
-                output.append(self.responses[v])
+                output.append(copy.deepcopy(self.responses[v]))
             else:
-                output.append(self.responses[v](path, test_case, simu_cfg))
+                output.append(copy.deepcopy(self.responses[v](path, test_case, simu_cfg)))
         return output

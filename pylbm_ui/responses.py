@@ -87,7 +87,52 @@ class LinearStability(FromConfig):
                 return False
         return True
 
-class Error(AfterSimulation):
+class Stability(FromConfig):
+    def __init__(self, expr, tol=1e10):
+        self.expr = expr
+        self.tol = tol
+        self.func = None
+        self.nite = 0
+        self.call_at = None
+        self.is_stable = True
+        self.solid_index = None
+
+    def __call__(self, duration, sol):
+        if self.call_at is None:
+            self.call_at = int(duration/sol.dt/10)
+
+        if self.func is None:
+            func = sp.lambdify(list(self.expr.atoms(sp.Symbol)), self.expr, "numpy", dummify=False)
+        to_subs = {str(k): sol.m[k] for k in sol.scheme.consm.keys()}
+        to_subs.update({str(k): v for k, v in sol.scheme.param.items()})
+
+        args = {str(s): to_subs[str(s)] for s in self.expr.atoms(sp.Symbol)}
+        data = func(**args)
+
+        # remove element with NaN values
+        if self.solid_index is None:
+            solid_cells = sol.domain.in_or_out != sol.domain.valin
+
+            vmax = sol.domain.stencil.vmax
+            ind = []
+            for vm in vmax:
+                ind.append(slice(vm, -vm))
+            ind = np.asarray(ind)
+
+            self.solid_index = solid_cells[tuple(ind)]
+
+        if nite == self.call_at:
+            data[self.solid_index] = 0
+
+            if np.isnan(np.sum(data)) or np.any(np.abs(data)>self.tol):
+                self.is_stable = False
+
+        return self.is_stable
+
+    def value(self):
+        return self.is_stable
+
+class Error(DuringSimulation):
     def __init__(self, ref_solution, expr, log10=True, relative=False):
         self.func = None
         self.ref_solution = ref_solution
@@ -136,7 +181,7 @@ class ErrorStd(DuringSimulation):
 
     def __call__(self, duration, sol):
         start_time = self.call_at*duration
-        # print(start_time, duration)
+
         if sol.t >= start_time:
             domain = sol.domain
             ref_solution = self.ref_func(sol.t, domain.x, field=self.field)
@@ -147,7 +192,8 @@ class ErrorStd(DuringSimulation):
                 self.error_func.ref_solution = ref_solution
 
             self.error.append(self.error_func(sol))
-            # self.error.append(ref_solution)
+
+        return True
 
     def value(self):
         std = np.std(np.asarray(self.error))
@@ -161,6 +207,7 @@ class ErrorStd(DuringSimulation):
         output['ref_func'] = self.ref_func
         output['expr'] = self.expr
         return output
+
 class ErrorAvg(ErrorStd):
     def value(self):
         avg = np.average(np.asarray(self.error))

@@ -176,12 +176,12 @@ class ParametricStudyWidget:
             self.dialog.check_path(path)
 
             asyncio.ensure_future(self.run_study(path))
-            # self.run_study(path)
+            self.run_study(path)
         else:
             self.stop_simulation(None)
 
     async def run_study(self, path):
-    # def run_study(self, path):
+    #def run_study(self, path):
         """
         Create the sampling using the design space defined in the menu 
         and run the evaluation of each the each sample point in parallel.

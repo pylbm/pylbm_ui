@@ -127,14 +127,16 @@ class ErrorStd(DuringSimulation):
         self.error = []
         self.nite = 0
         self.call_at = call_at
+        #print('hello')
 
     def __call__(self, sol, duration):
         self.nite += 1
         startTime = duration*self.call_at
         startIt = int(startTime/sol.dt)
+        
         if sol.t >= startTime:
-            print(sol.t, duration, startTime)
         #if self.nite == startIt:
+            #print(sol.t, duration, startTime)
             self.nite = 0
             domain = sol.domain
             time_e = sol.t
@@ -162,12 +164,13 @@ class ErrorStd(DuringSimulation):
             norm = error(sol)
 
             self.error.append(norm)
+            #print (len(self.error))
 
     def value(self):
-        #std = np.std(np.asarray(self.error))
-        #return np.log10(std) if self.log10 else std
-        std = len(self.error)
-        return std
+        std = np.std(np.asarray(self.error))
+        return np.log10(std) if self.log10 else std
+        #std = len(self.error)
+        #return std
 
 class ErrorAvg(ErrorStd):
     def value(self):

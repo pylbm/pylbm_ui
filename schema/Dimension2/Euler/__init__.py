@@ -60,6 +60,7 @@ cases = {
     'test cases': {
         'Wedge Ma=2.5': {
             'test case': Wedge_Ma2p5,
+            'space_step': 0.01,
             'schemes': [
                 D2Q4444(
                     la=15,

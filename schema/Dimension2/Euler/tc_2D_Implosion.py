@@ -68,7 +68,7 @@ class tc_2D_implosion2D(HashBaseModel):
                 init_ux_Impl(x, y)**2 + init_uy_Impl(x, y)**2
             ) + init_p_Impl(x, y)/(self.gamma-1)
 
-        BC_labels = [-1,-1,-1,-1]
+        BC_labels = [-1, -1, -1, -1]
         if (self.BCType == "symmetric"):
             BC_labels = [3, 3, 4, 4]
 

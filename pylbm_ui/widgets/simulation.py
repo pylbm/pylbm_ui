@@ -259,7 +259,10 @@ class SimulationWidget:
                 nite += 1
                 self.iplot += 1
 
-            await asyncio.sleep(0.001)
+            if self.simu.sol.dim == 1:
+                await asyncio.sleep(0.001)
+            else:
+                await asyncio.sleep(0)
             if self.start.v_model:
                 break
         self.stop_simulation(None)

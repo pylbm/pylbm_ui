@@ -27,6 +27,11 @@ class EulerSolver(GenericSolver):
     The 3 variables used to parametrize the solution are
     rho, u, and p.
     """
+    def __init__(self, parameters):
+        self.rho_k1 = self.u_k1 = self.p_k1 = self.lambda_l = None
+        self.rho_k3 = self.u_k3 = self.p_k3 = self.lambda_r = None
+        super().__init__(parameters)
+
     def _read_particular_parameters(self, parameters):
         self.gamma = parameters.get('gamma', 1.4)
         self.mu2 = (self.gamma-1) / (self.gamma+1)
@@ -70,32 +75,43 @@ class EulerSolver(GenericSolver):
         ]
 
     def _rarefaction_1(self, xik):
-        rho_l, u_l, p_l = self.u_left
-        c_l = np.sqrt(self.gamma*p_l/rho_l)
-        lambda_l = u_l - c_l
-        dummy = (xik - lambda_l) / (self.gamma+1)
-        rho_k = (
-            np.sqrt(rho_l**(self.gamma-1)) -
-            np.sqrt(rho_l**self.gamma / (self.gamma*p_l)) *
-            (self.gamma-1) * dummy
-        )**(2/(self.gamma-1))
-        u_k = u_l + 2 * dummy
-        p_k = p_l*(rho_k/rho_l)**self.gamma
-        return np.array([rho_k, u_k, p_k])
+        if self.rho_k1 is None:
+            rho_l, u_l, p_l = self.u_left
+            c_l = np.sqrt(self.gamma*p_l/rho_l)
+            self.lambda_l = u_l - c_l
+
+            self.rho_k1 = [
+                np.sqrt(rho_l**(self.gamma-1)),
+                - np.sqrt(rho_l**self.gamma / (self.gamma*p_l)) * (self.gamma-1)
+            ]
+            self.u_k1 = u_l
+            self.p_k1 = p_l*rho_l**-self.gamma
+
+        dummy = (xik - self.lambda_l) / (self.gamma+1)
+        rho_k = (self.rho_k1[0] + self.rho_k1[1]*dummy)**(2/(self.gamma-1))
+        return [
+            rho_k,
+            self.u_k1 + 2 * dummy,
+            self.p_k1 * rho_k**self.gamma]
 
     def _rarefaction_3(self, xik):
-        rho_r, u_r, p_r = self.u_right
-        c_r = np.sqrt(self.gamma*p_r/rho_r)
-        lambda_r = u_r + c_r
-        dummy = (xik - lambda_r) / (self.gamma+1)
-        rho_k = (
-            np.sqrt(rho_r**(self.gamma-1)) +
-            np.sqrt(rho_r**self.gamma / (self.gamma*p_r)) *
-            (self.gamma-1) * dummy
-        )**(2/(self.gamma-1))
-        u_k = u_r + 2 * dummy
-        p_k = p_r*(rho_k/rho_r)**self.gamma
-        return np.array([rho_k, u_k, p_k])
+        if self.rho_k3 is None:
+            rho_r, u_r, p_r = self.u_right
+            c_r = np.sqrt(self.gamma*p_r/rho_r)
+            self.lambda_r = u_r + c_r
+            self.rho_k3 = [
+                np.sqrt(rho_r**(self.gamma-1)),
+                np.sqrt(rho_r**self.gamma / (self.gamma*p_r)) * (self.gamma-1)
+            ]
+            self.u_k3 = u_r
+            self.p_k3 = p_r*(rho_r)**-self.gamma
+
+        dummy = (xik - self.lambda_r) / (self.gamma+1)
+        rho_k = (self.rho_k3[0] + self.rho_k3[1]*dummy)**(2/(self.gamma-1))
+        return [
+            rho_k,
+            self.u_k3 + 2 * dummy,
+            self.p_k3 * rho_k**self.gamma]
 
     def _compute_waves(self):
         """

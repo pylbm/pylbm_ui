@@ -163,14 +163,13 @@ class GenericSolver(object):
             vxi = (x-self.pos_disc) / t
             for k in range(self.n):
                 y[k, :] = self.values[0][k]  # left value
-            for k, xik in enumerate(vxi):
-                for i in range(len(self.velocities)):
-                    if self.waves[i] == 'rarefaction' \
-                       and xik > self.velocities[i][0] \
-                       and xik < self.velocities[i][1]:
-                        y[:, k] = self.values[2*i+1](xik)
-                    if xik >= self.velocities[i][1]:
-                        y[:, k] = self.values[2*i+2]
+
+            for i in range(len(self.velocities)):
+                if self.waves[i] == 'rarefaction':
+                    mask = np.logical_and(vxi > self.velocities[i][0], vxi < self.velocities[i][1])
+                    y[:, mask] = self.values[2*i+1](vxi[mask])
+                mask = vxi >= self.velocities[i][1]
+                y[:, mask] = np.asarray(self.values[2*i+2])[:, np.newaxis]
         return y
 
     def diagram(self):

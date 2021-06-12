@@ -21,6 +21,7 @@ cases = {
     'test cases': {
         'Toro 1': {
             'test case': Toro1_1D,
+            'space_step': 0.01,
             'schemes': [
                 D1Q222(la=5, s_rho=1.9, s_u=1.8, s_p=2.),
                 D1Q333(

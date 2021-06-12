@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from .equation_type import Euler2D
 from ...utils import HashBaseModel
 
+
 class tc_2D_implosion2D(HashBaseModel):
     xmin: float
     xmax: float
@@ -31,10 +32,10 @@ class tc_2D_implosion2D(HashBaseModel):
     gamma: float
     duration: float
 
-    dim=2
+    dim = 2
     equation = Euler2D()
     name = 'Implosion2D'
-    BCType  = 'none'
+    BCType = 'none'
     # description = 'none'
     responses = {}
 
@@ -63,10 +64,11 @@ class tc_2D_implosion2D(HashBaseModel):
             return init_rho_Impl(x, y) * init_uy_Impl(x, y)
 
         def init_E_Impl(x, y):
-            return .5*init_rho_Impl(x, y)*(init_ux_Impl(x, y)**2 + init_uy_Impl(x, y)**2) + \
-                init_p_Impl(x, y)/(self.gamma-1)
+            return .5*init_rho_Impl(x, y)*(
+                init_ux_Impl(x, y)**2 + init_uy_Impl(x, y)**2
+            ) + init_p_Impl(x, y)/(self.gamma-1)
 
-        BC_labels = [-1,-1,-1,-1]
+        BC_labels = [-1, -1, -1, -1]
         if (self.BCType == "symmetric"):
             BC_labels = [3, 3, 4, 4]
 
@@ -104,40 +106,41 @@ class tc_2D_implosion2D(HashBaseModel):
         }
 
     def state(self):
-        return [{self.equation.rho: self.rho_left,
-                 self.equation.qx: self.rho_left*self.ux_left,
-                 self.equation.qy: self.rho_left*self.uy_left,
-                 self.equation.E: 0.5*self.rho_left*(self.ux_left**2.*self.uy_left**2.) + self.p_left/(self.gamma-1.),
-                },
-                {self.equation.rho: self.rho_right,
-                 self.equation.qx: self.rho_right*self.ux_right,
-                 self.equation.qy: self.rho_right*self.uy_right,
-                 self.equation.E: 0.5*self.rho_right*(self.ux_right**2.*self.uy_right**2.) + self.p_right/(self.gamma-1.)
-                },
+        return [
+            {
+                self.equation.rho: self.rho_left,
+                self.equation.qx: self.rho_left*self.ux_left,
+                self.equation.qy: self.rho_left*self.uy_left,
+                self.equation.E: 0.5*self.rho_left*(
+                    self.ux_left**2.*self.uy_left**2.
+                ) + self.p_left/(self.gamma-1.),
+            },
+            {
+                self.equation.rho: self.rho_right,
+                self.equation.qx: self.rho_right*self.ux_right,
+                self.equation.qy: self.rho_right*self.uy_right,
+                self.equation.E: 0.5*self.rho_right*(
+                    self.ux_right**2.*self.uy_right**2.
+                ) + self.p_right/(self.gamma-1.)
+            },
         ]
+
 
 ##################################
 ### predefined cases
 ##################################
 
 Implosion2D_Symmetric = tc_2D_implosion2D(
-    xmin = 0., xmax = 0.3,
-    ymin = 0., ymax = 0.3,
-    trisize = 0.150001,
-
+    xmin=0., xmax=0.3,
+    ymin=0., ymax=0.3,
+    trisize=0.150001,
     rho_left=0.125, rho_right=1.,
     ux_left=0., ux_right=0.,
     uy_left=0., uy_right=0.,
     p_left=0.14, p_right=1.,
-
     gamma=1.4,
     duration=2.5, # ~0.4 pour que le choc atteigne le coin oppose
-
     name = 'Implosion2D_Symmetric',
     BCType = "symmetric",
-
-#     description =
-# """Implosion 2D is a 2D test case proposed in....
-
-# """
+    description_file='./implosion.html'
 )

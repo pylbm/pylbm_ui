@@ -32,7 +32,7 @@ class DiscretizationWidget(v.ExpansionPanel):
         lb_param = lb_scheme_widget.parameters
         tc_param = test_case_widget.parameters
 
-        dx = default_dx
+        dx = test_case_widget.get_dict_case().get("space_step", default_dx)
         nx = int(test_case.size()[0]/dx) + 1
         ny = 1
         dt = dx/lb_param['la'].value
@@ -156,4 +156,6 @@ class DiscretizationWidget(v.ExpansionPanel):
         if dim > 1:
             tc_param['ymin'].observe(self.observer, 'v_model')
             tc_param['ymax'].observe(self.observer, 'v_model')
+        dx = self.test_case_widget.get_dict_case().get("space_step", default_dx)
+        self.discret['dx'].value = dx
         self.observer(None)

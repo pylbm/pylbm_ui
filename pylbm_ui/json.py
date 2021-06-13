@@ -87,3 +87,22 @@ def save_param_study_for_simu(path, filename, design, responses):
         sort_keys=True,
         indent=4,
     )
+
+@debug_func
+def save_stats(path, filename, stats):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    json_data = {}
+
+    file = os.path.join(path, filename)
+    if os.path.exists(file):
+        json_data = json.load(open(file, 'r'))
+
+    json_data['stats'] = stats
+    json.dump(
+        json_data,
+        open(file, 'w'),
+        sort_keys=True,
+        indent=4,
+    )

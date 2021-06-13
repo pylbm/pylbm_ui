@@ -10,6 +10,8 @@ import asyncio
 import os
 import ipyvuetify as v
 import json
+import numpy as np
+import time
 
 from .discretization import DiscretizationWidget
 from .save_widget import Save_widget
@@ -53,6 +55,7 @@ class SimulationWidget:
         lb_case = lb_scheme_widget.get_case()
         lb_param = lb_scheme_widget.parameters
 
+        self.stats = {}
         ##
         ## The menu
         ##
@@ -164,6 +167,10 @@ class SimulationWidget:
         self.pause.disabled = True
         self.pause.v_model = False
 
+        sol = self.simu.sol
+        self.stats['MLUPS'] = sol.nt*np.prod(sol.domain.shape_in)/self.stats['LBM']/1e6
+        self.simu.save_stats(self.stats)
+
     def update_result(self, change):
         """
         When the test case is changed, the equation can be changed giving
@@ -255,7 +262,11 @@ class SimulationWidget:
                 if self.simu.sol.nt in ite_to_save:
                     self.simu.save_data(ite_to_save[self.simu.sol.nt])
 
+                t1 = time.time()
                 self.simu.sol.one_time_step()
+                t2 = time.time()
+                self.stats['LBM'] += t2 - t1
+
                 nite += 1
                 self.iplot += 1
 
@@ -284,6 +295,7 @@ class SimulationWidget:
             self.pause.disabled = False
             self.progress_bar.value = 0
 
+            self.stats = {'LBM': 0}
             asyncio.ensure_future(self.run_simu())
             # self.run_simu()
         else:

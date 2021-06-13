@@ -18,6 +18,7 @@ import asyncio
 import pathos
 import pathos.pools as pp
 import json
+import time
 
 from .debug import debug, debug_func
 from .design_space import DesignWidget, DesignItem
@@ -28,25 +29,33 @@ from ..config import default_path
 from ..responses import FromConfig, DuringSimulation, AfterSimulation
 from ..simulation import simulation, get_config
 from ..utils import required_fields, NbPointsField
-from ..json import save_param_study, save_simu_config, save_param_study_for_simu
+from ..json import save_param_study, save_simu_config, save_param_study_for_simu, save_stats
 from .message import Message
 
 @debug_func
 def run_simulation(args):
+    stats = {}
     simu_cfg, sample, duration, responses = args
     simu_cfg['codegen_option']['generate'] = False
 
     output = [0]*len(responses)
 
+    t1 = time.time()
     sol = pylbm.Simulation(simu_cfg, initialize=False)
+    t2 = time.time()
+    stats['initialization'] = t2 - t1
     sol.extra_parameters = sample
 
     sol._need_init = True
     solid_cells = sol.domain.in_or_out != sol.domain.valin
 
+    stats['responses'] = 0
+    t1 = time.time()
     for i, r in enumerate(responses):
         if isinstance(r, FromConfig):
             output[i] = r(simu_cfg, sample)
+    t2 = time.time()
+    stats['responses'] += t2 - t1
 
     def test_unstab():
         c = list(sol.scheme.consm.keys())[0] ##??? are we sure that it is the mass field?
@@ -65,28 +74,40 @@ def run_simulation(args):
     niteStab =  int(duration/sol.dt/10) # the number of stability check during the simulation = 10
     can_continue = True
     # while sol.t <= duration and not can_continue:
+    stats['LBM'] = 0
     while sol.t <= duration and not unstable:
+        t1 = time.time()
         sol.one_time_step()
+        t2 = time.time()
+        stats['LBM'] += t2 - t1
 
+        t1 = time.time()
         for a in actions:
             can_continue &= a(duration, sol)
 
         if nite == niteStab:
             nite = 0
             unstable = test_unstab()
+        t2 = time.time()
+        stats['responses'] += t2 - t1
 
         nite += 1
 
     unstable |= test_unstab()
 
+    t1 = time.time()
     if not unstable: # avoid meaningless responses values (or empty plots) when simulation is unstable
         for i, r in enumerate(responses):
             if isinstance(r, AfterSimulation):
                 output[i] = r(sol)
             elif isinstance(r, DuringSimulation):
                 output[i] = r.value()
-
-    return [not unstable] + output
+    t2 = time.time()
+    stats['responses'] += t2 - t1
+    stats['nt'] = float(sol.nt)
+    stats['domain_size'] = float(np.prod(sol.domain.shape_in))
+    stats['MLUPS'] = sol.nt*np.prod(sol.domain.shape_in)/stats['LBM']/1e6
+    return [not unstable] + output, stats
 
 skopt_method = {'Latin hypercube': Lhs,
                 'Sobol': Sobol,
@@ -287,7 +308,9 @@ class ParametricStudyWidget:
                 from pathos.multiprocessing import ProcessingPool
                 from pathos.helpers import cpu_count
                 pool = pp.ProcessPool(nodes=cpu_count()//2)
-                output = pool.map(run_simulation, args)
+                res = pool.map(run_simulation, args)
+                output = [r[0] for r in res]
+                stats = [r[1] for r in res]
 
                 dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
                 dimensions.extend([dict(values=np.arange(len(output)), label='id')])
@@ -305,6 +328,7 @@ class ParametricStudyWidget:
                     tmp_responses['stability'] = output[isamp][0]
                     simu_path = os.path.join(path, f'simu_{isamp}')
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
+                    save_stats(simu_path, 'simu_config.json', stats[isamp])
 
                 fig = v.Row(children=[
                         go.FigureWidget(

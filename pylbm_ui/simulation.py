@@ -259,3 +259,8 @@ class simulation:
     def save_config(self, filename='simu_config.json'):
         from .json import save_simu_config
         save_simu_config(self.path, filename, self.dx, self.v_model, self.test_case, self.lb_scheme)
+
+    def save_stats(self, stats, filename='simu_config.json'):
+        from .json import save_stats
+        if self.path:
+            save_stats(self.path, filename, stats)

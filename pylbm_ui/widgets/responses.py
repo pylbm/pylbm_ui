@@ -39,6 +39,9 @@ class Error:
 
             return pylbm_responses.Error(ref, self.expr, log10=self.log10, relative=self.relative)
 
+    def __str__(self):
+        return f'err_{self.field}'
+
 class Plot:
     def __init__(self, field, expr):
         self.field = field

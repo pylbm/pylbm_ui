@@ -11,10 +11,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 import copy
 import pylbm
+import re
+
+relax_regexp = re.compile('s_(.*)')
 
 class FromConfig:
     pass
-
 
 class DuringSimulation:
     pass
@@ -26,6 +28,7 @@ class Sigma(FromConfig):
     def __init__(self, s, log10=False):
         self.log10 = log10
         self.s = s
+        self.symb = relax_regexp.search(str(self.s)).group(1)
 
     def __call__(self, config, extra_config=None):
         extra_config = extra_config or {}
@@ -34,6 +37,12 @@ class Sigma(FromConfig):
 
         output = 1./params[self.s] - 0.5
         return np.log10(output) if self.log10 else output
+
+    def __str__(self):
+        out = ''
+        if self.log10:
+            out += 'Log'
+        return out + f'Sig_{self.symb}'
 
 class S(FromConfig):
     def __init__(self, s):
@@ -47,11 +56,15 @@ class S(FromConfig):
         output = params[self.s]
         return output
 
+    def __str__(self):
+        return f'{self.s}'
+
 class Diff(FromConfig):
     def __init__(self, s, with_dx=True, log10=False):
         self.log10 = log10
         self.with_dx = with_dx
         self.s = s
+        self.symb = relax_regexp.search(str(self.s)).group(1)
 
     def __call__(self, config, extra_config=None):
         extra_config = extra_config or {}
@@ -66,6 +79,15 @@ class Diff(FromConfig):
 
         output = (1./params[self.s] - 0.5)*dx*la
         return np.log10(output) if self.log10 else output
+
+    def __str__(self):
+        out = ''
+        if self.log10:
+            out += 'Log'
+        out += 'Diff'
+        if self.with_dx:
+            out += 'Odx'
+        return out + f'_{self.symb}'
 
 class LinearStability(FromConfig):
     def __init__(self, states):
@@ -87,6 +109,8 @@ class LinearStability(FromConfig):
                 return False
         return True
 
+    def __str__(self):
+        return 'LinStab'
 class Stability(FromConfig):
     def __init__(self, expr, tol=1e10):
         self.expr = expr
@@ -132,6 +156,9 @@ class Stability(FromConfig):
     def value(self):
         return self.is_stable
 
+    def __str__(self):
+        return 'Stab'
+
 class Error(DuringSimulation):
     def __init__(self, ref_solution, expr, log10=True, relative=False):
         self.func = None
@@ -169,6 +196,8 @@ class Error(DuringSimulation):
             norm /= np.linalg.norm(self.ref_solution)
         return np.log10(norm) if self.log10 else norm
 
+    def __str__(self):
+        return 'Error'
 class ErrorStd(DuringSimulation):
     def __init__(self, field, ref_func, expr, call_at=0.92, log10=True):
         self.field = field
@@ -199,19 +228,16 @@ class ErrorStd(DuringSimulation):
         std = np.std(np.asarray(self.error))
         return np.log10(std) if self.log10 else std
 
-    def to_json(self):
-        output = {}
-        output['module'] = self.__module__
-        output['class'] = self.__class__.__name__
-        output['field'] = self.field
-        output['ref_func'] = self.ref_func
-        output['expr'] = self.expr
-        return output
+    def __str__(self):
+        return f'ErrStd_{self.field}'
 
 class ErrorAvg(ErrorStd):
     def value(self):
         avg = np.average(np.asarray(self.error))
         return np.log10(avg) if self.log10 else avg
+
+    def __str__(self):
+        return f'ErrAvg_{self.field}'
 
 class CFL(AfterSimulation):
     def __init__(self, rho, q):
@@ -234,6 +260,9 @@ class CFL(AfterSimulation):
                 raise KeyError(f'{la} not found')
 
         return output/la
+
+    def __str__(self):
+        return 'CFL'
 
 class Plot(AfterSimulation):
     def __init__(self, filename, expr, ref_solution=None):

@@ -423,12 +423,22 @@ class ParametricStudyWidget:
 
         items = []
         for d in cfg['design_space']:
-            items.append(DesignItem(self.test_case_widget,
-                                    self.lb_scheme_widget,
-                                    self.discret_widget,
-                                    class_='ma-1',
-                                    style_='background-color: #F8F8F8;',
-                                    **d))
+            new_item = DesignItem(self.test_case_widget,
+                                  self.lb_scheme_widget,
+                                  self.discret_widget,
+                                  class_='ma-1',
+                                  style_='background-color: #F8F8F8;',
+                                  **d)
+
+            def remove_item(widget, event, data):
+                self.design.item_list.children.remove(new_item)
+                self.design.item_list.notify_change({'name': 'children', 'type': 'change'})
+
+            new_item.btn.on_event('click', remove_item)
+            new_item.on_event('click', new_item.update_item)
+            new_item.observe(self.design.on_change, 'children')
+            items.append(new_item)
+
         self.design.item_list.children = items
 
         self.responses.widget.v_model = cfg['responses']

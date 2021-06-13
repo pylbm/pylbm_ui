@@ -319,7 +319,7 @@ class ParametricStudyWidget:
 
                 for i, r in enumerate(self.responses.widget.v_model):
                     if output[0][i+1] is not None:
-                        dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=r))
+                        dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=str(self.responses.responses[r])))
 
                 for isamp in range(len(sampling)):
                     tmp_design = {f'{k}': sampling[isamp, ik] for ik, k in enumerate(design_space.keys())}
@@ -330,13 +330,13 @@ class ParametricStudyWidget:
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
                     save_stats(simu_path, 'simu_config.json', stats[isamp])
 
-                fig = v.Row(children=[
-                        go.FigureWidget(
-                            data=go.Parcoords(
-                            line=dict(color = dimensions[0]['values']),
-                            dimensions = dimensions,
-                        )),
-                        ],
+                fig = v.Row(children=[],
+                        # go.FigureWidget(
+                        #     data=go.Parcoords(
+                        #     line=dict(color = dimensions[0]['values']),
+                        #     dimensions = dimensions,
+                        # )),
+                        # ],
                         align='center', justify='center'
                 )
 
@@ -360,13 +360,14 @@ class ParametricStudyWidget:
                     ]
 
                 color = v.Select(label='color', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=0)
-                items = v.Select(label='Show items', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=[i for i in range(len(dimensions))], multiple=True)
+                items = v.Select(label='Show items', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=[i for i in range(len(design_space.keys())+2)], multiple=True)
                 only_stable = v.Switch(label='Show only stable results', v_model=False)
 
                 color.observe(change_plot, 'v_model')
                 items.observe(change_plot, 'v_model')
                 only_stable.observe(change_plot, 'v_model')
 
+                change_plot(None)
                 self.plotly_plot.children = [color, items, only_stable, fig]
 
                 self.stop_simulation(None)

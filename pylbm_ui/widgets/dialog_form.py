@@ -160,8 +160,6 @@ class Dialog:
             def close_click(widget, event, data):
                 create_dialog.v_model = False
 
-            def on_change(change):
-                self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
             def add_click(widget, event, data):
                 self.form.check_rules()
@@ -177,7 +175,7 @@ class Dialog:
 
                     new_item.btn.on_event('click', remove_item)
                     new_item.on_event('click', new_item.update_item)
-                    new_item.observe(on_change, 'children')
+                    new_item.observe(self.on_change, 'children')
 
                     self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
@@ -196,6 +194,9 @@ class Dialog:
                 v.CardText(children=[self.item_list]),
                 v.CardActions(children=[v.Spacer(), add_button])
             ])
+
+    def on_change(self, change):
+        self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
     def purge(self):
         self.item_list.children = []

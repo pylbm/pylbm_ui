@@ -1,6 +1,7 @@
 import argparse
 import json
 import importlib
+import numpy as np
 
 ## To remove (create a catalog package)
 import sys
@@ -28,8 +29,13 @@ simu = simulation()
 simu.reset_fields(lb_scheme.equation.get_fields())
 
 simu.reset_path(path)
-simu.reset_sol(test_case, lb_scheme, data['dx'])
+simu.reset_sol(None, test_case, lb_scheme, data['dx'])
 simu.save_config()
 
+import time
+t1 = time.time()
 while simu.sol.t <= simu.duration:
     simu.sol.one_time_step()
+t2 = time.time()
+print('execution time:', t2 - t1)
+print('MLUPS:,', simu.sol.nt*np.prod(simu.sol.domain.shape_in)/(t2 - t1)/1e6)

@@ -168,7 +168,8 @@ class SimulationWidget:
         self.pause.v_model = False
 
         sol = self.simu.sol
-        self.stats['MLUPS'] = sol.nt*np.prod(sol.domain.shape_in)/self.stats['LBM']/1e6
+        if sol:
+            self.stats['MLUPS'] = sol.nt*np.prod(sol.domain.shape_in)/self.stats['LBM']/1e6
         self.simu.save_stats(self.stats)
 
     def update_result(self, change):

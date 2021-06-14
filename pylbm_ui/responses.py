@@ -111,6 +111,7 @@ class LinearStability(FromConfig):
 
     def __str__(self):
         return 'LinStab'
+
 class Stability(FromConfig):
     def __init__(self, expr, tol=1e10):
         self.expr = expr

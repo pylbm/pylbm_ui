@@ -7,6 +7,8 @@
 
 import json
 import os
+import numpy as np
+
 from .widgets.debug import debug_func
 
 @debug_func
@@ -100,6 +102,25 @@ def save_stats(path, filename, stats):
         json_data = json.load(open(file, 'r'))
 
     json_data['stats'] = stats
+    json.dump(
+        json_data,
+        open(file, 'w'),
+        sort_keys=True,
+        indent=4,
+    )
+
+@debug_func
+def save_results(path, filename, results):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    json_data = {}
+
+    file = os.path.join(path, filename)
+    if os.path.exists(file):
+        json_data = json.load(open(file, 'r'))
+
+    json_data['results'] = [{k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in r.items()} for r in results]
     json.dump(
         json_data,
         open(file, 'w'),

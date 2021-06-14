@@ -29,7 +29,7 @@ from ..config import default_path
 from ..responses import FromConfig, DuringSimulation, AfterSimulation
 from ..simulation import simulation, get_config
 from ..utils import required_fields, NbPointsField
-from ..json import save_param_study, save_simu_config, save_param_study_for_simu, save_stats
+from ..json import save_param_study, save_simu_config, save_param_study_for_simu, save_stats, save_results
 from .message import Message
 
 @debug_func
@@ -308,7 +308,13 @@ class ParametricStudyWidget:
                 from pathos.multiprocessing import ProcessingPool
                 from pathos.helpers import cpu_count
                 pool = pp.ProcessPool(nodes=cpu_count()//2)
+                t1 = time.time()
                 res = pool.map(run_simulation, args)
+                t2 = time.time()
+                pcp_stats = {}
+                pcp_stats['number of cpu'] = cpu_count()//2
+                pcp_stats['execution time'] = t2 - t1
+                pcp_stats['mean time by evaluation'] = (t2 - t1)/len(args)
                 output = [r[0] for r in res]
                 stats = [r[1] for r in res]
 
@@ -330,13 +336,10 @@ class ParametricStudyWidget:
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
                     save_stats(simu_path, 'simu_config.json', stats[isamp])
 
+                save_results(path, 'parametric_study.json', dimensions)
+                save_stats(path, 'parametric_study.json', pcp_stats)
+
                 fig = v.Row(children=[],
-                        # go.FigureWidget(
-                        #     data=go.Parcoords(
-                        #     line=dict(color = dimensions[0]['values']),
-                        #     dimensions = dimensions,
-                        # )),
-                        # ],
                         align='center', justify='center'
                 )
 

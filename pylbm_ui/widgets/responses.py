@@ -16,14 +16,26 @@ from .pylbmwidget import out
 from .. import responses as pylbm_responses
 from schema.utils import RelaxationParameterFinal
 
-def CFL(test_case):
-    eq = test_case.equation
-    if test_case.dim == 1:
-        vel = [eq.q]
-    elif test_case.dim == 2:
-        vel = [eq.qx, eq.qy]
+class CFL:
+    def __init__(self, test_case):
+        eq = test_case.equation
+        if hasattr(eq, 'rho'):
+            self.rho = eq.rho
+            if test_case.dim == 1:
+                self.vel = [eq.q]
+            elif test_case.dim == 2:
+                self.vel = [eq.qx, eq.qy]
+        else:
+            self.rho = None
 
-    return pylbm_responses.CFL(eq.rho, vel)
+    def __call__(self, path, test_case, simu_cfg):
+        if self.rho:
+            return pylbm_responses.CFL(self.rho, self.vel)
+        else:
+            return None
+
+    def __str__(self):
+        return 'CFL'
 
 class Error:
     def __init__(self, field, expr, relative=False, log10=True):
@@ -58,7 +70,7 @@ class Plot:
 
 def build_responses_list(test_case, lb_scheme):
     responses = {'linear stability': lambda path, test_case, simu_cfg: pylbm_responses.LinearStability(test_case.state()),
-                 'CFL': lambda path, test_case, simu_cfg: CFL(test_case),
+                 'CFL': CFL(test_case),
     }
 
     fields = test_case.equation.get_fields()

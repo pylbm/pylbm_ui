@@ -87,10 +87,10 @@ def build_responses_list(test_case, lb_scheme):
         responses[k] = pylbm_responses.S(v.symb)
         responses[f'sigma for {k}'] = pylbm_responses.Sigma(v.symb)
         responses[f'log of sigma for {k}'] = pylbm_responses.Sigma(v.symb, log10=True)
-        responses[f'diff/dx for {k}'] = pylbm_responses.Diff(v.symb)
-        responses[f'log of diff/dx for {k}'] = pylbm_responses.Diff(v.symb, log10=True)
-        responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
-        responses[f'log of diff for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False, log10=True)
+        responses[f'diff for {k}'] = pylbm_responses.Diff(v.symb)
+        responses[f'log of diff for {k}'] = pylbm_responses.Diff(v.symb, log10=True)
+        responses[f'diff/dx for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False)
+        responses[f'log of diff/dx for {k}'] = pylbm_responses.Diff(v.symb, with_dx=False, log10=True)
 
     for k, v in lb_scheme.__dict__.items():
         if isinstance(v, RelaxationParameterFinal):

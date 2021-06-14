@@ -85,7 +85,7 @@ class Diff(FromConfig):
         if self.log10:
             out += 'Log'
         out += 'Diff'
-        if self.with_dx:
+        if not self.with_dx:
             out += 'Odx'
         return out + f'_{self.symb}'
 

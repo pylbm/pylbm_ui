@@ -103,6 +103,7 @@ def run_simulation(args):
             elif isinstance(r, DuringSimulation):
                 output[i] = r.value()
     t2 = time.time()
+
     stats['responses'] += t2 - t1
     stats['nt'] = float(sol.nt)
     stats['domain_size'] = float(np.prod(sol.domain.shape_in))
@@ -315,6 +316,7 @@ class ParametricStudyWidget:
                 pcp_stats['number of cpu'] = cpu_count()//2
                 pcp_stats['execution time'] = t2 - t1
                 pcp_stats['mean time by evaluation'] = (t2 - t1)/len(args)
+
                 output = [r[0] for r in res]
                 stats = [r[1] for r in res]
 

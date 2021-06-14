@@ -143,6 +143,7 @@ class ParametricStudyWidget:
         self.lb_scheme_widget = lb_scheme_widget
         self.discret_widget = discret_widget
         self.tmp_dir = tempfile.TemporaryDirectory()
+        self.results = []
 
         ##
         ## The menu
@@ -188,8 +189,15 @@ class ParametricStudyWidget:
         ##
         ## The main
         ##
-        self.dialog = DialogPath()
+        self.color = v.Select(label='color', v_model=0)
+        self.items = v.Select(label='Show items', multiple=True)
+        self.only_stable = v.Switch(label='Show only stable results', v_model=False)
+        self.fig = v.Row(children=[],
+                         align='center', justify='center')
         self.plotly_plot = v.Container(align_content_center=True)
+
+        self.dialog = DialogPath()
+
         self.main = [v.Row(children=[self.plotly_plot]), self.dialog]
 
         ##
@@ -200,6 +208,10 @@ class ParametricStudyWidget:
         self.lb_scheme_widget.select_case.observe(self.purge, 'v_model')
         self.codegen.observe(self.purge, 'v_model')
         self.param_cfg.observe(self.load_param_cfg, 'v_model')
+
+        self.color.observe(self.change_plot, 'v_model')
+        self.items.observe(self.change_plot, 'v_model')
+        self.only_stable.observe(self.change_plot, 'v_model')
 
     def update_param_cfg_list(self):
         param_list = []
@@ -320,14 +332,14 @@ class ParametricStudyWidget:
                 output = [r[0] for r in res]
                 stats = [r[1] for r in res]
 
-                dimensions = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
-                dimensions.extend([dict(values=np.arange(len(output)), label='id')])
+                self.results = [dict(values=np.asarray([o[0] for o in output], dtype=np.float64), label='stability')]
+                self.results.extend([dict(values=np.arange(len(output)), label='id')])
 
-                dimensions.extend([dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())])
+                self.results.extend([dict(values=sampling[:, ik], label=f'{k}') for ik, k in enumerate(design_space.keys())])
 
                 for i, r in enumerate(self.responses.widget.v_model):
                     if output[0][i+1] is not None:
-                        dimensions.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=str(self.responses.responses[r])))
+                        self.results.append(dict(values=np.asarray([o[i+1] for o in output], dtype=np.float64), label=str(self.responses.responses[r])))
 
                 for isamp in range(len(sampling)):
                     tmp_design = {f'{k}': sampling[isamp, ik] for ik, k in enumerate(design_space.keys())}
@@ -338,46 +350,42 @@ class ParametricStudyWidget:
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
                     save_stats(simu_path, 'simu_config.json', stats[isamp])
 
-                save_results(path, 'parametric_study.json', dimensions)
+                save_results(path, 'parametric_study.json', self.results)
                 save_stats(path, 'parametric_study.json', pcp_stats)
 
-                fig = v.Row(children=[],
-                        align='center', justify='center'
-                )
+                self.color.items = [{'text': v['label'], 'value': i } for i, v in enumerate(self.results)]
+                self.color.v_model = 0
+                self.items.items = [{'text': v['label'], 'value': i } for i, v in enumerate(self.results)]
+                self.items.v_model = [i for i in range(len(design_space.keys())+2)]
+                self.only_stable.v_model =False
 
-                def change_plot(change):
-                    if only_stable.v_model:
-                        mask = dimensions[0]['values'] == 1
-                    else:
-                        mask = slice(dimensions[0]['values'].size)
-
-                    new_data = []
-                    for i in items.v_model:
-                        d = dimensions[i]
-                        new_data.append(dict(values=d['values'][mask], label=d['label']))
-
-                    fig.children = [
-                            go.FigureWidget(
-                                go.Parcoords(
-                            line=dict(color = dimensions[color.v_model]['values'][mask]),
-                            dimensions = new_data,
-                        ))
-                    ]
-
-                color = v.Select(label='color', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=0)
-                items = v.Select(label='Show items', items=[{'text': v['label'], 'value': i } for i, v in enumerate(dimensions)], v_model=[i for i in range(len(design_space.keys())+2)], multiple=True)
-                only_stable = v.Switch(label='Show only stable results', v_model=False)
-
-                color.observe(change_plot, 'v_model')
-                items.observe(change_plot, 'v_model')
-                only_stable.observe(change_plot, 'v_model')
-
-                change_plot(None)
-                self.plotly_plot.children = [color, items, only_stable, fig]
-
+                self.change_plot(None)
                 self.stop_simulation(None)
 
             run_parametric_study()
+
+
+    def change_plot(self, change):
+        if self.only_stable.v_model:
+            mask = self.results[0]['values'] == 1
+        else:
+            mask = slice(self.results[0]['values'].size)
+
+        new_data = []
+        for i in self.items.v_model:
+            d = self.results[i]
+            new_data.append(dict(values=d['values'][mask], label=d['label']))
+
+
+        self.fig.children = [
+                go.FigureWidget(
+                    go.Parcoords(
+                line=dict(color = self.results[self.color.v_model]['values'][mask]),
+                dimensions=new_data,
+            ))
+        ]
+
+        self.plotly_plot.children = [self.color, self.items, self.only_stable, self.fig]
 
     def stop_simulation(self, change):
         """
@@ -448,3 +456,15 @@ class ParametricStudyWidget:
         self.design.item_list.children = items
 
         self.responses.widget.v_model = cfg['responses']
+
+        self.results = cfg['results']
+        for r in self.results:
+            r['values'] = np.asarray(r['values'])
+
+        self.color.items = [{'text': v['label'], 'value': i } for i, v in enumerate(self.results)]
+        self.color.v_model = 0
+        self.items.items = [{'text': v['label'], 'value': i } for i, v in enumerate(self.results)]
+        self.items.v_model = list(range(len(cfg['design_space'])+2))
+        self.only_stable.v_model =False
+
+        self.change_plot(None)

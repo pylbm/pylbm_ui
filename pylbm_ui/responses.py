@@ -160,7 +160,7 @@ class Stability(FromConfig):
     def __str__(self):
         return 'Stab'
 
-class Error(DuringSimulation):
+class Error(AfterSimulation):
     def __init__(self, ref_solution, expr, log10=True, relative=False):
         self.func = None
         self.ref_solution = ref_solution

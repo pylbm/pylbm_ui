@@ -358,7 +358,9 @@ class StabilityWidget:
         """
         for state in self.state_widget.item_list.children:
             # test_case = self.test_case_widget.get_case()
+            self.lb_scheme_widget.parameters_widget2scheme()
             case = self.lb_scheme_widget.get_case()
+
             stability = case.get_stability(state.state)
             if stability.is_stable_l2:
                 state.stab_status.children = ['stable']

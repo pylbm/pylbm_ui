@@ -198,7 +198,11 @@ class Error(AfterSimulation):
         return np.log10(norm) if self.log10 else norm
 
     def __str__(self):
-        return 'Error'
+        if self.relative:
+            return 'RelError'
+        else:
+            return 'AbsError'
+
 class ErrorStd(DuringSimulation):
     def __init__(self, field, ref_func, expr, call_at=0.92, log10=True):
         self.field = field

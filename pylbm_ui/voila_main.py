@@ -63,7 +63,7 @@ def main():
 
     stability =  StabilityWidget(tc, lb)
     simulation = SimulationWidget(tc, lb)
-    parametric = ParametricStudyWidget(tc, lb, simulation.discret)
+    parametric = ParametricStudyWidget(tc, lb, simulation.discret, simulation.codegen)
     posttreatment = PostTreatmentWidget()
 
     class DebugWidget:

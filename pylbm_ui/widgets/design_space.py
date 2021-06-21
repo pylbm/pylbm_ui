@@ -188,7 +188,7 @@ class DesignForm(Form):
 @debug
 class DesignItem(Item):
     form_class = DesignForm
-    update_text = 'Update field range configuration'
+    update_text = 'Update design parameter'
 
     param = Unicode()
     relax = List()
@@ -229,7 +229,7 @@ class DesignItem(Item):
 @debug
 class DesignWidget(Dialog):
     item_class = DesignItem
-    new_text = "New field range configuration"
+    new_text = "Add new design parameter"
 
     def __init__(self, test_case_widget, lb_scheme_widget, discret_widget):
         self.test_case_widget = test_case_widget

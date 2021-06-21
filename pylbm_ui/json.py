@@ -54,6 +54,7 @@ def save_param_study(path, filename, dx, model, test_case, lb_scheme, param_widg
             'dim': lb_scheme.dim,
             'dx': dx,
             'v_model': model,
+            'codegen': param_widget.codegen.v_model,
             'test_case': {
                 'module': test_case.__module__,
                 'class': test_case.__class__.__name__,

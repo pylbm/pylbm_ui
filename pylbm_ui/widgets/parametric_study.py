@@ -118,7 +118,7 @@ skopt_method = {'Latin hypercube': Lhs,
 
 @debug
 class ParametricStudyWidget:
-    def __init__(self, test_case_widget, lb_scheme_widget, discret_widget):
+    def __init__(self, test_case_widget, lb_scheme_widget, discret_widget, codegen_widget):
         """
         Widget definition for parametric study of lattice Boltzmann methods.
 
@@ -142,6 +142,7 @@ class ParametricStudyWidget:
         self.test_case_widget = test_case_widget
         self.lb_scheme_widget = lb_scheme_widget
         self.discret_widget = discret_widget
+        self.codegen = codegen_widget
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.results = []
 
@@ -152,9 +153,6 @@ class ParametricStudyWidget:
 
         self.param_cfg = v.Select(label='Load parametric study', items=[], v_model=None)
         self.update_param_cfg_list()
-
-        # self.space_step = v.TextField(label='Space step', v_model=0.01, type='number')
-        self.codegen = v.Select(label='Code generator', items=['auto', 'numpy', 'cython'], v_model='auto')
 
         self.design = DesignWidget(test_case_widget, lb_scheme_widget, discret_widget)
         self.responses = ResponsesWidget(test_case_widget, lb_scheme_widget)
@@ -167,8 +165,6 @@ class ParametricStudyWidget:
         self.menu = [
             self.study_name,
             self.param_cfg,
-            # self.space_step,
-            self.codegen,
             v.ExpansionPanels(children=[
                 v.ExpansionPanel(children=[
                     v.ExpansionPanelHeader(children=['Design space']),
@@ -206,7 +202,6 @@ class ParametricStudyWidget:
         self.run.on_event('click', self.start_PS)
         self.test_case_widget.select_case.observe(self.purge, 'v_model')
         self.lb_scheme_widget.select_case.observe(self.purge, 'v_model')
-        self.codegen.observe(self.purge, 'v_model')
         self.param_cfg.observe(self.load_param_cfg, 'v_model')
 
         self.color.observe(self.change_plot, 'v_model')
@@ -419,6 +414,7 @@ class ParametricStudyWidget:
         self.lb_scheme_widget.select_case.v_model = cfg['v_model']['lb_scheme']
 
         self.discret_widget['dx'].value =  cfg['dx']
+        self.codegen.v_model = cfg['codegen']
 
         case = self.test_case_widget.get_case()
         param = self.test_case_widget.parameters

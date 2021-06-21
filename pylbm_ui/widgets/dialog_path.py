@@ -34,6 +34,7 @@ class DialogPath(v.Dialog):
             super().__init__()
 
     def check_path(self, path):
+        self.replace = True
         if os.path.exists(path):
             if os.listdir(path):
                 self.path = path
@@ -53,4 +54,3 @@ class DialogPath(v.Dialog):
     def no_click(self, widget, event, data):
         self.replace = False
         self.v_model = False
-

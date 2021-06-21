@@ -40,9 +40,9 @@ class D1Q3L2(LBM_scheme):
         sigma_2 = sp.symbols('sigma_2', constants=True)
         sigma_3 = sp.symbols('sigma_3', constants=True)
 
-        symb_s_1 = 1/(.5+sigma_1)          # symbolic relaxation parameter
-        symb_s_2 = 1/(.5+sigma_2)          # symbolic relaxation parameter
-        symb_s_3 = 1/(.5+sigma_3)          # symbolic relaxation parameter
+        symb_s_1 = 1/(.5+sigma_1)          # symbolic relaxation rate
+        symb_s_2 = 1/(.5+sigma_2)          # symbolic relaxation rate
+        symb_s_3 = 1/(.5+sigma_3)          # symbolic relaxation rate
 
         ALPHA_NORM, alpha = self.alpha.symb, self.alpha.value
         # ALPHA_NORM = sp.Symbol('alpha')

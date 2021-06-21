@@ -172,7 +172,7 @@ class RelaxationParameter:
 
             @classmethod
             def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
-                field_schema.update(type='number', format='relaxation parameter')
+                field_schema.update(type='number', format='relaxation rate')
 
             @classmethod
             def __get_validators__(cls):
@@ -183,7 +183,7 @@ class RelaxationParameter:
                 if not isinstance(v, numbers.Number):
                     raise TypeError('Number is required')
                 if v < 0 or v > 2:
-                    raise ValueError('relaxation parameter must be in [0, 2]')
+                    raise ValueError('relaxation rate must be in [0, 2]')
                 return cls(v)
 
         return Create

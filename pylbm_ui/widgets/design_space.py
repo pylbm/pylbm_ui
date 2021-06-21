@@ -28,7 +28,7 @@ class DesignForm(Form):
         self.params, self.relax_params = None, None
 
         self.select_param = v.Select(label='Parameters', v_model=None, items=[])
-        self.select_relax = v.Select(label='Relaxation parameters', v_model=[], items=[], multiple=True, class_='d-none')
+        self.select_relax = v.Select(label='relaxation rates', v_model=[], items=[], multiple=True, class_='d-none')
         self.srt_relax = v.Switch(label='Single relaxation time', v_model=True, class_='d-none')
         self.sigma = v.Switch(label='Using sigma', v_model=False, class_='d-none')
         self.in_log = v.Switch(label='Using log10', v_model=False, class_='d-none')
@@ -56,9 +56,9 @@ class DesignForm(Form):
         fields.update({'dx': {'value': self.discret_widget['dx'].value,
                               'type': 'number'}})
 
-        params = {'relaxation parameters': None}
-        params.update({f: v['value'] for f, v in fields.items() if v['type'] != 'relaxation parameter'})
-        relax_params = {f: v['value'] for f, v in fields.items() if v['type'] == 'relaxation parameter'}
+        params = {'relaxation rates': None}
+        params.update({f: v['value'] for f, v in fields.items() if v['type'] != 'relaxation rate'})
+        relax_params = {f: v['value'] for f, v in fields.items() if v['type'] == 'relaxation rate'}
 
         self.params = {k: params[k] for k in sorted(params)}
         self.relax_params = {k: relax_params[k] for k in sorted(relax_params)}
@@ -68,7 +68,7 @@ class DesignForm(Form):
 
     def select_param_changed(self, change):
         if self.select_param.v_model:
-            if self.select_param.v_model == 'relaxation parameters':
+            if self.select_param.v_model == 'relaxation rates':
                 self.minmax.children = [
                     FloatField(label='Enter the minimum', v_model=1),
                     FloatField(label='Enter the maximum', v_model=1)
@@ -99,9 +99,9 @@ class DesignForm(Form):
 
     @add_rule
     def select_relax_rules(self, change):
-        if self.select_param.v_model == 'relaxation parameters':
+        if self.select_param.v_model == 'relaxation rates':
             if self.select_relax.v_model == []:
-                self.select_relax.rules = ['You must select at least one relaxation parameter']
+                self.select_relax.rules = ['You must select at least one relaxation rate']
                 self.select_relax.error = True
                 return
             else:
@@ -137,7 +137,7 @@ class DesignForm(Form):
         if self.minmax.children:
             min_widget, max_widget = self.minmax.children
             min, max = min_widget.value, max_widget.value
-            if self.select_param.v_model == 'relaxation parameters':
+            if self.select_param.v_model == 'relaxation rates':
                 if self.sigma.v_model:
                     if not self.in_log.v_model:
                         if min < 0:
@@ -221,7 +221,7 @@ class DesignItem(Item):
         self.form.minmax.children[1].value =  self.max
 
     def __str__(self):
-        if self.param == 'relaxation parameters':
+        if self.param == 'relaxation rates':
             return ', '.join(self.relax) + f' (srt: {self.srt}, sigma: {self.sigma}, log: {self.in_log}, min: {self.min}, max: {self.max})'
         else:
             return f'{self.param} (min: {self.min}, max: {self.max})'
@@ -259,7 +259,7 @@ class DesignWidget(Dialog):
             data['param'] = item.param
             data['min'] = item.min
             data['max'] = item.max
-            if item.param == 'relaxation parameters':
+            if item.param == 'relaxation rates':
                 data['relax'] = item.relax
                 data['srt'] = item.srt
                 data['sigma'] = item.sigma
@@ -309,7 +309,7 @@ class DesignWidget(Dialog):
 
         ic = 0
         for c in self.item_list.children:
-            if c.param == 'relaxation parameters':
+            if c.param == 'relaxation rates':
                 if c.srt:
                     update(ic, c)
                     ic += 1

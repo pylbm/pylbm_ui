@@ -52,12 +52,12 @@ class D1Q333_general(LBM_scheme):
         s_ux_, s_ux = self.s_ux.symb, self.s_ux.value
         s_px_, s_px = self.s_px.symb, self.s_px.value
 
-        symb_s_rho = 1/(.5+sigma_rho)      # symbolic relaxation parameter
-        symb_s_u = 1/(.5+sigma_u)          # symbolic relaxation parameter
-        symb_s_p = 1/(.5+sigma_p)          # symbolic relaxation parameter
-        symb_s_rhox = 1/(.5+sigma_rhox)    # symbolic relaxation parameter
-        symb_s_ux = 1/(.5+sigma_ux)        # symbolic relaxation parameter
-        symb_s_px = 1/(.5+sigma_px)        # symbolic relaxation parameter
+        symb_s_rho = 1/(.5+sigma_rho)      # symbolic relaxation rate
+        symb_s_u = 1/(.5+sigma_u)          # symbolic relaxation rate
+        symb_s_p = 1/(.5+sigma_p)          # symbolic relaxation rate
+        symb_s_rhox = 1/(.5+sigma_rhox)    # symbolic relaxation rate
+        symb_s_ux = 1/(.5+sigma_ux)        # symbolic relaxation rate
+        symb_s_px = 1/(.5+sigma_px)        # symbolic relaxation rate
 
         # equilibrium values
         w0eq, w1eq, w2eq = self._get_equilibrium(

@@ -68,13 +68,13 @@ TYPE_TO_WIDGET = {
     'integer': IntField,
     'number': FloatField,
     'scheme velocity': StrictlyPositiveFloatField,
-    'relaxation parameter': RelaxField,
+    'relaxation rate': RelaxField,
     'parameter': FloatField,
 }
 
 
 def schema_to_widgets(parameter_widget, data_0):
-    
+
     def fill_dict(widgets, required, properties, data):
         for field in required:
             default = getattr(data, field)
@@ -92,7 +92,7 @@ def schema_to_widgets(parameter_widget, data_0):
             widgets[field] = TYPE_TO_WIDGET[data_type](
                 label=name, v_model=default_value
             )
-    
+
     schema = data_0.schema()
     required = schema['required']
     properties = schema['properties']

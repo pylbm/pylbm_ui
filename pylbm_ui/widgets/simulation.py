@@ -153,6 +153,7 @@ class SimulationWidget:
         for root, d_names,f_names in os.walk(default_path):
                 if 'simu_config.json' in f_names:
                     simu_list.append(os.path.join(root, 'simu_config.json'))
+        simu_list.sort()
         self.simu_cfg.items = simu_list
 
     def stop_simulation(self, change):

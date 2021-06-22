@@ -213,6 +213,7 @@ class ParametricStudyWidget:
         for root, d_names,f_names in os.walk(default_path):
                 if 'parametric_study.json' in f_names:
                     param_list.append(os.path.join(root, 'parametric_study.json'))
+        param_list.sort()
         self.param_cfg.items = param_list
 
     def start_PS(self, widget, event, data):

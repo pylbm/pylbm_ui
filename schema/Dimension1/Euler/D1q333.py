@@ -152,6 +152,7 @@ class D1Q333_general(LBM_scheme):
             },
         }
 
+
 class D1Q333(D1Q333_general):
     addvisc = 0.25
     name = 'D1Q333_0'

@@ -234,7 +234,7 @@ class ErrorStd(DuringSimulation):
         return np.log10(std) if self.log10 else std
 
     def __str__(self):
-        return f'ErrStd_{self.field}'
+        return f'StdErr_{self.field}'
 
 class ErrorAvg(ErrorStd):
     def value(self):
@@ -242,7 +242,7 @@ class ErrorAvg(ErrorStd):
         return np.log10(avg) if self.log10 else avg
 
     def __str__(self):
-        return f'ErrAvg_{self.field}'
+        return f'AvgErr_{self.field}'
 
 class CFL(AfterSimulation):
     def __init__(self, rho, q):

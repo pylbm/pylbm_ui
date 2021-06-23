@@ -18,7 +18,6 @@ import numbers
 import sympy as sp
 from copy import deepcopy
 
-from pathlib import Path
 from pkgutil import iter_modules
 from importlib import import_module
 
@@ -40,14 +39,13 @@ def define_cases(filename, modulename):
     """
     cases = {}
     gbl = globals()
-    package_dir = Path(filename).resolve().parent
+    package_dir = os.path.dirname(filename)
     for _, module_name, ispkg in iter_modules([package_dir]):
         if ispkg:
             module = f"{modulename}.{module_name}"
             gbl['md'] = import_module(module, package=None)
             cases[module_name] = md.cases
     return cases
-
 
 def freeze(d):
     if isinstance(d, dict):

@@ -108,7 +108,14 @@ class SimulationWidget:
         self.pause = v.Btn(children=['Pause'], class_='ma-2', style_='width: 100px', disabled=True, v_model=False)
         self.progress_bar = v.ProgressLinear(height=20, value=0, color='light-blue', striped=True)
         self.result = v.Select(items=list(self.simu.fields.keys()), v_model=list(self.simu.fields.keys())[0])
-        self.period = StrictlyPositiveIntField(label='Period', v_model=self.discret['nt'].value/nb_split_period)
+
+        # copy the informations to be able
+        # to modify the period conforming with the previous value
+        self.nt_copy = self.discret['nt'].value
+        self.period = StrictlyPositiveIntField(
+            label='Period',
+            v_model=int(self.nt_copy / nb_split_period)
+        )
         self.snapshot = v.Btn(children=['Snapshot'])
 
         self.plot = Plot()
@@ -141,12 +148,23 @@ class SimulationWidget:
         self.snapshot.on_event('click', self.take_snapshot)
         self.result.observe(self.replot, 'v_model')
         self.simu_cfg.observe(self.load_simu_cfg, 'v_model')
+        self.discret['nt'].observe(self.change_period, 'v_model')
 
         test_case_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.update_result, 'v_model')
         test_case_widget.select_case.observe(self.update_name, 'v_model')
         lb_scheme_widget.select_case.observe(self.update_name, 'v_model')
+
+    def change_period(self, change):
+        """
+        change de period of plot when the number of time steps is modified
+        """
+        if not self.discret['nt'].error:
+            self.period.v_model = int(
+                self.discret['nt'].value/self.nt_copy*self.period.value
+            )
+            self.nt_copy = self.discret['nt'].value
 
     def update_simu_cfg_list(self):
         simu_list = []

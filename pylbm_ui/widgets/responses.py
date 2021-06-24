@@ -81,10 +81,10 @@ def build_responses_list(test_case, lb_scheme):
         responses[f'plot {name}'] = Plot(name, expr)
         if hasattr(test_case, 'ref_solution'):
             # responses[f'stability on {name}'] = pylbm_responses.Stability(expr)
-            responses[f'log of error on {name}'] = Error(name, expr)
-            responses[f'log of error avg on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
-            responses[f'log of error std on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
-            responses[f'log of relative error on {name}'] = Error(name, expr, relative=True)
+            responses[f'log of abs error on {name}'] = Error(name, expr)
+            responses[f'log of avg error on {name}'] = pylbm_responses.ErrorAvg(name, test_case.ref_solution, expr)
+            responses[f'log of std error on {name}'] = pylbm_responses.ErrorStd(name, test_case.ref_solution, expr)
+            responses[f'log of rel error on {name}'] = Error(name, expr, relative=True)
 
     def add_relax(v):
         responses[k] = pylbm_responses.S(v.symb)

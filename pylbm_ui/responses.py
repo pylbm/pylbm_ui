@@ -5,6 +5,7 @@
 #
 # License: BSD 3 clause
 
+import os
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
@@ -294,8 +295,14 @@ class Plot(AfterSimulation):
         data[solid_cells[tuple(ind)]] = np.nan
 
         fig, ax = plt.subplots()
+        h5_file, _ = os.path.splitext(self.filename)
+        h5_dir, h5_file = os.path.split(h5_file)
+        h5 = pylbm.H5File(sol.domain.mpi_topo, f'{h5_file}_{sol.nt}', h5_dir)
+
         if sol.dim == 1:
             x = sol.domain.x
+            h5.set_grid(x)
+
             ax.plot(x, data,
                     color='black',
                     alpha=0.8,
@@ -309,12 +316,17 @@ class Plot(AfterSimulation):
                     alpha=0.8,
                     linewidth=1,
                     )
+                h5.add_scalar('sol_ref', self.ref_solution)
+
         elif sol.dim == 2:
             x, y = sol.domain.x, sol.domain.y
+            h5.set_grid(x, y)
             cmap = copy.copy(matplotlib.cm.get_cmap("RdBu"))
             cmap.set_bad('black', 0.8)
             extent = [np.amin(x), np.amax(x), np.amin(y), np.amax(y)]
             imshow = ax.imshow(data.T, origin='lower', cmap=cmap, extent=extent)
             fig.colorbar(imshow, ax=ax)
 
+        h5.add_scalar('sol', data)
         fig.savefig(self.filename, dpi=300)
+        h5.save()

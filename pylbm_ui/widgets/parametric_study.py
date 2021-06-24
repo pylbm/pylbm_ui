@@ -179,7 +179,6 @@ class ParametricStudyWidget:
                     v.ExpansionPanelContent(children=[self.sampling_method, self.sample_size]),
                 ]),
             ], multiple=True),
-            v.Row(children=[self.run], align='center', justify='center'),
         ]
 
         ##
@@ -194,7 +193,11 @@ class ParametricStudyWidget:
 
         self.dialog = DialogPath()
 
-        self.main = [v.Row(children=[self.plotly_plot]), self.dialog]
+        self.main = [
+            v.Row(children=[self.run], align='center', justify='center'),
+            v.Row(children=[self.plotly_plot]),
+            self.dialog
+        ]
 
         ##
         ## Widget events

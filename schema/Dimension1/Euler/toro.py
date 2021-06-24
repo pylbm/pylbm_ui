@@ -211,7 +211,7 @@ Toro1_1D = ToroCase(
     gamma=1.4,
     xmin=0., xmax=1, x_disc=0.5,
     duration=0.25,
-    name='Sod',
+    name='Toro_1',
     description_file='./toro_1.html'
     )
 

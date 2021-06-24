@@ -220,6 +220,7 @@ class PostTreatmentWidget:
             {'text': 'Iteration', 'value': 'iteration'},
             {'text': 'Time', 'value': 'time' },
             {'text': 'Field', 'value': 'field' },
+            {'text': 'Model', 'value': 'model' },
             {'text': 'Test case', 'value': 'test case' },
             {'text': 'LB scheme', 'value': 'lb scheme' },
             {'text': 'Filename', 'value':'file' },
@@ -227,8 +228,8 @@ class PostTreatmentWidget:
         ]
 
         headers_select = v.Select(label='Show columns',
-                                  items=[{'text': v['text'], 'value': i} for i, v in enumerate(headers)],
-                                  v_model=list(range(1, 6)),
+                                  items=[{'text': v['text'], 'value': i+1} for i, v in enumerate(headers[1:])],
+                                  v_model=list(range(1, 7)),
                                   multiple=True)
 
         search = v.TextField(
@@ -474,13 +475,13 @@ class PostTreatmentWidget:
                                 for k in h5_data.keys():
                                     if k not in ['x_0', 'x_1', 'x_2']:
                                         data.append({
-                                                    # 'id': id,
                                                     'iteration': ite,
                                                     'dim': cfg['dim'],
                                                     'time': ite*dt,
                                                     'field': k,
-                                                    'test case': cfg['test_case']['class'],
-                                                    'lb scheme': cfg['lb_scheme']['class'],
+                                                    'model': cfg['v_model']['model'],
+                                                    'test case': cfg['v_model']['test_case'],
+                                                    'lb scheme': cfg['v_model']['lb_scheme'],
                                                     'file': filename,
                                                     'directory': dirname,
                                         })

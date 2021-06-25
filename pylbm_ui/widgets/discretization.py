@@ -15,8 +15,8 @@ def dx_validity(dx, size):
     """
     Modify dx and the problem size to match.
     """
-    nmin = round(min(size)/dx + 1)
-    dx = min(size)/(nmin - 1)
+    # nmin = round(min(size)/dx + 1)
+    # dx = min(size)/(nmin - 1)
     n = [round(s/dx) + 1 for s in size]
     L = [(i-1)*dx for i in n]
     return dx, L, n

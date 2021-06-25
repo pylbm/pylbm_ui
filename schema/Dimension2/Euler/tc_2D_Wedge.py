@@ -4,11 +4,12 @@
 #     Thibaut Van Hoof <thibaut.vanhoof@cenaero.be>
 #
 # License: BSD 3 clause
-from pydantic import BaseModel
-import numpy as np
 import pylbm
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
+import numpy as np
+import sympy as sp
+import hashlib
 
 from .equation_type import Euler2D
 from ...utils import HashBaseModel
@@ -47,36 +48,63 @@ def dichotomie(f, a, b_max, epsilon=1.e-10):
     return c
 
 
-def wedge_in_to_out(theta, rho_in, ux_in, p_in, gamma):
-    """Compute the outlet values being given the inlet values"""
+class exact_solver:
+    """
+    exact solver for the wedge
+    """
+    def __init__(self, config):
+        """Compute the outlet values being given the inlet values"""
+        theta = config['angle_degre'] * np.pi / 180
+        rho_in, ux_in, p_in = config['inlet']
+        gamma = config['gamma']
 
-    # the function that gives the shock angle
-    def f_alpha(alpha):
-        st = np.sin(theta)
-        ca = np.cos(alpha)
-        ta = np.tan(alpha)
-        cda = ca*ca
-        samt = np.sin(alpha-theta)
-        cdamt = np.cos(alpha-theta)**2
-        tamt = np.tan(alpha-theta)
-        return rho_in*ux_in**2*(
-            .5*(cdamt - cda) - gamma/(gamma-1)*ca*st*samt
-        ) / cdamt - gamma/(gamma-1)*p_in*(
-            tamt - ta
-        ) / ta
-    
-    alpha = dichotomie(f_alpha, theta, 1.2)
-    if np.isnan(alpha):
-        return alpha, None, None, None, None
-    rho = rho_in * np.tan(alpha) / np.tan(alpha-theta)
-    v = ux_in * np.cos(alpha) / np.cos(alpha-theta)
-    p = p_in + rho_in*ux_in**2 * np.sin(alpha)*np.sin(theta) \
-        / np.cos(alpha-theta)
-    ux = v * np.cos(theta)
-    uy = v * np.sin(theta)
-    return alpha, rho, ux, uy, p
+        # the function that gives the shock angle
+        def f_alpha(alpha):
+            st = np.sin(theta)
+            ca = np.cos(alpha)
+            ta = np.tan(alpha)
+            cda = ca*ca
+            samt = np.sin(alpha-theta)
+            cdamt = np.cos(alpha-theta)**2
+            tamt = np.tan(alpha-theta)
+            return rho_in*ux_in**2*(
+                .5*(cdamt - cda) - gamma/(gamma-1)*ca*st*samt
+            ) / cdamt - gamma/(gamma-1)*p_in*(
+                tamt - ta
+            ) / ta
+
+        alpha = dichotomie(f_alpha, theta, 1.2)
+        if np.isnan(alpha):
+            return alpha, None, None, None, None
+        rho = rho_in * np.tan(alpha) / np.tan(alpha-theta)
+        v = ux_in * np.cos(alpha) / np.cos(alpha-theta)
+        p = p_in + rho_in*ux_in**2 * np.sin(alpha)*np.sin(theta) \
+            / np.cos(alpha-theta)
+        ux = v * np.cos(theta)
+        uy = v * np.sin(theta)
+
+        self.theta, self.alpha = theta, alpha
+        self.rho_in, self.ux_in, self.uy_in, self.p_in = rho_in, ux_in, 0, p_in
+        self.rho_out, self.ux_out, self.uy_out, self.p_out = rho, ux, uy, p
+        self.posx = config['position_wedge']
+        self.sol = None
+
+    def evaluate(self, x, y, t):
+        if self.sol is None:
+            self.sol = np.zeros((4, x.size, y.size))
+            rho = self.sol[0]
+            ux = self.sol[1]
+            uy = self.sol[2]
+            p = self.sol[3]
+            ind_out = y[None, :] <= (x[:, None]-self.posx) * np.tan(self.alpha)
+            rho[:] = self.rho_in + (self.rho_out-self.rho_in) * ind_out
+            ux[:] = self.ux_in + (self.ux_out-self.ux_in) * ind_out
+            uy[:] = self.uy_in + (self.uy_out-self.uy_in) * ind_out
+            p[:] = self.p_in + (self.p_out-self.p_in) * ind_out
+        return self.sol
 
 
+cache_exact_solver = {}
 class tc_2D_wedge(HashBaseModel):
     xmin: float
     xmax: float
@@ -188,12 +216,61 @@ class tc_2D_wedge(HashBaseModel):
             },
         ]
 
+    def get_exact_solution(self):
+        config = {
+            'angle_degre': self.angle_degre,
+            'inlet': [self.rho_in, self.ux_in, self.p_in],
+            'gamma': self.gamma,
+            'position_wedge': self.xmin + (self.xmax-self.xmin)*self.distance_relative
+        }
+
+        dhash = hashlib.md5()
+        dhash.update(f'{config.values()}'.encode())
+        hash = dhash.hexdigest()
+
+        if hash not in cache_exact_solver:
+            cache_exact_solver[hash] = exact_solver(config)
+
+        return cache_exact_solver[hash]
+
+    def ref_solution(self, t, x, y, field=None):
+        exact_solution = self.get_exact_solution()
+        sol_e = exact_solution.evaluate(x, y, t)
+        rho = sol_e[0]
+        ux, uy = sol_e[1], sol_e[2]
+        p = sol_e[3]
+
+        to_subs = {
+            self.equation.rho: rho,
+            self.equation.qx: rho*ux,
+            self.equation.qy: rho*uy,
+            self.equation.E: .5*rho*(ux**2+uy**2)+p/(self.gamma-1.),
+            self.equation.gamma: self.gamma
+        }
+
+        if field:
+            expr = self.equation.get_fields()[field]
+            args = {str(s): to_subs[s] for s in expr.atoms(sp.Symbol)}
+            func = sp.lambdify(list(expr.atoms(sp.Symbol)), expr, "numpy", dummify=False)
+            output = func(**args)
+        else:
+            output = {}
+            for k, v in self.equation.get_fields().items():
+                args = {str(s): to_subs[s] for s in v.atoms(sp.Symbol)}
+                func = sp.lambdify(list(v.atoms(sp.Symbol)), v, "numpy", dummify=False)
+                output[k] = func(**args)
+
+        return output
+
     def plot_ref_solution(self, fig):
-        angle = self.angle_degre * np.pi / 180
-        posx = self.xmin + (self.xmax-self.xmin)*self.distance_relative
-        alpha, rho_out, ux_out, uy_out, p_out = wedge_in_to_out(
-            angle, self.rho_in, self.ux_in, self.p_in, self.gamma
-        )
+        exact_solution = self.get_exact_solution()
+        angle = exact_solution.theta
+        posx = exact_solution.posx
+        alpha = exact_solution.alpha
+        rho_out = exact_solution.rho_out
+        ux_out, uy_out = exact_solution.ux_out, exact_solution.uy_out
+        p_out = exact_solution.p_out
+
         # initialize the figure
         gs = fig.add_gridspec(1, 1)
         ax = fig.add_subplot(gs[0, 0])

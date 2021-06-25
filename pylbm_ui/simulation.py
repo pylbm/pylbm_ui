@@ -236,19 +236,23 @@ class simulation:
         elif self.sol.dim == 2:
             h5.set_grid(self.sol.domain.x, self.sol.domain.y)
 
+        def save_one_field(f):
+            data = self.get_data(f)
+            h5.add_scalar(f, data)
+            if has_ref:
+                if self.sol.dim == 1:
+                    data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, f)
+                elif self.sol.dim == 2:
+                    data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, self.sol.domain.y, f)
+                else:
+                    data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, self.sol.domain.y, self.sol.domain.z, f)
+                h5.add_scalar(f'{f}_ref', data_ref)
+
         if isinstance(field, set):
             for f in field:
-                data = self.get_data(f)
-                h5.add_scalar(f, data)
-                if has_ref:
-                    data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, f)
-                    h5.add_scalar(f'{f}_ref', data_ref)
+                save_one_field(f)
         else:
-            data = self.get_data(field)
-            h5.add_scalar(field, data)
-            if has_ref:
-                data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, field)
-                h5.add_scalar(f'{field}_ref', data_ref)
+            save_one_field(field)
 
         h5.save()
 

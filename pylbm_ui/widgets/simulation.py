@@ -292,6 +292,14 @@ class SimulationWidget:
                 await asyncio.sleep(0)
             if self.start.v_model:
                 break
+
+        # save and plot the last time step
+        if nite > 1:
+            self.simu.save_data(self.result.v_model)
+            self.simu.plot(self.plot, self.result.v_model)
+            self.plot_output.children[0].draw_idle()
+
+        # stop the simulation
         self.stop_simulation(None)
 
     def start_simulation(self, widget, event, data):

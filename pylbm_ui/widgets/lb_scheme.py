@@ -190,9 +190,11 @@ class LBSchemeWidget:
         # we show the reset button
         if not is_same:
             self.reset.class_ = ''
-            self.parameters_widget2scheme()
         else:
             self.reset.class_ = 'd-none'
+
+        # set the widget parameters to the scheme parameters
+        self.parameters_widget2scheme()
         # update the tab
         self.change_tab(None)
 

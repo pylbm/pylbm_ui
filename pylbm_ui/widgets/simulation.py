@@ -257,7 +257,7 @@ class SimulationWidget:
         )
 
         nite = 1
-        stop_time = self.simu.duration + .5*self.simu.sol.dt
+        stop_time = self.simu.duration - .5*self.simu.sol.dt
 
         await asyncio.sleep(0.01)
         while self.simu.sol.t < stop_time:

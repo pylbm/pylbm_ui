@@ -87,10 +87,10 @@ class exact_solver:
         self.rho_in, self.ux_in, self.uy_in, self.p_in = rho_in, ux_in, 0, p_in
         self.rho_out, self.ux_out, self.uy_out, self.p_out = rho, ux, uy, p
         self.posx = config['position_wedge']
-        self.sol = None
+        self.sol = np.array([])
 
     def evaluate(self, x, y, t):
-        if self.sol is None:
+        if self.sol.shape != (4, x.size, y.size):
             self.sol = np.zeros((4, x.size, y.size))
             rho = self.sol[0]
             ux = self.sol[1]

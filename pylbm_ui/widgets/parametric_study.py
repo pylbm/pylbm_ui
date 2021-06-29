@@ -29,7 +29,7 @@ from ..config import default_path
 from ..responses import FromConfig, DuringSimulation, AfterSimulation
 from ..simulation import simulation, get_config
 from ..utils import required_fields, NbPointsField
-from ..json import save_param_study, save_simu_config, save_param_study_for_simu, save_stats, save_results
+from ..json import save_param_study, save_simu_config, save_param_study_for_simu, save_stats, save_results, save_param_study_Minamo
 from .message import Message
 
 @debug_func
@@ -248,7 +248,10 @@ class ParametricStudyWidget:
         except OSError:
             # Could be some issues on Windows
             pass
-
+        
+        sample_path = os.path.join(path, 'pts')
+        if not os.path.exists(sample_path): os.makedirs(sample_path)
+        
         design_space = self.design.design_space()
         if design_space:
             self.run.v_model = False
@@ -269,7 +272,8 @@ class ParametricStudyWidget:
             sampling = np.asarray(skopt_method[self.sampling_method.v_model]().generate(list(design_space.values()), int(self.sample_size.v_model)))
 
             save_param_study(path, 'parametric_study.json', self.discret_widget['dx'].value, v_model, test_case, lb_scheme, self, sampling)
-
+            save_param_study_Minamo(path, 'parametric_study.json', 'master.json', self.responses)
+            
             message.update(f'Prepare the simulation in {self.tmp_dir.name}')
             simu = simulation()
             simu.reset_sol(v_model, test_case, lb_scheme, dx, self.codegen.v_model, exclude=design_space.keys(), initialize=False, codegen_dir=self.tmp_dir.name, show_code=False)
@@ -309,13 +313,13 @@ class ParametricStudyWidget:
                 if tmp_case.duration%dt != 0:
                     tmp_case.duration += dt
 
-                simu_path = os.path.join(path, f'simu_{i}')
+                simu_path = os.path.join(sample_path, f'simu_{i}')
                 simu_cfg = get_config(tmp_case, lb_scheme, dx, self.codegen.v_model, exclude=design_space.keys(), codegen_dir=self.tmp_dir.name)
                 save_simu_config(simu_path, 'simu_config.json', dx, v_model, tmp_case, lb_scheme, {str(k): v for k, v in design_sample.items()}, self.responses.responses_list.v_model)
                 args.append((simu_cfg, design_sample, tmp_case.duration, self.responses.get_list(simu_path, tmp_case, simu_cfg)))
 
             message.update('Run simulations on the sampling...')
-
+            
             def run_parametric_study():
                 from pathos.multiprocessing import ProcessingPool
                 from pathos.helpers import cpu_count
@@ -328,6 +332,8 @@ class ParametricStudyWidget:
                 pcp_stats['execution time'] = t2 - t1
                 pcp_stats['mean time by evaluation'] = (t2 - t1)/len(args)
 
+                
+                
                 output = [r[0] for r in res]
                 stats = [r[1] for r in res]
 
@@ -345,7 +351,7 @@ class ParametricStudyWidget:
                     tmp_responses = {r: output[isamp][ir + 1] for ir, r in enumerate(self.responses.widget.v_model)}
                     tmp_responses['id'] = isamp
                     tmp_responses['stability'] = output[isamp][0]
-                    simu_path = os.path.join(path, f'simu_{isamp}')
+                    simu_path = os.path.join(sample_path, f'simu_{isamp}')
                     save_param_study_for_simu(simu_path, 'param_study.json', tmp_design, tmp_responses)
                     save_stats(simu_path, 'simu_config.json', stats[isamp])
 
@@ -362,6 +368,7 @@ class ParametricStudyWidget:
                 self.stop_simulation(None)
 
             run_parametric_study()
+            save_param_study_Minamo(path, 'parametric_study.json', 'minamo_evaluated.json', self.responses)
 
 
     def change_plot(self, change):

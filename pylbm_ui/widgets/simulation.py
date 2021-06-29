@@ -298,6 +298,8 @@ class SimulationWidget:
             self.simu.save_data(self.result.v_model)
             self.simu.plot(self.plot, self.result.v_model)
             self.plot_output.children[0].draw_idle()
+        if self.simu.sol.nt in ite_to_save:
+            self.simu.save_data(ite_to_save[self.simu.sol.nt])
 
         # stop the simulation
         self.stop_simulation(None)

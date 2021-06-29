@@ -196,6 +196,42 @@ class RelaxationParameterFinal:
         return f"RelaxationParameter('{self.symb}')({self.value})"
 
 
+class AddviscParameter:
+    def __new__(cls, symb):
+        class Create:
+            def __new__(self, v):
+                return AddviscParameterFinal(v, sp.Symbol(symb))
+
+            @classmethod
+            def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
+                field_schema.update(
+                    type='number', format='additional viscosity'
+                )
+
+            @classmethod
+            def __get_validators__(cls):
+                yield cls.validate
+
+            @classmethod
+            def validate(cls, v):
+                if not isinstance(v, numbers.Number):
+                    raise TypeError('Number is required')
+                if v < 0 or v > 1:
+                    raise ValueError('additional viscosity must be in [0, 1]')
+                return cls(v)
+
+        return Create
+
+
+class AddviscParameterFinal:
+    def __init__(self, value, symb):
+        self.symb = symb
+        self.value = value
+
+    def __repr__(self):
+        return f"AddviscParameter('{self.symb}')({self.value})"
+
+
 class RealParameter:
     def __new__(cls, symb):
         class Create:
@@ -236,4 +272,5 @@ ENCODERS_BY_TYPE.update({
     SchemeVelocity: lambda o: o.value,
     RelaxationParameterFinal: lambda o: o.value,
     RealParameterFinal: lambda o: o.value,
+    AddviscParameterFinal: lambda o: o.value,
     })

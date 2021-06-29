@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import sympy as sp
 import pylbm
 from .equation_type import Euler1D
-from ...utils import LBM_scheme, RelaxationParameter
+from ...utils import LBM_scheme, RelaxationParameter, AddviscParameter
 
 
 class D1Q333_general(LBM_scheme):
@@ -18,6 +18,7 @@ class D1Q333_general(LBM_scheme):
     s_rhox: RelaxationParameter('s_rhox')
     s_ux: RelaxationParameter('s_ux')
     s_px: RelaxationParameter('s_px')
+    addvisc: AddviscParameter('addvisc')
 
     equation = Euler1D()
     dim = 1
@@ -25,7 +26,7 @@ class D1Q333_general(LBM_scheme):
     tex_name = r'$D_1Q_{{333}}$_gen'
     description_file='./d1q333.html'
 
-    addvisc = 0.
+    # addvisc = 0.
 
     def get_required_param(self):
         return [self.equation.gamma]
@@ -51,6 +52,7 @@ class D1Q333_general(LBM_scheme):
         s_rhox_, s_rhox = self.s_rhox.symb, self.s_rhox.value
         s_ux_, s_ux = self.s_ux.symb, self.s_ux.value
         s_px_, s_px = self.s_px.symb, self.s_px.value
+        addvisc_, addvisc = self.addvisc.symb, self.addvisc.value
 
         symb_s_rho = 1/(.5+sigma_rho)      # symbolic relaxation rate
         symb_s_u = 1/(.5+sigma_u)          # symbolic relaxation rate
@@ -64,10 +66,9 @@ class D1Q333_general(LBM_scheme):
             rho, q, E, gamma
         )
         # add numerical diffusion
-        addvisc = self.addvisc
-        w0eq = (1-addvisc)*w0eq + addvisc/2*la_**2*rho
-        w1eq = (1-addvisc)*w1eq + addvisc/2*la_**2*q
-        w2eq = (1-addvisc)*w2eq + addvisc/2*la_**2*E
+        w0eq = (1-addvisc_)*w0eq + addvisc_/2*la_**2*rho
+        w1eq = (1-addvisc_)*w1eq + addvisc_/2*la_**2*q
+        w2eq = (1-addvisc_)*w2eq + addvisc_/2*la_**2*E
 
         X = sp.symbols('X')
 
@@ -123,6 +124,7 @@ class D1Q333_general(LBM_scheme):
                 sigma_rhox: 1/s_rhox_-.5,
                 sigma_ux: 1/s_ux_-.5,
                 sigma_px: 1/s_px_-.5,
+                addvisc_: addvisc,
             },
             'generator': 'numpy'
         }
@@ -154,7 +156,7 @@ class D1Q333_general(LBM_scheme):
 
 
 class D1Q333(D1Q333_general):
-    addvisc = 0.25
+    # addvisc = 0.25
     name = 'D1Q333_0'
     tex_name = r'$D_1Q_{{333}}0$'
 
@@ -162,12 +164,12 @@ class D1Q333(D1Q333_general):
         u = q/rho              # velocity
         w0eq = E
         w1eq = (3*E-rho*u**2)*u
-        w2eq = 6*E**2/rho-rho*u**4
+        w2eq = 3*E**2/rho-rho*u**4/2
         return w0eq, w1eq, w2eq
 
 
 class D1Q333_NS(D1Q333_general):
-    addvisc = 0.1
+    # addvisc = 0.1
     name = 'D1Q333_1'
     tex_name = r'$D_1Q_{{333}}1$'
 
@@ -177,6 +179,7 @@ class D1Q333_NS(D1Q333_general):
         p = (gamma-1)*(E-Ec)   # pressure
         w0eq = Ec + p/2
         w1eq = (Ec + 3/2*p) * u
-        coeff = (5*gamma-1)/(gamma-1)
-        w2eq = (Ec + coeff/2*p) * u**2/2
+        # coeff = (5*gamma-1)/(gamma-1)
+        # w2eq = (Ec + coeff/2*p) * u**2/2
+        w2eq = Ec*u**2/2 + (5*gamma-3)/(4*(gamma-1))*u**2*p + gamma/(2*(gamma-1))*p**2/rho
         return w0eq, w1eq, w2eq

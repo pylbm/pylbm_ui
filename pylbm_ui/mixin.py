@@ -77,3 +77,14 @@ class BoundMixin(BaseMixin):
             self.rules = []
             self.error = False
         return super().check(change)
+
+class AddviscMixin(BaseMixin):
+    def check(self, change):
+        if float(self.v_model) < 0 or float(self.v_model) > 1:
+            self.rules = ['Must be between 0 and 1']
+            self.error = True
+            return
+        else:
+            self.rules = []
+            self.error = False
+        return super().check(change)

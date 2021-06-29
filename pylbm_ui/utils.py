@@ -63,6 +63,11 @@ class NbPointsField(IntField, GreaterThanOneMixin):
         super().__init__(**kwargs)
         self.observe(self.check, 'v_model')
 
+class AddviscField(FloatField, AddviscMixin):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.observe(self.check, 'v_model')
+
 
 TYPE_TO_WIDGET = {
     'integer': IntField,
@@ -70,6 +75,7 @@ TYPE_TO_WIDGET = {
     'scheme velocity': StrictlyPositiveFloatField,
     'relaxation rate': RelaxField,
     'parameter': FloatField,
+    'additional viscosity': AddviscField,
 }
 
 

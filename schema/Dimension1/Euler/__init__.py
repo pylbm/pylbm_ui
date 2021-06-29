@@ -27,12 +27,14 @@ cases = {
                 D1Q333(
                     la=10,
                     s_rho=1.9, s_u=1.9, s_p=1.9,
-                    s_rhox=1.75, s_ux=1.75, s_px=1.75
+                    s_rhox=1.75, s_ux=1.75, s_px=1.75,
+                    addvisc=0.25
                 ),
                 D1Q333_NS(
                     la=10,
                     s_rho=1.5, s_u=1.5, s_p=1.5,
-                    s_rhox=1., s_ux=1., s_px=1.
+                    s_rhox=1., s_ux=1., s_px=1.,
+                    addvisc=0.1
                 ),
                 D1Q3L2(
                     la=5,
@@ -48,12 +50,14 @@ cases = {
                 D1Q333(
                     la=10,
                     s_rho=1.95, s_u=1.95, s_p=1.95,
-                    s_rhox=1.75, s_ux=1.5, s_px=1.75
+                    s_rhox=1.75, s_ux=1.5, s_px=1.75,
+                    addvisc=0.25
                 ),
                 D1Q333_NS(
                     la=20,
                     s_rho=1.6, s_u=1.6, s_p=1.6,
-                    s_rhox=1.6, s_ux=1.6, s_px=1.6
+                    s_rhox=1.6, s_ux=1.6, s_px=1.6,
+                    addvisc=0.1
                 ),
                 D1Q3L2(
                     la=4,
@@ -69,12 +73,14 @@ cases = {
                 D1Q333(
                     la=250,
                     s_rho=1.9, s_u=1.9, s_p=1.9,
-                    s_rhox=1.5, s_ux=1.5, s_px=1.5
+                    s_rhox=1.5, s_ux=1.5, s_px=1.5,
+                    addvisc=0.25
                 ),
                 D1Q333_NS(
                     la=250,
                     s_rho=1.6, s_u=1.6, s_p=1.6,
-                    s_rhox=1., s_ux=1., s_px=1.
+                    s_rhox=1., s_ux=1., s_px=1.,
+                    addvisc=0.1
                 ),
                 D1Q3L2(
                     la=175,
@@ -90,12 +96,14 @@ cases = {
                 D1Q333(
                     la=100,
                     s_rho=1.8, s_u=1.8, s_p=1.8,
-                    s_rhox=1.5, s_ux=1.5, s_px=1.5
+                    s_rhox=1.5, s_ux=1.5, s_px=1.5,
+                    addvisc=0.25
                 ),
                 D1Q333_NS(
                     la=100,
                     s_rho=1.6, s_u=1.6, s_p=1.6,
-                    s_rhox=1., s_ux=1., s_px=1.
+                    s_rhox=1., s_ux=1., s_px=1.,
+                    addvisc=0.1
                 ),
                 D1Q3L2(
                     la=100,
@@ -111,12 +119,14 @@ cases = {
                 D1Q333(
                     la=100,
                     s_rho=1.9, s_u=1.8, s_p=1.8,
-                    s_rhox=1.8, s_ux=1.8, s_px=1.8
+                    s_rhox=1.8, s_ux=1.8, s_px=1.8,
+                    addvisc=0.25
                 ),
                 D1Q333_NS(
                     la=100,
                     s_rho=1.5, s_u=1.5, s_p=1.5,
-                    s_rhox=1., s_ux=1., s_px=1.
+                    s_rhox=1., s_ux=1., s_px=1.,
+                    addvisc=0.1
                 ),
                 D1Q3L2(
                     la=100,

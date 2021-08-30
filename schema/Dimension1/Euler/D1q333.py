@@ -164,7 +164,7 @@ class D1Q333(D1Q333_general):
         u = q/rho              # velocity
         w0eq = E
         w1eq = (3*E-rho*u**2)*u
-        w2eq = 3*E**2/rho-rho*u**4/2
+        w2eq = (3*E**2/rho-rho*u**4/2)*2
         return w0eq, w1eq, w2eq
 
 

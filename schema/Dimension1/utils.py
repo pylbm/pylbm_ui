@@ -8,6 +8,74 @@
 import numpy as np
 
 
+def constant_func(x, val):
+    """
+    initial condition with a constant
+
+    Parameters
+    ----------
+
+    x : ndarray
+        spatial mesh
+
+    val : double
+        value of the field
+
+
+    Returns
+    -------
+
+    vect_u
+        ndarray
+    """
+    vect_u = val + np.zeros(x.shape)
+    return vect_u
+
+
+def wave_func_sincos(x, t, k, omega, coeff):
+    """
+    initial condiction with a wave
+
+    Parameters
+    ----------
+
+    x : ndarray
+        spatial mesh
+
+    t : float
+        time
+
+    k : float
+        wavenumber
+
+    omega : float
+        frequency
+    """
+    return coeff * np.sin(k*x) * np.cos(omega*t)
+
+
+def wave_func_cossin(x, t, k, omega, coeff):
+    """
+    initial condiction with a wave
+
+    Parameters
+    ----------
+
+    x : ndarray
+        spatial mesh
+
+    t : float
+        time
+
+    k : float
+        wavenumber
+
+    omega : float
+        frequency
+    """
+    return coeff * np.cos(k*x) * np.sin(omega*t)
+
+
 def regularization(x, reg, u_l, u_r):
     y, c = x.copy(), 1
     w = 1-x**2

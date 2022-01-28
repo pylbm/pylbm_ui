@@ -77,6 +77,16 @@ class SimulationWidget:
             list(lb_scheme_widget.get_case().equation.get_fields().keys())
         )
 
+        self.fix_axis = v.Switch(label='Fix axis', v_model=False)
+        self.fix_axis_ymin = v.TextField(
+            label='ymin', v_model='', class_="d-none"
+        )
+        self.fix_axis_ymax = v.TextField(
+            label='ymax', v_model='', class_="d-none"
+        )
+        # self.fix_axis_ymin.hide()
+        # self.fix_axis_ymax.hide()
+
         self.menu = [
             self.simulation_name,
             self.simu_cfg,
@@ -90,6 +100,13 @@ class SimulationWidget:
                     v.ExpansionPanelHeader(children=['Field output request']),
                     v.ExpansionPanelContent(children=[
                         self.save_fields.widget
+                    ]),
+                ]),
+                v.ExpansionPanel(children=[
+                    v.ExpansionPanelHeader(children=['Graphic options']),
+                    v.ExpansionPanelContent(children=[
+                        self.fix_axis,
+                        self.fix_axis_ymin, self.fix_axis_ymax
                     ]),
                 ]),
             ], multiple=True, class_='pa-0')
@@ -146,6 +163,7 @@ class SimulationWidget:
         self.result.observe(self.replot, 'v_model')
         self.simu_cfg.observe(self.load_simu_cfg, 'v_model')
         self.discret['nt'].observe(self.change_period_by_nt, 'v_model')
+        self.fix_axis.observe(self.on_fix_axis_click, 'v_model')
 
         test_case_widget.select_case.observe(self.stop_simulation, 'v_model')
         lb_scheme_widget.select_case.observe(self.stop_simulation, 'v_model')
@@ -247,9 +265,20 @@ class SimulationWidget:
         self.plot = Plot()
         self.iplot = 0
         self.plot_output.children = [self.plot.fig.canvas]
+        if self.fix_axis.v_model:
+            ymin = self.fix_axis_ymin.v_model
+            ymax = self.fix_axis_ymax.v_model
+            self.plot_options = {
+                'set_ylim': [ymin, ymax]
+            }
+        else:
+            self.plot_options = None
 
         self.simu.save_data(self.result.v_model)
-        self.simu.plot(self.plot, self.result.v_model)
+        self.simu.plot(
+            self.plot, self.result.v_model,
+            properties=self.plot_options
+        )
         self.plot_output.children[0].draw_idle()
 
         ite_to_save = self.save_fields.get_save_time(
@@ -271,7 +300,10 @@ class SimulationWidget:
                     if nite > self.period.value:
                         nite = 1
                         self.simu.save_data(self.result.v_model)
-                        self.simu.plot(self.plot, self.result.v_model)
+                        self.simu.plot(
+                            self.plot, self.result.v_model,
+                            properties=self.plot_options
+                        )
                         self.plot_output.children[0].draw_idle()
                         ###### await asyncio.sleep(0.2)
 
@@ -332,6 +364,17 @@ class SimulationWidget:
         Pause the simulation when the pause button is clicked.
         """
         self.pause.v_model = not self.pause.v_model
+
+    def on_fix_axis_click(self, change):
+        """
+        fix or not the ylim axis when click
+        """
+        if self.fix_axis.v_model:
+            self.fix_axis_ymin.show()
+            self.fix_axis_ymax.show()
+        else:
+            self.fix_axis_ymin.hide()
+            self.fix_axis_ymax.hide()
 
     def replot(self, change):
         """

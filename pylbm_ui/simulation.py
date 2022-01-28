@@ -23,6 +23,7 @@ class Plot:
         self.fig.canvas.header_visible = False
         self.plot_type = None
         self.color_bar = None
+        self.fix_ylim = False
         # plt.ion()
 
     def plot(self, t, domain, field, data, transpose=True, properties=None):
@@ -63,11 +64,22 @@ class Plot:
                     marker=marker,
                     markersize=markersize
                 )
+                ylim = None
+                if 'set_ylim' in properties:
+                    ylim = properties['set_ylim']
+                if ylim is not None:
+                    self.ax.set_ylim(
+                        ymin=float(ylim[0]),
+                        ymax=float(ylim[1]),
+                        auto=False
+                    )
+                    self.fix_ylim = True
             else:
                 self.plot_type.set_ydata(data)
-
-            self.ax.relim()
-            self.ax.autoscale_view()
+            
+            if not self.fix_ylim:
+                self.ax.relim()
+                self.ax.autoscale_view()
 
             if not properties:
                 self.ax.set_xlabel('x')
@@ -256,9 +268,12 @@ class simulation:
 
         h5.save()
 
-    def plot(self, fig, field):
+    def plot(self, fig, field, properties=None):
         data = self.get_data(field)
-        fig.plot(self.sol.t, self.sol.domain, field, data)
+        fig.plot(
+            self.sol.t, self.sol.domain, field, data,
+            properties=properties
+        )
 
     def save_config(self, filename='simu_config.json'):
         from .json import save_simu_config

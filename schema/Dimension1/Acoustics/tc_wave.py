@@ -15,8 +15,6 @@ from ...utils import HashBaseModel
 
 
 class Wave_acc(HashBaseModel):
-    alpha: float
-    beta: float
     k: int
     c: float
     duration: float
@@ -139,5 +137,5 @@ tc_wave_acc = Wave_acc(
     xmin=0, xmax=1,
     duration=0.25,
     name='Wave_for_acoustic',
-    description_file='./bump.html'
+    description_file='./wave.html'
 )

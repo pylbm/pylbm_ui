@@ -1,10 +1,19 @@
 For this test case, the density $\rho$ and the momentum $q$ are taken as bump functions at the initial time according to
 
 $$
-q(0, x) = u_0 \rho(0, x),
+q_0(x) = u_0 \rho_0(x),
 $$
 
 where $u_0$ is a constant velocity that can be fixed with the parameter `u_zero`.
+
+The solution reads
+
+$$
+\begin{aligned}
+\rho(t, x) &= \frac{1}{2}\Bigl(1+\frac{u_0}{c}\Bigr) \rho_0(x-ct) + \frac{1}{2}\Bigl(1-\frac{u_0}{c}\Bigr) \rho_0(x+ct),\\
+q(t, x) &= \frac{1}{2}\Bigl(u_0+c\Bigr) \rho_0(x-ct) + \frac{1}{2}\Bigl(u_0-c\Bigr) \rho_0(x+ct).
+\end{aligned}
+$$
 
 A **bump** function is both smooth (in the sense of having continuous derivatives of all orders) and compactly supported.
 In order to investigate the behaviour of the schemes, we also consider **indicator** function of an intervalle or intermadiate regularization of it.
@@ -51,4 +60,4 @@ $$
 
 **Figure**
 
-![](./Entropy/Acoustics/image_bump.png "The bump functions")
+![](./Dimension1/Acoustics/image_bump.png "The bump functions")

@@ -3,10 +3,10 @@ For this test case, the density $\rho$ and the momentum $q$ read
 $$
 \rho(t, x) = \sin(\xi x)\cos(\omega t),
 \quad
-q(t, x) = -\frac{1}{c} \cos(\xi x)\sin(\omega t),
+q(t, x) = - c \cos(\xi x)\sin(\omega t),
 $$
 
-where $\omega = \xi/c$.
+where $\omega = \xi c$.
 
 In order to avoid the problem of the boundary conditions, the wave number $\xi$ is adapted to the domain length:
 

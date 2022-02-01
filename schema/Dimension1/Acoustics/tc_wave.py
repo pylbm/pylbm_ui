@@ -27,7 +27,7 @@ class Wave_acc(HashBaseModel):
 
     def get_dictionary(self):
         wn = self.k*2*np.pi/(self.xmax-self.xmin)
-        omega = wn/self.c
+        omega = wn*self.c
         init = {
             self.equation.rho: (
                 wave_func_sincos,
@@ -35,7 +35,7 @@ class Wave_acc(HashBaseModel):
             ),
             self.equation.q: (
                 wave_func_cossin,
-                (0, wn, omega, -1/self.c)
+                (0, wn, omega, -self.c)
             )
         }
 
@@ -71,12 +71,12 @@ class Wave_acc(HashBaseModel):
 
     def ref_solution(self, t, x, field=None):
         wn = self.k*2*np.pi/(self.xmax-self.xmin)
-        omega = wn/self.c
+        omega = wn*self.c
         sol_rho = wave_func_sincos(
             x, t, wn, omega, 1
         )
         sol_q = wave_func_cossin(
-            x, t, wn, omega, -1/self.c
+            x, t, wn, omega, -self.c
         )
 
         to_subs = {

@@ -14,15 +14,18 @@ the simplest model of hyperbolic equation.
 Denoting $c$ a real constant, the scalar quantity $u(t, x)$,
 where $t$ is the time and $x$ the one-dimensional space variable,
 satisfies the advection equation
+
 $$
     \left\lbrace\begin{aligned}
     &\partial_t u(t,x) + c \partial_x u(t,x) = 0,&& t>0, \ x\in\mathbb{R},\\
     &u(0,x) = u_0(x), && x\in\mathbb{R},
     \end{aligned}\right.
 $$
+
 where $u_0$ is a given function (the initial configuration).
 
 The solution of the advection equation is given by
+
 $$
     u(t, x) = u_0(x-ct), \qquad t>0, \ x\in\mathbb{R}.
 $$

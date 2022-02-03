@@ -21,8 +21,8 @@ cases = {
         'Bump': {
             'test case': tc_bumpy,
             'schemes': [
-                D1Q2(la=2, s_u=1.9),
-                D1Q3(la=2, s_u=1.9, s_ux=1.9, temperature=.5),
+                D1Q2(la=2, s_u=2),
+                D1Q3(la=3, s_u=2, s_ux=2, temperature=.5),
             ]
         },
         'Indicator': {

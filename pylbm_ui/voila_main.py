@@ -56,7 +56,6 @@ def change_list_tabs(link_widget_tab):
     return tab_widgets, tab_titles, tab_indices
 
 
-@debug_func
 def get_information(tab_name, mc, tc, lb, param):
     """
     return the widget of informations if needed
@@ -90,7 +89,6 @@ def get_information(tab_name, mc, tc, lb, param):
                 class_='pa-0')
             ])
         ]
-
 
     # for test case, scheme, ...
     items = [
@@ -163,6 +161,7 @@ def main():
     bugtab = DebugWidget()
 
     link_widget_tab = {
+        'configuration': [param, True],
         'model': [mc, True],
         'test case': [tc, True],
         'scheme': [lb, True],
@@ -170,10 +169,8 @@ def main():
         'simulation': [simulation, True],
         'parametric study': [parametric, True],
         'post treatment': [posttreatment, True],
-        'configuration': [param, True],
         'debug': [bugtab, True],
     }
-
 
     tab = v.Tabs(
         v_model=None,
@@ -192,28 +189,22 @@ def main():
     )
     content = v.Content(children=[])
 
+    @debug_func
     def tab_change(change):
         """
         change the tab
         """
-        tab_id = tab.v_model  # id in the old tab
-        if tab_id is not None:
-            tab_name = tab.children[tab_id].children[0]  # title
-        else:
-            tab_name = 'model'  # default title
-
-        # compute the new tab (parameters can modify the list)
+        print(tab.v_model)
         tab_widgets, tab_titles, tab_indices = change_list_tabs(link_widget_tab)
-        # update the widget with the new list of tabs
-        tab.children = [
-            v.Tab(children=[k]) for k in tab_titles
-        ]
-        # select the same tab (if the id is different)
-        tab.v_model = tab_indices[tab_name]
-        
-        # update the tab_id and its name
-        tab_id = tab.v_model
+        if tab.v_model is None:
+            tab_name = 'configuration'
+            tab_id = tab_indices.get(tab_name, 0)
+        else:
+            tab_id = tab.v_model
         tab_name = tab_titles[tab_id]
+        # print(f"{tab_id}: {tab_name}")
+        # print(tab_titles)
+
         items = get_information(tab_name, mc, tc, lb, param)
 
         widget = tab_widgets[tab_id]
@@ -237,13 +228,29 @@ def main():
         if tab_name == 'post treatment':
             posttreatment.update(None)
 
-
-    def list_tab_change(*args):
+    @debug_func
+    def list_tab_change(change):
+        """
+        change the list of tabs
+        """
+        # change the link_widget_tab dictionary
         link_widget_tab['parametric study'][1] = param.list_options['ps'].widget.v_model
         link_widget_tab['post treatment'][1] = param.list_options['pt'].widget.v_model
         link_widget_tab['debug'][1] = param.list_options['debug'].widget.v_model
-        tab_change(None)
 
+        tab_id = tab.v_model  # id in the old tab
+        if tab_id is not None:
+            tab_name = tab.children[tab_id].children[0]  # title
+        else:
+            tab_name = 'configuration'  # default title
+        # compute the new tab (parameters can modify the list)
+        _, tab_titles, tab_indices = change_list_tabs(link_widget_tab)
+        # update the widget with the new list of tabs
+        tab.children = [
+           v.Tab(children=[k]) for k in tab_titles
+        ]
+        tab.v_model = tab_indices[tab_name]
+        
     # TO MODIFY ICON:
     # https://materialdesignicons.com
     param.add_option(
@@ -281,7 +288,6 @@ def main():
     )
 
     # tab_change(None)
-    list_tab_change(None)
     tab.observe(tab_change, 'v_model')
     mc.select_category.observe(tab_change, 'v_model')
     mc.select_model.observe(tab_change, 'v_model')
@@ -289,6 +295,7 @@ def main():
     lb.select_case.observe(tab_change, 'v_model')
     for option in param.list_options.values():
         option.widget.observe(option.change, 'v_model')
+    list_tab_change(None)
     
     navicon = v.AppBarNavIcon()
 

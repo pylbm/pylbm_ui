@@ -9,7 +9,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import EntropyAcoustics
+from .equation_type import Acoustics1D
 from ..utils import wave_func_cossin, wave_func_sincos
 from ...utils import HashBaseModel
 
@@ -22,7 +22,7 @@ class Wave_acc(HashBaseModel):
     xmax: float
 
     dim = 1
-    equation = EntropyAcoustics()
+    equation = Acoustics1D()
     name = 'Wave for acoustic'
 
     def get_dictionary(self):

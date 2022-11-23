@@ -12,14 +12,13 @@ from .equation_type import Acoustics1D
 from ...utils import LBM_scheme, RelaxationParameter
 
 
-class D1Q22(LBM_scheme):
-    s_rho: RelaxationParameter('s_rho')
-    s_q: RelaxationParameter('s_q')
+class D1Q3(LBM_scheme):
+    s: RelaxationParameter('s')
 
     equation = Acoustics1D()
     dim = 1
-    name = 'D1Q22'
-    tex_name = r'$D_1Q_{{22}}$'
+    name = 'D1Q3'
+    tex_name = r'$D_1Q_{{}}$'
 
     def get_required_param(self):
         return [self.equation.c]
@@ -29,13 +28,11 @@ class D1Q22(LBM_scheme):
         q = self.equation.q
         c = self.equation.c
 
-        u = q/rho
+        # u = q/rho
 
         la_, la = self.la.symb, self.la.value
-        s_rho_, s_rho = self.s_rho.symb, self.s_rho.value
-        s_q_, s_q = self.s_q.symb, self.s_q.value
-        sigma_rho = sp.symbols('sigma_rho', constants=True)
-        sigma_q = sp.symbols('sigma_q', constants=True)
+        s_, s = self.s.symb, self.s.value
+        sigma = sp.symbols('sigma', constants=True)
 
         X = sp.symbols('X')
 
@@ -44,26 +41,17 @@ class D1Q22(LBM_scheme):
             'scheme_velocity': la_,
             'schemes': [
                 {
-                    'velocities': [1, 2],
-                    'conserved_moments': rho,
-                    'polynomials': [1, X],
-                    'relaxation_parameters': [0, 1/(.5+sigma_rho)],
-                    'equilibrium': [rho, q]
-                },
-                {
-                    'velocities': [1, 2],
-                    'conserved_moments': q,
-                    'polynomials': [1, X],
-                    'relaxation_parameters': [0, 1/(.5+sigma_q)],
-                    'equilibrium': [q, c**2*rho]
+                    'velocities': [0, 1, 2],
+                    'conserved_moments': [rho, q],
+                    'polynomials': [1, X, X**2],
+                    'relaxation_parameters': [0, 0, 1/(.5+sigma)],
+                    'equilibrium': [rho, q, c**2*rho]
                 },
             ],
             'parameters': {
                 la_: la,
-                s_rho_: s_rho,
-                sigma_rho: 1/s_rho_-.5,
-                s_q_: s_q,
-                sigma_q: 1/s_q_-.5,
+                s_: s,
+                sigma: 1/s_-.5,
             },
             'generator': 'numpy'
         }
@@ -73,21 +61,16 @@ class D1Q22(LBM_scheme):
             self.equation.NonReflexiveOutlet: {
                 'method': {
                     0: pylbm.bc.Neumann,
-                    1: pylbm.bc.Neumann,
                 },
             },
             self.equation.Neumann: {
                 'method': {
                     0: pylbm.bc.Neumann,
-                    1: pylbm.bc.Neumann,
                 },
             },
             self.equation.Dirichlet_u: {
                 'method': {
                     0: pylbm.bc.BounceBack,
-                    1: pylbm.bc.BounceBack,
-                    # 1: pylbm.bc.AntiBounceBack,
-                    # 2: pylbm.bc.BounceBack,
                 },
             },
         }

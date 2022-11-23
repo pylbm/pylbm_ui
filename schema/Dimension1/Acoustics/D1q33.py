@@ -9,17 +9,21 @@ import sympy as sp
 import pylbm
 import traitlets
 from .equation_type import Acoustics1D
-from ...utils import LBM_scheme, RelaxationParameter
+from ...utils import LBM_scheme, RealParameter, RelaxationParameter
 
 
-class D1Q22(LBM_scheme):
+class D1Q33(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_q: RelaxationParameter('s_q')
+    s_rhox: RelaxationParameter('s_rhox')
+    s_qx: RelaxationParameter('s_qx')
+    alpha: RealParameter("alpha")
+    beta: RealParameter("beta")
 
     equation = Acoustics1D()
     dim = 1
-    name = 'D1Q22'
-    tex_name = r'$D_1Q_{{22}}$'
+    name = 'D1Q33'
+    tex_name = r'$D_1Q_{{33}}$'
 
     def get_required_param(self):
         return [self.equation.c]
@@ -36,6 +40,12 @@ class D1Q22(LBM_scheme):
         s_q_, s_q = self.s_q.symb, self.s_q.value
         sigma_rho = sp.symbols('sigma_rho', constants=True)
         sigma_q = sp.symbols('sigma_q', constants=True)
+        s_rhox_, s_rhox = self.s_rhox.symb, self.s_rhox.value
+        s_qx_, s_qx = self.s_qx.symb, self.s_qx.value
+        sigma_rhox = sp.symbols('sigma_rhox', constants=True)
+        sigma_qx = sp.symbols('sigma_qx', constants=True)
+        alpha_, alpha = self.alpha.symb, self.alpha.value
+        beta_, beta = self.beta.symb, self.beta.value
 
         X = sp.symbols('X')
 
@@ -44,18 +54,22 @@ class D1Q22(LBM_scheme):
             'scheme_velocity': la_,
             'schemes': [
                 {
-                    'velocities': [1, 2],
+                    'velocities': [0, 1, 2],
                     'conserved_moments': rho,
-                    'polynomials': [1, X],
-                    'relaxation_parameters': [0, 1/(.5+sigma_rho)],
-                    'equilibrium': [rho, q]
+                    'polynomials': [1, X, X**2/2],
+                    'relaxation_parameters': [
+                        0, 1/(.5+sigma_rho), 1/(.5+sigma_rhox)
+                    ],
+                    'equilibrium': [rho, q, alpha_*la_**2*rho/2]
                 },
                 {
-                    'velocities': [1, 2],
+                    'velocities': [0, 1, 2],
                     'conserved_moments': q,
-                    'polynomials': [1, X],
-                    'relaxation_parameters': [0, 1/(.5+sigma_q)],
-                    'equilibrium': [q, c**2*rho]
+                    'polynomials': [1, X, X**2/2],
+                    'relaxation_parameters': [
+                        0, 1/(.5+sigma_q), 1/(.5+sigma_qx)
+                    ],
+                    'equilibrium': [q, c**2*rho, beta_*la_**2*q/2]
                 },
             ],
             'parameters': {
@@ -64,6 +78,12 @@ class D1Q22(LBM_scheme):
                 sigma_rho: 1/s_rho_-.5,
                 s_q_: s_q,
                 sigma_q: 1/s_q_-.5,
+                s_rhox_: s_rhox,
+                sigma_rhox: 1/s_rhox_-.5,
+                s_qx_: s_qx,
+                sigma_qx: 1/s_qx_-.5,
+                alpha_: alpha,
+                beta_: beta,
             },
             'generator': 'numpy'
         }
@@ -86,8 +106,6 @@ class D1Q22(LBM_scheme):
                 'method': {
                     0: pylbm.bc.BounceBack,
                     1: pylbm.bc.BounceBack,
-                    # 1: pylbm.bc.AntiBounceBack,
-                    # 2: pylbm.bc.BounceBack,
                 },
             },
         }

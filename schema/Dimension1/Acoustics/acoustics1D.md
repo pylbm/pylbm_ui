@@ -4,7 +4,7 @@
 >
 > Hearing is one of the most crucial means of survival in the animal world and speech is one of the most distinctive characteristics of human development and culture. Accordingly, the science of acoustics spreads across many facets of human society—music, medicine, architecture, industrial production, warfare and more. Likewise, animal species such as songbirds and frogs use sound and hearing as a key element of mating rituals or marking territories. Art, craft, science and technology have provoked one another to advance the whole, as in many other fields of knowledge. Robert Bruce Lindsay's "Wheel of Acoustics" is a well accepted overview of the various fields in acoustics.
 
-The acoustics system in dimension 1 is
+The isentropic acoustics system in dimension 1 is
 the simplest model of linear hyperbolic system.
 
 Denoting $c$ a real constant, the scalar quantities $\rho(t, x)$ and $q(t, x)$,

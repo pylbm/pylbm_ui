@@ -9,7 +9,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import EntropyAcoustics
+from .equation_type import Acoustics1D
 from ..utils import bump as bump_init
 from ...utils import HashBaseModel
 
@@ -27,7 +27,7 @@ class Bump_acc(HashBaseModel):
     reg: int
 
     dim = 1
-    equation = EntropyAcoustics()
+    equation = Acoustics1D()
     name = 'Bump for acoustic'
 
     def get_dictionary(self):

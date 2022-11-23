@@ -10,7 +10,7 @@ from ...symbol import Symbol
 from ...equation_type import EquationType
 
 
-class EntropyAcoustics(EquationType):
+class Acoustics1D(EquationType):
     name = 'Isentropic Acoustics'
     rho = Symbol('rho')
     q = Symbol('q')

@@ -6,11 +6,14 @@
 
 The Euler equations consist of a system of conservation laws on the fluid mass density $\rho$, the momentum density $q$, and the total energy density $E$.
 These quantities are linked with the velocity $u$ and the pressure $p$ by the relations
+
 $$
 q = \rho u, \qquad E = \frac{1}{2}\rho u^2 + \frac{p}{\gamma-1},
 $$
+
 with $\gamma$ the heat capacity ratio.
 In dimension $1$, the system reads
+
 $$
     \left\lbrace\begin{aligned}
     &\partial_t \rho + \partial_x (\rho u) = 0,\\
@@ -18,6 +21,7 @@ $$
     &\partial_t E + \partial_x ((E+p)u) = 0,
     \end{aligned}\right.
 $$
+
 where we have omitted the dependency in the time variable $t$ and in the space variable $x$ for clarity.
 
 The system is hyperbolic and the three eigenvalues of the jacobian matrix are $u-c$, $u$, and $u+c$ where $c = \sqrt{\gamma p/\rho}$ is the speed of sound.

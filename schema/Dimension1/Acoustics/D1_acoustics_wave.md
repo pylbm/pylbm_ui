@@ -1,9 +1,9 @@
 For this test case, the density $\rho$ and the momentum $q$ read
 
 $$
-\rho(t, x) = \sin(\xi x)\cos(\omega t),
+\rho(t, x) = \sin(\xi x - \omega t),
 \quad
-q(t, x) = - c \cos(\xi x)\sin(\omega t),
+q(t, x) = c \sin(\xi x - \omega t),
 $$
 
 where $\omega = \xi c$.

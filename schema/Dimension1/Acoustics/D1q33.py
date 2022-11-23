@@ -8,11 +8,11 @@
 import sympy as sp
 import pylbm
 import traitlets
-from .equation_type import Acoustics1D
+from .equation_type import D1_acoustics
 from ...utils import LBM_scheme, RealParameter, RelaxationParameter
 
 
-class D1Q33(LBM_scheme):
+class D1_acoustics_D1Q33(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_q: RelaxationParameter('s_q')
     s_rhox: RelaxationParameter('s_rhox')
@@ -20,7 +20,7 @@ class D1Q33(LBM_scheme):
     alpha: RealParameter("alpha")
     beta: RealParameter("beta")
 
-    equation = Acoustics1D()
+    equation = D1_acoustics()
     dim = 1
     name = 'D1Q33'
     tex_name = r'$D_1Q_{{33}}$'

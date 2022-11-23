@@ -11,7 +11,7 @@ from ...symbol import Symbol
 from ...equation_type import EquationType
 
 
-class Transport1D(EquationType):
+class D1_advection(EquationType):
     name = 'Advection with constant velocity'
     u = Symbol('u')
     c = Symbol('c')

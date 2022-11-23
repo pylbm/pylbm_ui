@@ -10,12 +10,12 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import Transport1D
+from .equation_type import D1_advection
 from ..utils import indicator as indicator_init
 from ...utils import HashBaseModel
 
 
-class Indicator(HashBaseModel):
+class D1_advection_Indicator(HashBaseModel):
     u_out: float
     u_in: float
     c: float
@@ -29,8 +29,8 @@ class Indicator(HashBaseModel):
     reg: int
 
     dim = 1
-    equation = Transport1D()
-    name = 'Indicator'
+    equation = D1_advection()
+    name = 'Indicator for advection'
 
     def get_dictionary(self):
         init = {
@@ -115,13 +115,13 @@ class Indicator(HashBaseModel):
 ### predefined cases
 ##################################
 
-tc_indy = Indicator(
+D1_advection_tc_indy = D1_advection_Indicator(
     u_out=0, u_in=1,
     c=1, reg=1,
     xmin=0, xmax=1,
     pos_left=0.2, pos_right=0.4,
     width_left=0.05, width_right=0.05,
     duration=1.5,
-    name='Indicator',
-    description_file='./indicator.html'
+    name='Indicator for advection',
+    description_file='./D1_advection_indicator.html'
 )

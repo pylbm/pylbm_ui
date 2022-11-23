@@ -8,16 +8,16 @@
 import sympy as sp
 import pylbm
 import traitlets
-from .equation_type import Transport1D
+from .equation_type import D1_advection
 from ...utils import LBM_scheme, RealParameter, RelaxationParameter
 
 
-class D1Q3(LBM_scheme):
+class D1_advection_D1Q3(LBM_scheme):
     s_u: RelaxationParameter('s_u')
     s_ux: RelaxationParameter("s_ux")
     temperature: RealParameter("T")
 
-    equation = Transport1D()
+    equation = D1_advection()
     dim = 1
     name = 'D1Q3'
     tex_name = r'$D_1Q_{{3}}$'

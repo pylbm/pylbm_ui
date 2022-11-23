@@ -9,12 +9,12 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import Acoustics1D
-from ..utils import wave_func_cossin, wave_func_sincos
+from .equation_type import D1_acoustics
+from ..utils import wave_func_sin
 from ...utils import HashBaseModel
 
 
-class Wave_acc(HashBaseModel):
+class D1_acoustics_Wave(HashBaseModel):
     k: int
     c: float
     duration: float
@@ -22,20 +22,20 @@ class Wave_acc(HashBaseModel):
     xmax: float
 
     dim = 1
-    equation = Acoustics1D()
-    name = 'Wave for acoustic'
+    equation = D1_acoustics()
+    name = 'Wave for acoustics'
 
     def get_dictionary(self):
         wn = self.k*2*np.pi/(self.xmax-self.xmin)
         omega = wn*self.c
         init = {
             self.equation.rho: (
-                wave_func_sincos,
+                wave_func_sin,
                 (0, wn, omega, 1)
             ),
             self.equation.q: (
-                wave_func_cossin,
-                (0, wn, omega, -self.c)
+                wave_func_sin,
+                (0, wn, omega, self.c)
             )
         }
 
@@ -72,11 +72,11 @@ class Wave_acc(HashBaseModel):
     def ref_solution(self, t, x, field=None):
         wn = self.k*2*np.pi/(self.xmax-self.xmin)
         omega = wn*self.c
-        sol_rho = wave_func_sincos(
+        sol_rho = wave_func_sin(
             x, t, wn, omega, 1
         )
-        sol_q = wave_func_cossin(
-            x, t, wn, omega, -self.c
+        sol_q = wave_func_sin(
+            x, t, wn, omega, self.c
         )
 
         to_subs = {
@@ -131,11 +131,11 @@ class Wave_acc(HashBaseModel):
 ### predefined cases
 ##################################
 
-tc_wave_acc = Wave_acc(
+D1_acoustics_tc_wave = D1_acoustics_Wave(
     alpha=1, beta=0, k=1,
     c=1,
     xmin=0, xmax=1,
-    duration=0.25,
-    name='Wave_for_acoustic',
-    description_file='./wave.html'
+    duration=2,
+    name='Wave for acoustics',
+    description_file='./D1_acoustics_wave.html'
 )

@@ -32,9 +32,31 @@ def constant_func(x, val):
     return vect_u
 
 
+def wave_func_sin(x, t, k, omega, coeff):
+    """
+    initial condition with a wave
+
+    Parameters
+    ----------
+
+    x : ndarray
+        spatial mesh
+
+    t : float
+        time
+
+    k : float
+        wavenumber
+
+    omega : float
+        frequency
+    """
+    return coeff * np.sin(k*x-omega*t)
+    
+    
 def wave_func_sincos(x, t, k, omega, coeff):
     """
-    initial condiction with a wave
+    initial condition with a wave
 
     Parameters
     ----------
@@ -56,7 +78,7 @@ def wave_func_sincos(x, t, k, omega, coeff):
 
 def wave_func_cossin(x, t, k, omega, coeff):
     """
-    initial condiction with a wave
+    initial condition with a wave
 
     Parameters
     ----------

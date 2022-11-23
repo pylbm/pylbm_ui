@@ -10,12 +10,12 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import Transport1D
+from .equation_type import D1_advection
 from ..utils import bump as bump_init
 from ...utils import HashBaseModel
 
 
-class Bump(HashBaseModel):
+class D1_advection_Bump(HashBaseModel):
     u_ground: float
     u_bump: float
     c: float
@@ -27,8 +27,8 @@ class Bump(HashBaseModel):
     reg: int
 
     dim = 1
-    equation = Transport1D()
-    name = 'Bump'
+    equation = D1_advection()
+    name = 'Bump for advection'
 
     def get_dictionary(self):
         init = {
@@ -111,12 +111,12 @@ class Bump(HashBaseModel):
 ### predefined cases
 ##################################
 
-tc_bumpy = Bump(
+D1_advection_tc_bumpy = D1_advection_Bump(
     u_ground=0, u_bump=1,
     c=1, reg=0,
     xmin=0, xmax=1,
     x_bump=0.25, width_bump=0.125,
     duration=1.5,
-    name='Bump',
-    description_file='./bump.html'
+    name='Bump for advection',
+    description_file='./D1_advection_bump.html'
 )

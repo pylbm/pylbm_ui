@@ -8,15 +8,15 @@
 import sympy as sp
 import pylbm
 import traitlets
-from .equation_type import Acoustics1D
+from .equation_type import D1_acoustics
 from ...utils import LBM_scheme, RelaxationParameter
 
 
-class D1Q22(LBM_scheme):
+class D1_acoustics_D1Q22(LBM_scheme):
     s_rho: RelaxationParameter('s_rho')
     s_q: RelaxationParameter('s_q')
 
-    equation = Acoustics1D()
+    equation = D1_acoustics()
     dim = 1
     name = 'D1Q22'
     tex_name = r'$D_1Q_{{22}}$'

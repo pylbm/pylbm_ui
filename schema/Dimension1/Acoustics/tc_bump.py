@@ -9,12 +9,12 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import sympy as sp
 
-from .equation_type import Acoustics1D
+from .equation_type import D1_acoustics
 from ..utils import bump as bump_init
 from ...utils import HashBaseModel
 
 
-class Bump_acc(HashBaseModel):
+class D1_acoustics_Bump(HashBaseModel):
     rho_ground: float
     rho_bump: float
     u_zero: float
@@ -27,8 +27,8 @@ class Bump_acc(HashBaseModel):
     reg: int
 
     dim = 1
-    equation = Acoustics1D()
-    name = 'Bump for acoustic'
+    equation = D1_acoustics()
+    name = 'Bump for acoustics'
 
     def get_dictionary(self):
         init = {
@@ -171,13 +171,13 @@ class Bump_acc(HashBaseModel):
 ### predefined cases
 ##################################
 
-tc_bumpy_acc = Bump_acc(
+D1_acoustics_tc_bumpy = D1_acoustics_Bump(
     rho_ground=0, rho_bump=1,
     u_zero=0,
     c=1, reg=0,
     xmin=0, xmax=1,
     x_bump=0.5, width_bump=0.125,
     duration=0.25,
-    name='Bump_for_acoustic',
-    description_file='./bump.html'
+    name='Bump for acoustics',
+    description_file='./D1_acoustics_bump.html'
 )

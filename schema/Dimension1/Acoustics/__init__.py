@@ -5,48 +5,42 @@
 # License: BSD 3 clause
 
 # model
-from .equation_type import Acoustics1D
+from .equation_type import D1_acoustics
 # test cases
-from .tc_bump import tc_bumpy_acc
-from .tc_wave import tc_wave_acc
+from .tc_bump import D1_acoustics_tc_bumpy
+from .tc_wave import D1_acoustics_tc_wave
 # schemes
-from .D1q22 import D1Q22
-from .D1q3 import D1Q3
-from .D1q33 import D1Q33
+from .D1q22 import D1_acoustics_D1Q22
+from .D1q3 import D1_acoustics_D1Q3
+from .D1q33 import D1_acoustics_D1Q33
 
 cases = {
-    'model': Acoustics1D,
-    'default case': 'Bump_acoustics',
+    'model': D1_acoustics,
+    'default case': D1_acoustics_tc_bumpy.name,
     'test cases': {
-        'Bump_acoustics': {
-            'test case': tc_bumpy_acc,
+        D1_acoustics_tc_bumpy.name: {
+            'test case': D1_acoustics_tc_bumpy,
             'schemes': [
-                D1Q3(la=2, s=1.9),
-                D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
-                D1Q33(
+                D1_acoustics_D1Q3(la=2, s=1.9),
+                D1_acoustics_D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
+                D1_acoustics_D1Q33(
                     la=1.5,
                     s_rho=1.8, s_rhox=1., s_q=1.8, s_qx=1.,
                     alpha=.75, beta=.75
                 ),
             ]
         },
-        'Wave_acoustics': {
-            'test case': tc_wave_acc,
+        D1_acoustics_tc_wave.name: {
+            'test case': D1_acoustics_tc_wave,
             'schemes': [
-                D1Q3(la=2, s=1.9),
-                D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
-                D1Q33(
+                D1_acoustics_D1Q3(la=2, s=1.9),
+                D1_acoustics_D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
+                D1_acoustics_D1Q33(
                     la=1.5,
                     s_rho=1.8, s_rhox=1., s_q=1.8, s_qx=1.,
                     alpha=.75, beta=.75
                 ),
             ]
         },
-        # 'Indicator': {
-        #     'test case': tc_indy,
-        #     'schemes': [
-        #         D1Q2(la=2, s_u=1.9),
-        #     ]
-        # }
     }
 }

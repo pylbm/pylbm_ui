@@ -35,7 +35,15 @@ for root, d_names, f_names in os.walk(path):
             if ext == '.md':
                 f_input = os.path.join(root, f_name)
                 f_output = os.path.join(root, filename + '.html')
-                command = f"pandoc {f_input} --webtex='https://latex.codecogs.com/svg.latex?' -o {f_output} --template=template.html --self-contained --metadata title=\"dummy\""
+                f_gladtex = os.path.join(root, filename + '.htex')
+                command = f"pandoc {f_input} --webtex='https://latex.codecogs.com/svg.latex?' -o {f_output} --template=template.html --embed-resources --standalone --metadata title=\"dummy\""
+                # command = f"pandoc -s --gladtex {f_input} -o {f_gladtex} "
+                # command = f"pandoc -s -t html --gladtex {f_input} -o {f_gladtex}| gladtex -o {f_output} {f_gladtex}"
+                #command = f"pandoc {f_input} --mathml -o {f_output} --template=template.html --self-contained --metadata title=\"dummy\""
                 print('execute command:')
                 print(command)
                 os.system(command)
+                # command = f"gladtex -o {f_output} {f_gladtex}"
+                # print('execute command:')
+                # print(command)
+                # os.system(command)

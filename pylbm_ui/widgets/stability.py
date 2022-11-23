@@ -160,11 +160,11 @@ class StateWidget(Dialog):
             children=['Check stability'],
             color='primary'
         )
-        self.recompute_states = v.Btn(
-            class_='mx-2',
-            children=['Restart linear states'],
-            color='primary'
-        )
+        # self.recompute_states = v.Btn(
+        #     class_='mx-2',
+        #     children=['Restart linear states'],
+        #     color='primary'
+        # )
 
         for s in states:
             self.item_list.children.append(self.create_item(s))
@@ -176,7 +176,7 @@ class StateWidget(Dialog):
                 children=[
                     'List of linear states',
                     v.Spacer(),
-                    v.CardActions(children=[self.recompute_states]),
+                    # v.CardActions(children=[self.recompute_states]),
                     self.add_button
                 ]
             ),
@@ -365,10 +365,10 @@ class StabilityWidget:
 
         self.state_widget.eval_stab.on_event('click', self.stability_states)
         self.state_widget.item_list.observe(self.update_states, 'children')
-        self.state_widget.recompute_states.on_event(
-            'click',
-            self.change_list_states
-        )
+        # self.state_widget.recompute_states.on_event(
+        #     'click',
+        #     self.change_list_states
+        # )
 
         plot_stab.on_event('click', self.plot_stability)
 

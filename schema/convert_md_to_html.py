@@ -51,12 +51,11 @@ else:
     subpath = "/"
 
 test_dir = True
-if len(subpath) > 2:
-    if subpath[-3:] == ".md":
-        f_input = subpath
-        f_output = subpath[:-3] + ".html"
-        md2html(f_input, f_output)
-        test_dir = False
+if subpath[-3:] == ".md":
+    f_input = subpath
+    f_output = subpath[:-3] + ".html"
+    md2html(f_input, f_output)
+    test_dir = False
 
 if test_dir:
     for root, d_names, f_names in os.walk(path):

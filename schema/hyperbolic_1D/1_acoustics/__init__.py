@@ -21,7 +21,7 @@ cases = {
         D1_acoustics_tc_bumpy.name: {
             'test case': D1_acoustics_tc_bumpy,
             'schemes': [
-                D1_acoustics_D1Q3(la=2, s=1.9),
+                D1_acoustics_D1Q3(la=1.5, s=1.9),
                 D1_acoustics_D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
                 D1_acoustics_D1Q33(
                     la=1.5,
@@ -33,7 +33,7 @@ cases = {
         D1_acoustics_tc_wave.name: {
             'test case': D1_acoustics_tc_wave,
             'schemes': [
-                D1_acoustics_D1Q3(la=2, s=1.9),
+                D1_acoustics_D1Q3(la=1.5, s=1.9),
                 D1_acoustics_D1Q22(la=1.5, s_rho=1.9, s_q=1.9),
                 D1_acoustics_D1Q33(
                     la=1.5,

@@ -132,8 +132,7 @@ class D1_acoustics_Wave(HashBaseModel):
 ##################################
 
 D1_acoustics_tc_wave = D1_acoustics_Wave(
-    alpha=1, beta=0, k=1,
-    c=1,
+    k=1, c=1,
     xmin=0, xmax=1,
     duration=2,
     name='Wave for acoustics',

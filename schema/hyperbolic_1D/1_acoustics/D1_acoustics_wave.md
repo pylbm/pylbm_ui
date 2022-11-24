@@ -15,3 +15,9 @@ $$
 $$
 
 where $k$ is a positive integer, $x_{\text{min}}$ and $x_{\text{max}}$ the left and right bounds of the domain.
+
+**The parameters** of this test case are
+
+- `c` the acoustics velocity;
+- `k` the scaled wave number;
+- `xmin` and `xmax` the bounds of the domain.

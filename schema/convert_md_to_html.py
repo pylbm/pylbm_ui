@@ -16,10 +16,32 @@ convert all md files in all the subdirectories
 convert all md files only in the directories that contain the subpath
 >>> python convert_md_to_html.py subpath
 
+convert only one md file
+>>> python convert_md_to_html.py path/to_the/file.md
+
 """
 
 import os
 import sys
+
+
+def md2html(f_input, f_output):
+    optwebtex = "--webtex='https://latex.codecogs.com/svg.latex?'"
+    opt = [
+        "--template=template.html",
+        "--embed-resources",
+        "--standalone",
+        "--metadata title=\"dummy\""
+    ]
+    command = f"pandoc {f_input} "
+    command += optwebtex
+    command += f" -o {f_output} "
+    for optk in opt:
+        command += optk + " "
+    print('execute command:')
+    print(command)
+    os.system(command)
+
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,22 +50,20 @@ if len(sys.argv) > 1:
 else:
     subpath = "/"
 
-for root, d_names, f_names in os.walk(path):
-    if subpath in root:
-        for f_name in f_names:
-            filename, ext = os.path.splitext(os.path.basename(f_name))
-            if ext == '.md':
-                f_input = os.path.join(root, f_name)
-                f_output = os.path.join(root, filename + '.html')
-                f_gladtex = os.path.join(root, filename + '.htex')
-                command = f"pandoc {f_input} --webtex='https://latex.codecogs.com/svg.latex?' -o {f_output} --template=template.html --embed-resources --standalone --metadata title=\"dummy\""
-                # command = f"pandoc -s --gladtex {f_input} -o {f_gladtex} "
-                # command = f"pandoc -s -t html --gladtex {f_input} -o {f_gladtex}| gladtex -o {f_output} {f_gladtex}"
-                #command = f"pandoc {f_input} --mathml -o {f_output} --template=template.html --self-contained --metadata title=\"dummy\""
-                print('execute command:')
-                print(command)
-                os.system(command)
-                # command = f"gladtex -o {f_output} {f_gladtex}"
-                # print('execute command:')
-                # print(command)
-                # os.system(command)
+test_dir = True
+if len(subpath) > 2:
+    if subpath[-3:] == ".md":
+        f_input = subpath
+        f_output = subpath[:-3] + ".html"
+        md2html(f_input, f_output)
+        test_dir = False
+
+if test_dir:
+    for root, d_names, f_names in os.walk(path):
+        if subpath in root:
+            for f_name in f_names:
+                filename, ext = os.path.splitext(os.path.basename(f_name))
+                if ext == '.md':
+                    f_input = os.path.join(root, f_name)
+                    f_output = os.path.join(root, filename + '.html')
+                    md2html(f_input, f_output)

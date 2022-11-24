@@ -194,7 +194,7 @@ def main():
         """
         change the tab
         """
-        print(tab.v_model)
+        # print(tab.v_model)
         tab_widgets, tab_titles, tab_indices = change_list_tabs(link_widget_tab)
         if tab.v_model is None:
             tab_name = 'configuration'

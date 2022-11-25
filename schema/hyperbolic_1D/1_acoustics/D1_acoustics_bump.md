@@ -60,4 +60,4 @@ $$
 
 **Figure**
 
-![](./Dimension1/Acoustics/image_bump.png "The bump functions")
+![](./hyperbolic_1D/1_acoustics/image_bump.png "The bump functions")

@@ -41,4 +41,4 @@ $$
 
 **Figure**
 
-![](./Dimension1/Advection/image_bump.png "The bump functions")
+![](./hyperbolic_1D/0_advection/image_bump.png "The bump functions")

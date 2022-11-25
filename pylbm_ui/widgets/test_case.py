@@ -63,7 +63,7 @@ class TestCaseWidget:
         self.description = HTML()
 
         plt.ioff()
-        self.fig = plt.figure(figsize=(12, 6))
+        self.fig = plt.figure(figsize=(9, 6))
         self.fig.canvas.header_visible = False
 
         self.tabs = v.Tabs(

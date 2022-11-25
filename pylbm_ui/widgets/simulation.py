@@ -74,7 +74,8 @@ class SimulationWidget:
         self.codegen = v.Select(items=['auto', 'numpy', 'cython'], v_model='auto')
 
         self.save_fields = Save_widget(
-            list(lb_scheme_widget.get_case().equation.get_fields().keys())
+            # list(lb_scheme_widget.get_case().equation.get_fields().keys())
+            list(lb_scheme_widget.get_case().get_fields().keys())
         )
 
         self.fix_axis = v.Switch(label='Fix axis', v_model=False)
@@ -117,7 +118,8 @@ class SimulationWidget:
         ##
 
         self.simu = simulation()
-        self.simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
+        #self.simu.reset_fields(lb_scheme_widget.get_case().equation.get_fields())
+        self.simu.reset_fields(lb_scheme_widget.get_case().get_fields())
 
         self.start = v.Btn(v_model=True, children=['Start'], class_='ma-2', style_='width: 100px', color='success')
         self.startTooltip = Tooltip(self.start, tooltip='click to start the simulation')
@@ -212,11 +214,13 @@ class SimulationWidget:
 
         This method updates the list in the menu accordingly.
         """
-        self.simu.reset_fields(self.lb_scheme_widget.get_case().equation.get_fields())
+        # self.simu.reset_fields(self.lb_scheme_widget.get_case().equation.get_fields())
+        self.simu.reset_fields(self.lb_scheme_widget.get_case().get_fields())
         self.result.items = list(self.simu.fields.keys())
         self.result.v_model = list(self.simu.fields.keys())[0]
         self.save_fields.purge()
-        self.save_fields.update_fields(list(self.lb_scheme_widget.get_case().equation.get_fields().keys()))
+        # self.save_fields.update_fields(list(self.lb_scheme_widget.get_case().equation.get_fields().keys()))
+        self.save_fields.update_fields(list(self.lb_scheme_widget.get_case().get_fields().keys()))
 
     def update_name(self, change):
         """
@@ -381,8 +385,9 @@ class SimulationWidget:
         Update the plot.
         """
         if self.plot:
-            self.simu.plot(self.plot, self.result.v_model)
-            self.plot_output.children[0].draw_idle()
+            if self.simu.sol:
+                self.simu.plot(self.plot, self.result.v_model)
+                self.plot_output.children[0].draw_idle()
 
     def take_snapshot(self, widget, event, data):
         """

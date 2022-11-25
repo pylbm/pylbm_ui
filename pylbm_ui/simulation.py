@@ -216,6 +216,8 @@ class simulation:
         return self.test_case.duration
 
     def get_data(self, field, solid_value=np.NaN):
+        if self.sol is None:
+            return
         to_subs = {str(k): self.sol.m[k] for k in self.sol.scheme.consm.keys()}
         to_subs.update({str(k): v for k, v in self.sol.scheme.param.items()})
 
@@ -251,7 +253,7 @@ class simulation:
         def save_one_field(f):
             data = self.get_data(f)
             h5.add_scalar(f, data)
-            if has_ref:
+            if has_ref and f in self.test_case.equation.get_fields():
                 if self.sol.dim == 1:
                     data_ref = self.test_case.ref_solution(self.sol.t, self.sol.domain.x, f)
                 elif self.sol.dim == 2:
@@ -269,6 +271,8 @@ class simulation:
         h5.save()
 
     def plot(self, fig, field, properties=None):
+        if self.sol is None:
+            return
         data = self.get_data(field)
         fig.plot(
             self.sol.t, self.sol.domain, field, data,

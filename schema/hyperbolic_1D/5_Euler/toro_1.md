@@ -73,7 +73,7 @@ The solution of the Sod's problem has a right shock wave,
 a right travelling contact wave, and a left sonic rarefaction wave.
 It was proposed to test the accuracy of computational fluid codes, like Riemann solvers.
 
-![](./Dimension1/Euler/Toro_Test1.png "Toro test case 1")
+![](./hyperbolic_1D/5_Euler/Toro_Test1.png "Toro test case 1")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

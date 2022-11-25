@@ -77,7 +77,7 @@ a right-traveling shock wave and a stationary contact discontinuity.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![](./Dimension1/Euler/Toro_Test5.png "Toro test case 5")
+![](./hyperbolic_1D/5_Euler/Toro_Test5.png "Toro test case 5")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

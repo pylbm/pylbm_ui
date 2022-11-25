@@ -76,7 +76,7 @@ The strong shock wave is of Mach number 1.98.
 The analytical solution computed with the computer program from Toro
 is plotted in the next Figure.
 
-![](./Dimension1/Euler/Toro_Test3.png "Toro test case 3")
+![](./hyperbolic_1D/5_Euler/Toro_Test3.png "Toro test case 3")
 
 The test case parameters can be modified using
 the "Test case parameters" panel below

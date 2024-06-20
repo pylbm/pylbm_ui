@@ -7,7 +7,7 @@ dependencies:
   - ipyvuetify
   - ipympl
   - matplotlib
-  - pydantic
+  - pydantic=1
   - scipy
   - jupyterlab
   - pathos

@@ -88,7 +88,12 @@ class HashBaseModel(BaseModel):
             return open(html_filename).read()
 
         return ''
+
+
 class Scheme:
+    def get_fields(self):
+        return self.equation.get_fields()
+
     def get_information(self):
         scheme = pylbm.Scheme(self.get_dictionary())
         return scheme
@@ -264,6 +269,72 @@ class RealParameterFinal:
         return f"Parameter('{self.symb}')({self.value})"
 
 
+class RealBounded:
+    def __new__(cls, symb, minvalue, maxvalue):
+        class Create:
+            def __new__(self, v):
+                return RealBoundedFinal(v, sp.Symbol(symb), minvalue, maxvalue)
+
+            @classmethod
+            def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
+                field_schema.update(
+                    type='number', format='bounded real'
+                )
+
+            @classmethod
+            def __get_validators__(cls):
+                yield cls.validate
+
+            @classmethod
+            def validate(cls, v):
+                if not isinstance(v, numbers.Number):
+                    raise TypeError('Number is required')
+                if v < minvalue or v > maxvalue:
+                    raise ValueError(
+                        f'value in [{minvalue},{maxvalue}]'
+                    )
+                return cls(v)
+
+        return Create
+
+
+class RealBoundedFinal:
+    def __init__(self, value, symb, val_min, val_max):
+        self.symb = symb
+        self.value = value
+
+    def __repr__(self):
+        return f"RealBounded('{self.symb}')({self.value})"
+
+
+# class RealBounded(Representation):
+#     def __init__(self, value, ):
+#         self.symb = sp.symbols('lambda')
+#         self.value = value
+
+#     @classmethod
+#     def __get_validators__(cls):
+#         yield cls.validate
+
+#     @classmethod
+#     def __modify_schema__(cls, field_schema):
+#         field_schema.update(type='number', format='scheme velocity')
+
+#     @classmethod
+#     def validate(cls, v):
+#         if not isinstance(v, numbers.Number):
+#             raise TypeError('number required')
+#         if v < 0:
+#             raise ValueError('strictly positive number required')
+#         return cls(v)
+
+#     def __str__(self):
+#         return self.value
+
+#     def __repr_args__(self):
+#         return [(None, self.value), ['symbol', self.symb]]
+
+
 class LBM_scheme(HashBaseModel, Scheme):
     la: SchemeVelocity
 
@@ -273,4 +344,5 @@ ENCODERS_BY_TYPE.update({
     RelaxationParameterFinal: lambda o: o.value,
     RealParameterFinal: lambda o: o.value,
     AddviscParameterFinal: lambda o: o.value,
+    RealBoundedFinal: lambda o: o.value,
     })

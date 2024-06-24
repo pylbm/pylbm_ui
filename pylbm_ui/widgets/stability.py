@@ -155,7 +155,16 @@ class StateWidget(Dialog):
         self.default_state = self.states[0]
         super().__init__(self.default_state)
 
-        self.eval_stab = v.Btn(children=['Check stability'], color='primary')
+        self.eval_stab = v.Btn(
+            class_='mx-2',
+            children=['Check stability'],
+            color='primary'
+        )
+        # self.recompute_states = v.Btn(
+        #     class_='mx-2',
+        #     children=['Restart linear states'],
+        #     color='primary'
+        # )
 
         for s in states:
             self.item_list.children.append(self.create_item(s))
@@ -163,7 +172,14 @@ class StateWidget(Dialog):
         self.item_list.notify_change({'name': 'children', 'type': 'change'})
 
         self.widget = v.Card(children=[
-            v.CardTitle(children=['List of linear states', v.Spacer(), self.add_button]),
+            v.CardTitle(
+                children=[
+                    'List of linear states',
+                    v.Spacer(),
+                    # v.CardActions(children=[self.recompute_states]),
+                    self.add_button
+                ]
+            ),
             v.CardText(children=[self.item_list]),
             v.CardActions(children=[v.Spacer(), self.eval_stab])
         ])
@@ -349,6 +365,10 @@ class StabilityWidget:
 
         self.state_widget.eval_stab.on_event('click', self.stability_states)
         self.state_widget.item_list.observe(self.update_states, 'children')
+        # self.state_widget.recompute_states.on_event(
+        #     'click',
+        #     self.change_list_states
+        # )
 
         plot_stab.on_event('click', self.plot_stability)
 
@@ -377,8 +397,8 @@ class StabilityWidget:
             self.container.show()
 
         if self.state_list.v_model is not None:
-            self.markers1.set_offsets([])
-            self.markers2.set_offsets([])
+            # self.markers1.set_offsets([])
+            # self.markers2.set_offsets([])
             self.stab_output.canvas.draw_idle()
 
             self.alert.type = 'info'
@@ -398,6 +418,14 @@ class StabilityWidget:
     def change_test_case(self, change):
         """
         Update the states when the test case is changed or its parameters.
+        """
+        test_case = self.test_case_widget.get_case()
+        self.state_widget.update_states(test_case.state())
+        self.test_case_widget.panels.children[0].bind(self.change_test_case)
+
+    def change_list_states(self, widget, event, data):
+        """
+        Manually update the states
         """
         test_case = self.test_case_widget.get_case()
         self.state_widget.update_states(test_case.state())
